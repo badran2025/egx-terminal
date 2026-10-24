@@ -20,6 +20,13 @@ export interface ThndrIndicatorItem {
   friendAdvice: string;
 }
 
+export interface ThndrIndicatorDetail {
+  nameEn: string;
+  nameAr: string;
+  role: string;
+  badge?: string;
+}
+
 export interface SevenLayerThndrMapping {
   layerNumber: number;
   layerName: string;
@@ -27,6 +34,7 @@ export interface SevenLayerThndrMapping {
   analogyTitle: string;
   thndrPrimaryIndicator: string;
   thndrSecondaryIndicator: string;
+  thndrIndicatorsList: ThndrIndicatorDetail[];
   isAvailableOnThndr: boolean;
   howToApplyInThndr: string;
   explanationBaladi: string;
@@ -39,26 +47,60 @@ export interface SevenLayerThndrMapping {
 export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
   {
     layerNumber: 1,
-    layerName: 'الاتجاه العام (The Trend)',
-    mirrorName: 'مراية الطريق السريع',
+    layerName: 'الاتجاه العام المزدوج للسوق والسهم (The Dual Trend)',
+    mirrorName: 'مراية الطريق السريع (EGX30 + السهم)',
     analogyTitle: 'مينفعش تسوق عربيتك عكس اتجاه الطريق السريع!',
     thndrPrimaryIndicator: 'Moving Average Exponential (EMA 50 & EMA 200)',
     thndrSecondaryIndicator: 'Trend Signals - [Tamer Zaky] / RMI Trend - [Tamer Zaky]',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'Moving Average Exponential (EMA 50)',
+        nameAr: 'المتوسط المتحرك الأسي 50 يوم',
+        role: 'خط الدعم الحركي السريع لاتجاه الأسابيع ولحركة مؤشر EGX30 العام.',
+        badge: 'مؤشر أساسي'
+      },
+      {
+        nameEn: 'Moving Average Exponential (EMA 200)',
+        nameAr: 'المتوسط المتحرك الأسي 200 يوم',
+        role: 'خط الأمان المؤسسي الأكبر للمحافظ والصناديق؛ طول ما السهم والمؤشر فوقه فالسوق في أمان استثماري.',
+        badge: 'خط الأمان الأكبر'
+      },
+      {
+        nameEn: 'Trend Signals - [Tamer Zaky]',
+        nameAr: 'سكربت إشارات الاتجاه لتامر زكي',
+        role: 'بديل سريع في ثاندر يلون الشموع بالأخضر عند الصعود وبالأحمر عند الهبوط.',
+        badge: 'بديل في ثاندر'
+      }
+    ],
     isAvailableOnThndr: true,
     howToApplyInThndr: 'افتح شارت ثاندر، دوس على علامة المؤشرات (Indicators)، واكتب "Moving Average Exponential" وضيفه مرتين؛ الأولى ادخل إعداداتها واكتب الطول (Length) = 50 وخلي لونه أزرق، والتانية اكتب الطول = 200 وخلي لونه برتقالي أو أحمر. أو اختار مؤشر "Trend Signals - [Tamer Zaky]".',
     explanationBaladi: 'الاتجاه العام يا صاحبي هو البوصلة. السهم لو بيتداول فوق خط الـ 200 يوم وخط الـ 50 يوم، معناه إن البورصة والمؤسسات في صفك والسكة سالكة. لو السهم تحت خط 200، كأنك ماشي عكس السير على الدائري، وممنوع تشتري فيه حتى لو شفت شمعة خضراء مغرية!',
-    whatToLookFor: 'شموع السهم تتداول بثبات أعلى خط EMA 50 و EMA 200 بزاوية ميل صاعدة للأعلى.'
+    whatToLookFor: 'شموع السهم تتداول بثبات أعلى خط EMA 50 و EMA 200 بزاوية ميل صاعدة للأعلى بالتزامن مع ثبات مؤشر EGX30 فوق دعمه الفني.'
   },
   {
     layerNumber: 2,
     layerName: 'الزخم وقوة الدوسة (Momentum)',
-    mirrorName: 'مراية دواسة البنزين',
+    mirrorName: 'مراية دواسة البنزين (RSI + MACD)',
     analogyTitle: 'بنقيس قوة الدوسة على دواسة البنزين.. المشترين بيدوسوا ولا مفرملين؟',
-    thndrPrimaryIndicator: 'Relative Strength Index (RSI)',
-    thndrSecondaryIndicator: 'MACD / Stochastic RSI',
+    thndrPrimaryIndicator: 'Relative Strength Index (RSI) + مؤشر MACD',
+    thndrSecondaryIndicator: 'Stochastic RSI / Momentum',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'Relative Strength Index (RSI)',
+        nameAr: 'مؤشر القوة النسبية (RSI)',
+        role: 'دواسة البنزين: قياس عزم وسرعة حركة الشموع (منطقة 40 - 60 نقطة هي منطقة الانطلاق الذهبية والتجميع الصحي).',
+        badge: 'المؤشر الأول بالشارت'
+      },
+      {
+        nameEn: 'MACD (Moving Average Convergence Divergence)',
+        nameAr: 'مؤشر الماكد (MACD)',
+        role: 'تأكيد انطلاق الزخم: تقاطع الخط السريع للأعلى فوق خط الإشارة وتحول أعمدة الهيستوجرام للون الأخضر فوق خط الصفر.',
+        badge: 'المؤشر الثاني بالشارت'
+      }
+    ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'في شارت ثاندر اكتب "Relative Strength Index" هيظهرلك خط RSI تحت الشموع، وضيف كمان "MACD".',
-    explanationBaladi: 'الزخم بيقيس عزم وحماسة المشترين؛ لما يكون RSI بين 45 و 60 نقطة، دي اسمها "منطقة الانطلاق الذهبية" يعني المشترين دايسين بنزين بهدوء والسهم لسه خفيف وماتضخمش. لكن لو RSI عدى 70، معناه دوسة البنزين خلاص جابت آخرها والسهم سخن وممكن يفرمل ويصحح فجأة في وشك.',
+    howToApplyInThndr: 'في شارت ثاندر دوس على علامة المؤشرات (Indicators)، واكتب "Relative Strength Index" واختاره، وارجع دوس على المؤشرات تاني واكتب "MACD" واختاره؛ هيظهروا الاتنين تحت بعض أسفل الشموع في ثاندر زي ما هما معروضين في شارت المعمل تماماً!',
+    explanationBaladi: 'الزخم وقوة الدوسة بيتقاسوا بمؤشرين متكاملين مع بعض على الشارت: مؤشر RSI بيقيس عزم وحماسة المشترين؛ لما يكون بين 45 و 60 نقطة، دي "منطقة الانطلاق الذهبية" يعني السهم خفيف ومش متضخم. ومؤشر MACD بيأكد لك إن الموجة بدأت فعلاً لما خط الماكد يقطع خط الإشارة لفوق وأعمدة الهيستوجرام تقلب أخضر فوق خط الصفر. الاتنين مع بعض بيدوك إشارة دخول حديدية!',
     whatToLookFor: 'مؤشر RSI يرتد من فوق خط 40-50 ويتجه للأعلى، وأعمدة MACD تقلب من اللون الأحمر إلى الأخضر فوق خط الصفر.'
   },
   {
@@ -67,7 +109,21 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
     mirrorName: 'مراية تانك بنزين العربية',
     analogyTitle: 'العربية مهما كانت فخمة وشيك، لو التانك فاضي مش هتتحرك شبر!',
     thndrPrimaryIndicator: 'Volume (مؤشر حجم التداول الكلاسيكي)',
-    thndrSecondaryIndicator: 'Liquidity - [Tamer Zaky] / Volume Profile Visible Range',
+    thndrSecondaryIndicator: 'Liquidity - [Tamer Zaky] / Money Flow Index',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'Volume',
+        nameAr: 'مؤشر حجم التداول الكلاسيكي',
+        role: 'تانك بنزين السهم: الأعمدة الخضراء الطويلة تدل على تجميع ومحافظ كبيرة تشتري، والأعمدة الحمراء القصيرة تؤكد هدوء البيع.',
+        badge: 'تلقائي في ثاندر'
+      },
+      {
+        nameEn: 'Liquidity - [Tamer Zaky]',
+        nameAr: 'سكربت السيولة لتامر زكي',
+        role: 'كشف مستويات تدفق السيولة المؤسسية ونقاط الانفجار الشرائي.',
+        badge: 'سكربت ثاندر'
+      }
+    ],
     isAvailableOnThndr: true,
     howToApplyInThndr: 'مؤشر "Volume" نازل تلقائياً في ثاندر تحت الشارت (الأعمدة الخضراء والحمراء). وتقدر تضيف "Liquidity - [Tamer Zaky]" لمعرفة كتل السيولة أو "Money Flow Index".',
     explanationBaladi: 'الفوليوم هو دم السهم! بنبص على الأعمدة: لما السهم يطلع بأعمدة خضراء طويلة، دي فلوس حيتان ومحافظ كبيرة بتشتري (تجميع). ولما السهم يريح لتحت بأعمدة حمراء صغيرة وقصيرة، اعرف إن مفيش حد من الحيتان بيبيع، وإن ده مجرد هدوء طبيعي وفرصة لشراء الديب.',
@@ -80,6 +136,20 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
     analogyTitle: 'عمارة الأدوار: أنت في الدور الكام؟ والسقف اللي فوقك على بعد قد إيه؟',
     thndrPrimaryIndicator: 'Average True Range (ATR)',
     thndrSecondaryIndicator: 'ATR Fibonacci Trend / AI Support & Resistance - [Tamer Zaky]',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'Average True Range (ATR)',
+        nameAr: 'متوسط المدى الحقيقي (ATR)',
+        role: 'حساب متوسط التذبذب اليومي بالجنيهات لتحديد مسافة وقف الخسارة المناسبة دون ضربها عشوائياً.',
+        badge: 'مؤشر قياسي'
+      },
+      {
+        nameEn: 'AI Support & Resistance - [Tamer Zaky]',
+        nameAr: 'سكربت الدعوم والمقاومات الذكية',
+        role: 'رسم أرضيات الأدوار (الدعوم) وأسقف الأدوار (المقاومات) آلياً على شارت ثاندر.',
+        badge: 'سكربت ثاندر'
+      }
+    ],
     isAvailableOnThndr: true,
     howToApplyInThndr: 'في ثاندر ابحث عن "Average True Range" عشان تعرف متوسط التذبذب اليومي للجنيهات، وافتح "AI Support & Resistance - [Tamer Zaky]" عشان يرسم لك أسقف الأدوار (المقاومات) وأرضيات الأدوار (الدعوم) أوتوماتيك.',
     explanationBaladi: 'السوق زي عمارة سكنية: "أرضية الدور" هي الدعم اللي السهم واقف عليه، و"سقف الدور" هو المقاومة اللي فوقك. إحنا بنشتري لما نكون واقفين على أرضية صلبة ويكون بيننا وبين السقف مساحة مكسب واسعة ومفتوحة (Room to Move) مش أقل من 8% إلى 15%، ومخاطرة وقف الخسارة صغيرة (2% إلى 3%).',
@@ -92,6 +162,20 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
     analogyTitle: 'السوستة لما تنضغط جامد في نطاق ضيق.. أول ما تفلت بتطير في الهوا!',
     thndrPrimaryIndicator: 'Bollinger Bands (أشرطة بولنجر باند)',
     thndrSecondaryIndicator: 'Bollinger Bands Width / Keltner Channels',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'Bollinger Bands',
+        nameAr: 'أشرطة بولنجر باند',
+        role: 'كشف مرحلة انضغاط السعر بين خطين ضيقين استعداداً لانفجار سعري قوي.',
+        badge: 'مؤشر قياسي'
+      },
+      {
+        nameEn: 'Bollinger Bands Width',
+        nameAr: 'مؤشر عرض نطاق بولنجر',
+        role: 'قياس نسبة انضغاط السوستة؛ كلما قل الرقم دل على انفجار وشيك.',
+        badge: 'مؤشر تأكيدي'
+      }
+    ],
     isAvailableOnThndr: true,
     howToApplyInThndr: 'في ثاندر ابحث عن "Bollinger Bands" وضيفه؛ هيرسم خطين محاوطين الشموع (الخط العلوي والخط السفلي ومتوسط الحركة في النص).',
     explanationBaladi: 'لما تلاقي خطوط البولنجر بتقرب من بعضها والشموع ماشية في ممر ضيق وهادي، اعرف إن السهم في حالة "سوستة مضغوطة". الحيتان بتلم بهدوء في الصندوق ده، وبمجرد ما شمعة تكسر الخط العلوي بفوليوم، السهم بينطلق برالي صاعد سريع.',
@@ -102,8 +186,28 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
     layerName: 'تعدد الأطر الزمنية (Multi-Timeframe)',
     mirrorName: 'نظرة الطيارة الهليكوبتر',
     analogyTitle: 'إياك تبص في شبر مية على فريم الدقيقة وتنسى الفريم الكبير!',
-    thndrPrimaryIndicator: 'ميزة الفريمات الزمنية المدمجة في ثاندر (1D / 1W / 1H)',
+    thndrPrimaryIndicator: 'أزرار الفريمات الزمنية في ثاندر (1D / 1W / 1H)',
     thndrSecondaryIndicator: 'Moving Average Multiple',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'الفريم الأسبوعي (1W)',
+        nameAr: 'شارت الأسبوع في ثاندر',
+        role: 'رؤية الصورة الكلية من الطيارة الهليكوبتر ومعرفة هل الاتجاه العام صاعد أم هابط.',
+        badge: 'الفريم الأكبر'
+      },
+      {
+        nameEn: 'الفريم اليومي (1D)',
+        nameAr: 'شارت اليوم في ثاندر',
+        role: 'تحديد خطة التداول وموقع أرضية الدور وسقف المقاومة.',
+        badge: 'فريم الخطة'
+      },
+      {
+        nameEn: 'فريم الساعة (1H)',
+        nameAr: 'شارت الساعة في ثاندر',
+        role: 'اقتناص نقطة الدخول اللحظية الدقيقة عند بداية الارتداد.',
+        badge: 'فريم التنفيذ'
+      }
+    ],
     isAvailableOnThndr: true,
     howToApplyInThndr: 'أعلى شارت ثاندر هتلاقي أزرار الفريمات (1D لليومي، 1W للأسبوعي، 1H للساعة). دوس على 1W الأول عشان تشوف السهم من الطيارة الهليكوبتر، وبعدين ارجع لـ 1D لتحديد الخطة، و 1H لاقتناص نقطة الدخول اللحظية.',
     explanationBaladi: 'مينفعش تشتري عشان شفت شمعة خضراء على فريم 5 دقائق والسهم على الفريم الأسبوعي في مسار هابط وبيغرق! بنطابق الفريمات: الأسبوعي صاعد ومستقر، واليومي مريح عند أرضية دعم، وفريم الساعة بدأ يلف ويرتد لفوق.. كده إنت داخل في اتجاه التيار مش عايم عكسه.',
@@ -116,6 +220,20 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
     analogyTitle: 'مصيدة سحب السيولة: الحوت نزل ضرب وقف الأفراد الصبح وطلع بطلقة!',
     thndrPrimaryIndicator: 'Order Blocks - [Tamer Zaky]',
     thndrSecondaryIndicator: 'AI Support & Resistance - [Tamer Zaky] / Pivot Points Standard',
+    thndrIndicatorsList: [
+      {
+        nameEn: 'Order Blocks - [Tamer Zaky]',
+        nameAr: 'سكربت كتل الأوامر المؤسسية',
+        role: 'رسم مستطيلات طلب الحيتان (المستطيل الأخضر بالأسفل) ومناطق تصريف العرض (المستطيل الأحمر بالأعلى).',
+        badge: 'سكربت ثاندر الرئيسي'
+      },
+      {
+        nameEn: 'Pivot Points Standard',
+        nameAr: 'النقاط المحورية القياسية',
+        role: 'حساب نقاط الارتكاز الرقمية اليومية ومستويات الدعم والمقاومة الحسابية الصريحة.',
+        badge: 'مؤشر قياسي'
+      }
+    ],
     isAvailableOnThndr: true,
     howToApplyInThndr: 'في ثاندر اكتب في البحث "Order Blocks - [Tamer Zaky]" هيرسم لك مستطيلات ملونة على الشارت بتمثل كتل أوامر الحيتان، وضيف "Pivot Points Standard" لمعرفة النقاط المحورية الدقيقة.',
     explanationBaladi: 'الطبقة الفيصلية يا غالي: الحيتان مش بتشتري عند خطوط الدعم العادية اللي مرسومة في الكتب؛ الحيتان بتنزل تكسر الدعم العادي عشان تضرب وقف خسارة الأفراد وتلم الأسهم منهم برخيص، وبعدين ترتد من كتلة طلب مؤسسية (Demand Order Block). لما تلاقي السهم كسر قاع وهمي وارتد بشمعة دوجي أو مطرقة، ده تأكيد إن الحوت دخل ورافع السهم.',

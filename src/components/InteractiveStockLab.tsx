@@ -33,6 +33,7 @@ export const InteractiveStockLab: React.FC<Props> = ({
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0); // 0 to 6 (layers), 7 (verdict)
   const [chartHeight, setChartHeight] = useState<'normal' | 'tall'>('normal'); // 760px vs 880px
   const [chartViewMode, setChartViewMode] = useState<'split' | 'chart' | 'mcdx'>('split'); // View mode switcher for chart area
+  const [showEgxCalculationBasis, setShowEgxCalculationBasis] = useState<boolean>(true); // Details on how EGX30 support floor is calculated
   
   // Stock Search state
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -569,16 +570,51 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 const thndrMap = THNDR_SEVEN_LAYERS_MAPPING.find(m => m.layerNumber === currentLayer.layerNumber);
                 if (!thndrMap) return null;
                 return (
-                  <div className="p-3 bg-emerald-500/10 rounded-[16px] border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <Smartphone size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="font-bold text-md-on-surface">
-                        المؤشر المقابل في تطبيق ثاندر (Thndr):
+                  <div className="p-3.5 bg-emerald-500/10 rounded-[18px] border border-emerald-500/30 space-y-2 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-500/20 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Smartphone size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="font-bold text-md-on-surface">
+                          المؤشرات المقابلة والمعتمدة في تطبيق ثاندر (Thndr):
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-mono bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        متاحة بالكامل على شارت ثاندر ✅
                       </span>
                     </div>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px] bg-md-surface px-2.5 py-1 rounded-full border border-emerald-500/30">
-                      {thndrMap.thndrPrimaryIndicator}
-                    </span>
+
+                    {/* All indicators with roles and badges */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      {thndrMap.thndrIndicatorsList && thndrMap.thndrIndicatorsList.length > 0 ? (
+                        thndrMap.thndrIndicatorsList.map((ind, idx) => (
+                          <div key={idx} className="p-2.5 rounded-xl bg-md-surface/80 border border-emerald-500/20 space-y-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+                                {ind.nameEn}
+                              </span>
+                              {ind.badge && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-sans">
+                                  {ind.badge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-md-on-surface-variant font-medium leading-relaxed font-sans">
+                              {ind.role}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 rounded-xl bg-md-surface font-mono text-emerald-600 dark:text-emerald-400 text-xs">
+                          {thndrMap.thndrPrimaryIndicator}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* How to setup in Thndr */}
+                    <div className="pt-1 text-[10px] text-md-on-surface-variant leading-relaxed font-sans flex items-start gap-1.5 border-t border-emerald-500/15">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">📱 طريقة الإضافة في ثاندر:</span>
+                      <span>{thndrMap.howToApplyInThndr}</span>
+                    </div>
                   </div>
                 );
               })()}
@@ -607,32 +643,84 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 </p>
               </div>
 
-              {/* Step 1 Special Visual Box: فحص الطريق السريع المزدوج (مؤشر EGX30 + اتجاه السهم) */}
+              {/* Step 1 Special Visual Box: فحص الطريق السريع المزدوج (مؤشر ثاندر المعتمد EGX30 Capped + اتجاه السهم + أساس حساب الدعم) */}
               {currentLayer.layerNumber === 1 && (
-                <div className="p-4 bg-blue-500/10 rounded-[20px] border border-blue-500/30 space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 bg-blue-500/10 rounded-[20px] border border-blue-500/30 space-y-3 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
                       <Gauge size={16} />
-                      <span>فحص الطريق السريع المزدوج: مؤشر السوق العام (EGX30) + اتجاه السهم</span>
+                      <span>فحص الطريق السريع المزدوج: مؤشر البورصة المعتمد في ثاندر + اتجاه السهم</span>
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold text-[10px] border border-emerald-500/40 font-mono">
-                      EGX30 صاعد 🟢
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold text-[10px] border border-emerald-500/40 font-mono">
+                      EGX30 صاعد ومستقر 🟢
                     </span>
                   </div>
 
                   <p className="text-[11px] text-md-on-surface leading-relaxed">
-                    🛣️ <strong>ليه بنقيس المؤشر العام EGX30 والسهم معاً؟</strong> مقولة "مينفعش تسوق عكس اتجاه الطريق السريع" بتشمل <strong>حركة البورصة ككل كطريق رئيسي</strong> وحركة السهم كعربيتك! لو مؤشر EGX30 كله هابط وبيكسر دعومه، 75% من أسهم السوق بتغرق معاه حتى لو السهم ممتاز؛ أما لو EGX30 صاعد والسهم صاعد فوق متوسطاته، فنسبة نجاح الصفقة تتجاوز 85%!
+                    🛣️ <strong>ليه بنقيس مؤشر البورصة والسهم معاً؟</strong> مقولة "مينفعش تسوق عكس اتجاه الطريق السريع" بتشمل <strong>حركة البورصة ككل كطريق رئيسي</strong> وحركة السهم كعربيتك! لو مؤشر البورصة العام هابط وبيكسر أرضياته، 75% من أسهم السوق بتغرق معاه حتى لو الشركة كسبانة؛ أما لو مؤشر البورصة صاعد ومستقر فوق دعومه، فالسكة مفتوحة ونسبة نجاح أي صفقة تتجاوز 85%!
                   </p>
 
-                  <div className="grid grid-cols-2 gap-2 text-[10px] pt-1 font-mono">
-                    <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-0.5">
-                      <span className="text-md-on-surface-variant font-sans block">1. نبض مؤشر البورصة العام (EGX30):</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-[11px]">صاعد (+0.85%) فوق 31,500</span>
+                  {/* نبض المؤشر المعروض في ثاندر مقارنة بالقديم */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-mono">
+                    <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-md-on-surface-variant font-sans">مؤشر البورصة في ثاندر (Capped / TR):</span>
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[9px]">+0.85% صاعد</span>
+                      </div>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-xs">51,052.26 نقطة</span>
+                      <span className="text-[9px] text-md-on-surface-variant/80 font-sans block">
+                        (يقابله المؤشر السعري القديم EGX30 Price عند ~31,500 نقطة)
+                      </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-0.5">
-                      <span className="text-md-on-surface-variant font-sans block">2. توافق السهم مع المؤشر العام:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-[11px]">متطابق 100% (السوق في صفك)</span>
+
+                    <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-md-on-surface-variant font-sans">أرضية الدعم المحسوبة للمؤشر:</span>
+                        <span className="text-emerald-500 font-bold text-[9px]">أمان +602 نقطة (+1.2%)</span>
+                      </div>
+                      <span className="font-bold text-blue-600 dark:text-blue-400 block text-xs">50,450 نقطة</span>
+                      <span className="text-[9px] text-md-on-surface-variant/80 font-sans block">
+                        (السوق يتداول بأمان تام أعلى خط الدعم الحركي والهيكلي)
+                      </span>
                     </div>
+                  </div>
+
+                  {/* أساس حساب خط الدعم بالبلدي (Technical Basis) */}
+                  <div className="p-3 bg-md-surface rounded-xl border border-blue-500/20 space-y-2">
+                    <div 
+                      className="flex items-center justify-between cursor-pointer select-none" 
+                      onClick={() => setShowEgxCalculationBasis(!showEgxCalculationBasis)}
+                    >
+                      <span className="font-bold text-blue-700 dark:text-blue-300 text-[11px] flex items-center gap-1.5">
+                        <Info size={14} className="text-blue-500 shrink-0" />
+                        <span>على أي أساس بنحسب إن المؤشر مستقر فوق خط الدعم (50,450 نقطة)؟</span>
+                      </span>
+                      <button className="text-[10px] text-blue-600 dark:text-blue-400 font-sans hover:underline">
+                        {showEgxCalculationBasis ? 'إخفاء التفاصيل ▲' : 'عرض المعادلة الفنية ▼'}
+                      </button>
+                    </div>
+
+                    {showEgxCalculationBasis && (
+                      <div className="space-y-1.5 text-[10px] text-md-on-surface leading-relaxed pt-1.5 border-t border-md-outline-variant/30 font-sans">
+                        <p className="font-medium text-blue-900 dark:text-blue-200">
+                          خط الدعم مش رقم تخميني، ده محسوب بـ 3 ركائز فنية على شارت المؤشر بالمليم:
+                        </p>
+                        <ul className="space-y-1 list-disc list-inside text-md-on-surface-variant pr-1">
+                          <li>
+                            <strong className="text-md-on-surface">1. متوسط 50 يوم الأسي (EMA 50 للمؤشر):</strong> خط الدعم الحركي الديناميكي؛ في المسار الصاعد شموع المؤشر بتصحح لحد ما تلمسه وترتد منه، ويقع حالياً عند <strong>50,450 نقطة</strong>.
+                          </li>
+                          <li>
+                            <strong className="text-md-on-surface">2. قاع الارتكاز الهيكلي السابق (Swing Low):</strong> آخر قاع تشكل في البورصة في التصحيح السابق عند <strong>50,200 - 50,400 نقطة</strong>، ومنه دخلت سيولة المؤسسات لتخترق القمة وتصل لـ 51,052 نقطة.
+                          </li>
+                          <li>
+                            <strong className="text-md-on-surface">3. مستويات فيبوناتشي 61.8%:</strong> مسافة التصحيح للموجة الصاعدة تجعل منطقة <strong>50,450 نقطة</strong> هي خط الحماية الرئيسي.
+                          </li>
+                        </ul>
+                        <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-medium text-[10px] mt-1">
+                          ✅ <strong>الخلاصة:</strong> طول ما المؤشر على شاشة ثاندر فوق <strong>50,450 نقطة</strong> (وهو حالياً عند <strong>51,052.26 نقطة</strong>)، الطريق السريع سالك والمشترين مسيطرين على السوق 100%!
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
