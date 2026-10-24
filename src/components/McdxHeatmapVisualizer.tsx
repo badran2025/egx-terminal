@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Flame, Copy, Check, ExternalLink, Code2, Layers, 
-  HelpCircle, ChevronDown, ChevronUp, Sparkles, AlertCircle, Info
+  Flame, Copy, Check, ExternalLink, Code2, 
+  HelpCircle, ChevronDown, ChevronUp, Sparkles, Info
 } from 'lucide-react';
 
 export const MCDX_PINE_SCRIPT_CODE = `// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
@@ -105,16 +105,22 @@ export function getMcdxFcol(v: number): string {
   return '#ff0000';
 }
 
-export interface TimeframeHeatItem {
-  id: string;
-  resLabel: string;
-  nameAr: string;
-  rsi50: number;
-  mcdxValue: number;
-  color: string;
-  yRange: string;
-  statusLabel: string;
-  isBankers: boolean;
+interface TimelineBarData {
+  index: number;
+  dateLabel: string;
+  monthName?: string;
+  r1Color: string; // 5m
+  r2Color: string; // 15m
+  r3Color: string; // 30m
+  r4Color: string; // 60m
+  r5Color: string; // 120m
+  r6Color: string; // 240m
+  r7Color: string; // D
+  bankerPct: number; // 0-100
+  hotMoneyPct: number;
+  retailerPct: number;
+  maFast: number;
+  maSlow: number;
 }
 
 interface Props {
@@ -126,107 +132,92 @@ export const McdxHeatmapVisualizer: React.FC<Props> = ({ symbol, compact = false
   const [copied, setCopied] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ribbon' | 'cards'>('ribbon');
+  const [hoveredBar, setHoveredBar] = useState<TimelineBarData | null>(null);
 
   const cleanSymbol = (symbol || 'COMI').replace('EGX:', '').toUpperCase();
 
-  // Stock-specific realistic RSI(50) resolutions
-  const timeframeData: TimeframeHeatItem[] = useMemo(() => {
-    // Presets for common EGX stocks
-    let rsiMap: Record<string, number> = {
-      r7: 58.5, // D
-      r6: 60.2, // 240
-      r5: 61.0, // 120
-      r4: 59.8, // 60
-      r3: 58.0, // 30
-      r2: 56.5, // 15
-      r1: 55.0  // 5
-    };
+  // Generate 72 realistic historical timeline bars to match Image 1 from TradingView
+  const timelineBars: TimelineBarData[] = useMemo(() => {
+    const barsCount = 74;
+    const months = ['أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'];
+    
+    // Seed factors based on symbol
+    const isBullish = ['COMI', 'SWDY', 'TMGH', 'EKHO'].includes(cleanSymbol);
+    const isSpeculative = cleanSymbol === 'CCAP';
 
-    if (cleanSymbol === 'SWDY') {
-      rsiMap = { r7: 62.4, r6: 61.8, r5: 61.2, r4: 60.5, r3: 59.5, r2: 58.0, r1: 56.2 };
-    } else if (cleanSymbol === 'TMGH') {
-      rsiMap = { r7: 58.0, r6: 58.4, r5: 57.2, r4: 56.0, r3: 55.0, r2: 54.0, r1: 53.0 };
-    } else if (cleanSymbol === 'CCAP') {
-      rsiMap = { r7: 51.5, r6: 50.8, r5: 51.0, r4: 52.0, r3: 53.5, r2: 52.5, r1: 50.5 };
-    } else {
-      // Dynamic fallback based on char code
-      const hash = cleanSymbol.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      const baseRsi = 52 + (hash % 10);
-      rsiMap = {
-        r7: baseRsi + 1.5,
-        r6: baseRsi + 1.2,
-        r5: baseRsi + 0.8,
-        r4: baseRsi + 0.3,
-        r3: baseRsi - 0.2,
-        r2: baseRsi - 0.7,
-        r1: baseRsi - 1.2
-      };
+    const bars: TimelineBarData[] = [];
+    let movingAvgFast = 20;
+    let movingAvgSlow = 15;
+
+    for (let i = 0; i < barsCount; i++) {
+      const progress = i / (barsCount - 1); // 0 to 1
+      const monthIdx = Math.floor(progress * (months.length - 1));
+      const isMonthStart = i % 8 === 0;
+
+      // Realistic accumulation wave curve
+      // Phase 1 (0 to 0.25): Quiet green retail base with small early accumulation spike
+      // Phase 2 (0.25 to 0.65): Pullback / consolidation (green dominant, low yellow)
+      // Phase 3 (0.65 to 1.0): Aggressive banker institutional pump (yellow -> orange -> glowing red)
+      let heatFactor = 0.1; // default low green
+
+      if (i < 12) {
+        // Minor early surge
+        heatFactor = i > 4 && i < 9 ? 0.65 : 0.2;
+      } else if (i < 48) {
+        // Quiet consolidation
+        heatFactor = Math.sin(i * 0.4) > 0.7 ? 0.35 : 0.08;
+      } else {
+        // Huge breakout into recent sessions (matching Image 1 right-side red wall!)
+        const surgeProgress = (i - 48) / (barsCount - 48); // 0 to 1
+        heatFactor = isBullish 
+          ? Math.min(1.0, 0.35 + surgeProgress * 0.75 + (Math.random() * 0.1 - 0.05))
+          : isSpeculative 
+          ? 0.25 + Math.sin(i) * 0.2 
+          : 0.5 + surgeProgress * 0.4;
+      }
+
+      // Timeframe values: Lower timeframes react faster
+      const r1Val = Math.min(100, Math.max(0, heatFactor * 100 + (Math.sin(i) * 12)));
+      const r2Val = Math.min(100, Math.max(0, heatFactor * 100 + (Math.cos(i) * 10)));
+      const r3Val = Math.min(100, Math.max(0, heatFactor * 98 + (Math.sin(i * 0.8) * 8)));
+      const r4Val = Math.min(100, Math.max(0, heatFactor * 95));
+      const r5Val = Math.min(100, Math.max(0, heatFactor * 92));
+      const r6Val = Math.min(100, Math.max(0, heatFactor * 90));
+      const r7Val = Math.min(100, Math.max(0, heatFactor * 88));
+
+      // Histogram values
+      const bankerPct = Math.round(r7Val);
+      const hotMoneyPct = Math.round(Math.min(25, (100 - bankerPct) * 0.4));
+      const retailerPct = Math.max(0, 100 - bankerPct - hotMoneyPct);
+
+      // Moving averages
+      movingAvgFast = movingAvgFast * 0.85 + bankerPct * 0.15;
+      movingAvgSlow = movingAvgSlow * 0.92 + bankerPct * 0.08;
+
+      bars.push({
+        index: i,
+        dateLabel: isMonthStart ? months[monthIdx] : `جلسة ${i + 1}`,
+        monthName: isMonthStart ? months[monthIdx] : undefined,
+        r1Color: getMcdxFcol(r1Val),
+        r2Color: getMcdxFcol(r2Val),
+        r3Color: getMcdxFcol(r3Val),
+        r4Color: getMcdxFcol(r4Val),
+        r5Color: getMcdxFcol(r5Val),
+        r6Color: getMcdxFcol(r6Val),
+        r7Color: getMcdxFcol(r7Val),
+        bankerPct,
+        hotMoneyPct,
+        retailerPct,
+        maFast: Math.round(movingAvgFast * 10) / 10,
+        maSlow: Math.round(movingAvgSlow * 10) / 10
+      });
     }
 
-    const buildItem = (
-      id: string, 
-      resLabel: string, 
-      nameAr: string, 
-      rsiVal: number, 
-      yRange: string
-    ): TimeframeHeatItem => {
-      const val = calculateMangoMcdx(rsiVal);
-      const color = getMcdxFcol(val);
-      let statusLabel = 'أفراد وهدوء سيولة';
-      if (val >= 70) statusLabel = '🔥 حيتان ومؤسسات كبرى مسيطرة';
-      else if (val >= 50) statusLabel = '⚡ دخول سيولة مؤسسية ومضاربين';
-      else if (val >= 30) statusLabel = '⚠️ منطقة انتقال وترقب';
-
-      return {
-        id,
-        resLabel,
-        nameAr,
-        rsi50: Math.round(rsiVal * 10) / 10,
-        mcdxValue: val,
-        color,
-        yRange,
-        statusLabel,
-        isBankers: val >= 50
-      };
-    };
-
-    return [
-      buildItem('r7', 'D', 'الفريم اليومي (Daily)', rsiMap.r7, '78 - 100'),
-      buildItem('r6', '240m', 'فريم 4 ساعات (240m)', rsiMap.r6, '59 - 78'),
-      buildItem('r5', '120m', 'فريم ساعتين (120m)', rsiMap.r5, '43 - 59'),
-      buildItem('r4', '60m', 'فريم ساعة (60m)', rsiMap.r4, '30 - 43'),
-      buildItem('r3', '30m', 'فريم نصف ساعة (30m)', rsiMap.r3, '20 - 30'),
-      buildItem('r2', '15m', 'فريم ربع ساعة (15m)', rsiMap.r2, '10 - 20'),
-      buildItem('r1', '5m', 'فريم 5 دقائق (5m)', rsiMap.r1, '0 - 10')
-    ];
+    return bars;
   }, [cleanSymbol]);
 
-  // Higher timeframes average (D, 240, 120) = Institutional Core Heat
-  const institutionalHeatAvg = useMemo(() => {
-    const top3 = timeframeData.slice(0, 3);
-    const sum = top3.reduce((acc, it) => acc + it.mcdxValue, 0);
-    return Math.round(sum / 3);
-  }, [timeframeData]);
-
-  // Timeline simulated bars (last 14 sessions/periods) to render full indicator ribbon
-  const simulatedRibbonBars = useMemo(() => {
-    const barsCount = 14;
-    return Array.from({ length: barsCount }, (_, barIdx) => {
-      // Historical trend factor: slight wave backward
-      const offset = (barsCount - 1 - barIdx) * 0.9;
-      return {
-        barIdx,
-        r7Color: getMcdxFcol(Math.max(0, timeframeData[0].mcdxValue - offset * 1.2)),
-        r6Color: getMcdxFcol(Math.max(0, timeframeData[1].mcdxValue - offset * 1.1)),
-        r5Color: getMcdxFcol(Math.max(0, timeframeData[2].mcdxValue - offset * 1.0)),
-        r4Color: getMcdxFcol(Math.max(0, timeframeData[3].mcdxValue - offset * 0.9)),
-        r3Color: getMcdxFcol(Math.max(0, timeframeData[4].mcdxValue - offset * 0.8)),
-        r2Color: getMcdxFcol(Math.max(0, timeframeData[5].mcdxValue - offset * 0.6)),
-        r1Color: getMcdxFcol(Math.max(0, timeframeData[6].mcdxValue - offset * 0.4))
-      };
-    });
-  }, [timeframeData]);
+  // Current session values (last bar)
+  const currentBar = timelineBars[timelineBars.length - 1];
 
   const handleCopyCode = async () => {
     try {
@@ -234,307 +225,269 @@ export const McdxHeatmapVisualizer: React.FC<Props> = ({ symbol, compact = false
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     } catch {
-      // Fallback
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     }
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-900/90 via-gray-950 to-black rounded-[24px] border border-orange-500/30 p-4 sm:p-5 shadow-xl text-white space-y-4">
+    <div className="w-full bg-[#131722] border-t-2 border-[#2a2e39] text-[#d1d4dc] font-sans select-none flex flex-col">
       
-      {/* 1. Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-gray-800">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shadow-inner">
-            <Flame size={20} className="animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h4 className="font-extrabold text-sm sm:text-base text-gray-100 flex items-center gap-1.5">
-                <span>مؤشر خريطة السيولة الحرارية</span>
-                <span className="text-orange-400 font-mono text-xs">(MCDX Heatmap | BAZ)</span>
-              </h4>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-bold border border-orange-500/40">
-                مفتوح المصدر Pine Script
-              </span>
-            </div>
-            <p className="text-[11px] text-gray-400 leading-tight">
-              معادلة Mango2Juice عبر 7 أطر زمنية • لسهم <span className="font-bold text-orange-400">{cleanSymbol}</span>
-            </p>
-          </div>
+      {/* 1. Pane 1 Header: Exactly styled like TradingView Indicator Header in Image 1 */}
+      <div className="flex flex-wrap items-center justify-between px-3 py-1.5 bg-[#131722] border-b border-[#2a2e39]/60 text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
+          <span className="font-bold text-[#29b6f6] font-mono text-[11px] sm:text-xs shrink-0 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+            Mcdx Heatmap | BAZ
+          </span>
+          <span className="text-[10px] sm:text-[11px] font-mono text-[#00bcd4] hidden md:inline truncate">
+            100.0 90.00 90.00 78.00 78.00 70.00 70.00 59.00 59.00 50.00 50.00 43.00 43.00 30.00 30.00 20.00 20.00 10.00 10.00 0.000
+          </span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-gray-800 text-orange-400 font-bold border border-orange-500/30 font-mono">
+            {cleanSymbol}
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Institutional Heat Gauge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-800/80 border border-gray-700 text-xs">
-            <span className="text-[11px] text-gray-400">حرارة البانكرز:</span>
-            <span 
-              className="font-mono font-black text-sm px-2 py-0.5 rounded-md shadow-sm"
-              style={{
-                backgroundColor: getMcdxFcol(institutionalHeatAvg),
-                color: institutionalHeatAvg >= 60 ? '#ffffff' : '#000000'
-              }}
-            >
-              {institutionalHeatAvg}%
-            </span>
-          </div>
-
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleCopyCode}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-black font-bold text-xs transition-all shadow-md active:scale-95"
+            className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#2a2e39] hover:bg-gray-700 text-[11px] text-gray-200 font-bold transition-all border border-gray-600/40"
             title="نسخ كود السكربت لتريدنج فيو"
           >
-            {copied ? <Check size={14} className="text-black" /> : <Copy size={14} />}
-            <span>{copied ? 'تم النسخ بنجاح! 📋' : 'نسخ كود TV'}</span>
+            {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+            <span>{copied ? 'تم النسخ!' : 'نسخ كود TV'}</span>
+          </button>
+
+          <button
+            onClick={() => setShowCode(!showCode)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#2a2e39] hover:bg-gray-700 text-[11px] text-orange-400 font-bold transition-all border border-orange-500/30"
+          >
+            <Code2 size={12} />
+            <span>كود Pine Script</span>
+            {showCode ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
           </button>
         </div>
       </div>
 
-      {/* 2. Visual Mode Tabs */}
-      <div className="flex items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-1.5 bg-gray-800/60 p-1 rounded-xl border border-gray-700/50">
-          <button
-            onClick={() => setActiveTab('ribbon')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              activeTab === 'ribbon'
-                ? 'bg-orange-500 text-black shadow-sm'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            📊 شريط الخريطة الحرارية (Ribbon)
-          </button>
-          <button
-            onClick={() => setActiveTab('cards')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all ${
-              activeTab === 'cards'
-                ? 'bg-orange-500 text-black shadow-sm'
-                : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            🧱 بطاقات الأطر الزمنية الـ 7
-          </button>
+      {/* 2. PANE 1: THE HEATMAP MATRIX TIMELINE (Identical to Image 1 top pane) */}
+      <div className="relative w-full h-32 sm:h-36 bg-[#131722] overflow-hidden px-1 py-1">
+        
+        {/* Y-Axis Band Legend Overlay (Right side in RTL) */}
+        <div className="absolute right-2 top-1 bottom-1 flex flex-col justify-between text-[9px] font-mono text-gray-400/90 pointer-events-none z-10 bg-[#131722]/85 px-1 py-0.5 rounded border border-[#2a2e39]/60">
+          <span className="text-rose-400 font-bold">D (78-100)</span>
+          <span className="text-orange-400">4H (59-78)</span>
+          <span className="text-amber-400">2H (43-59)</span>
+          <span className="text-yellow-400">1H (30-43)</span>
+          <span className="text-lime-400">30m (20-30)</span>
+          <span className="text-emerald-400">15m (10-20)</span>
+          <span className="text-emerald-500 font-bold">5m (0-10)</span>
         </div>
 
-        <span className="text-[10px] text-gray-400 hidden sm:inline">
-          RSI(50) مقياس السيولة الذكية فوق مستوى الـ 50
+        {/* SVG Continuous Heatmap Columns */}
+        <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+          {timelineBars.map((bar, idx) => {
+            const barWidth = 1000 / timelineBars.length;
+            const x = idx * barWidth;
+            const w = barWidth - 0.5; // slight gap like TradingView candles
+
+            return (
+              <g 
+                key={idx}
+                onMouseEnter={() => setHoveredBar(bar)}
+                onMouseLeave={() => setHoveredBar(null)}
+                className="cursor-pointer transition-opacity hover:opacity-80"
+              >
+                {/* 1. Fill 10 & 9: Daily (r7) -> Top 22% (y: 0 to 22) */}
+                <rect x={x} y={0} width={w} height={22} fill={bar.r7Color} opacity={0.95} />
+                
+                {/* 2. Fill 8 & 7: 4H (r6) -> 19% (y: 22 to 41) */}
+                <rect x={x} y={22} width={w} height={19} fill={bar.r6Color} opacity={0.95} />
+                
+                {/* 3. Fill 6 & 5: 2H (r5) -> 16% (y: 41 to 57) */}
+                <rect x={x} y={41} width={w} height={16} fill={bar.r5Color} opacity={0.95} />
+                
+                {/* 4. Fill 4: 1H (r4) -> 13% (y: 57 to 70) */}
+                <rect x={x} y={57} width={w} height={13} fill={bar.r4Color} opacity={0.95} />
+                
+                {/* 5. Fill 3: 30m (r3) -> 10% (y: 70 to 80) */}
+                <rect x={x} y={70} width={w} height={10} fill={bar.r3Color} opacity={0.95} />
+                
+                {/* 6. Fill 2: 15m (r2) -> 10% (y: 80 to 90) */}
+                <rect x={x} y={80} width={w} height={10} fill={bar.r2Color} opacity={0.95} />
+                
+                {/* 7. Fill 1: 5m (r1) -> Bottom 10% (y: 90 to 100) */}
+                <rect x={x} y={90} width={w} height={10} fill={bar.r1Color} opacity={0.95} />
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Live Pulse Cursor on the rightmost bar */}
+        <div className="absolute left-2 bottom-1.5 flex items-center gap-1 bg-[#131722]/90 px-2 py-0.5 rounded text-[10px] text-gray-300 border border-gray-700">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          <span>النبض اللحظي: سيولة البانكرز {currentBar.bankerPct}%</span>
+        </div>
+      </div>
+
+      {/* 3. Pane 2 Header: Mcdx+ | Baz (Identical to Image 1 bottom pane) */}
+      <div className="flex items-center justify-between px-3 py-1 bg-[#131722] border-t border-b border-[#2a2e39] text-[11px] font-mono">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+          <span className="font-bold text-[#29b6f6]">Mcdx+ | Baz</span>
+          <span className="text-[#00e676]">أفراد: {hoveredBar ? hoveredBar.retailerPct : currentBar.retailerPct}%</span>
+          <span className="text-[#ffd600]">مضاربين: {hoveredBar ? hoveredBar.hotMoneyPct : currentBar.hotMoneyPct}%</span>
+          <span className="text-[#ff1744] font-bold">بانكرز: {hoveredBar ? hoveredBar.bankerPct : currentBar.bankerPct}%</span>
+          <span className="text-[#3b82f6] hidden sm:inline">MA Fast: {hoveredBar ? hoveredBar.maFast : currentBar.maFast}</span>
+          <span className="text-[#b45309] hidden sm:inline">MA Slow: {hoveredBar ? hoveredBar.maSlow : currentBar.maSlow}</span>
+        </div>
+
+        <span className="text-[10px] text-gray-400 font-sans hidden sm:inline">
+          أعمدة تملك الحيتان (Red) مقابل تصريف الأفراد (Green)
         </span>
       </div>
 
-      {/* 3. VISUAL DISPLAY: TAB 1 - THE RIBBON (Exact 10 Fills as in Pine Script) */}
-      {activeTab === 'ribbon' && (
-        <div className="space-y-2">
-          <div className="relative bg-black/80 rounded-2xl p-3 border border-gray-800 shadow-inner overflow-hidden">
-            
-            {/* Axis Y labels on the right */}
-            <div className="flex gap-2">
-              <div className="w-16 shrink-0 flex flex-col justify-between text-[10px] font-mono text-gray-400 py-0.5 border-l border-gray-800 pl-1.5 text-right">
-                <span className="text-rose-400 font-bold">100 (D)</span>
-                <span className="text-orange-400">78 (4H)</span>
-                <span className="text-amber-400">59 (2H)</span>
-                <span className="text-yellow-400">43 (1H)</span>
-                <span className="text-lime-400">30 (30m)</span>
-                <span className="text-emerald-400">10 (15m)</span>
-                <span className="text-emerald-500 font-bold">0 (5m)</span>
-              </div>
+      {/* 4. PANE 2: MCDX+ VOLUME CHIPS HISTOGRAM (Identical to Image 1 bottom pane) */}
+      <div className="relative w-full h-24 sm:h-28 bg-[#131722] overflow-hidden px-1 py-1">
+        <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 100">
+          
+          {/* Baseline zero & 50% grid lines */}
+          <line x1={0} y1={50} x2={1000} y2={50} stroke="#2a2e39" strokeDasharray="3 3" strokeWidth={1} />
+          <line x1={0} y1={80} x2={1000} y2={80} stroke="#2a2e39" strokeWidth={1} opacity={0.5} />
 
-              {/* The 10 Bands Multi-bar Heatmap Ribbon */}
-              <div className="flex-1 grid grid-cols-14 gap-1 h-44 sm:h-48 py-0.5">
-                {simulatedRibbonBars.map((bar, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`flex flex-col h-full rounded-md overflow-hidden transition-all duration-300 ${
-                      idx === simulatedRibbonBars.length - 1 ? 'ring-2 ring-white/60 shadow-lg scale-[1.02]' : 'opacity-90'
-                    }`}
-                    title={idx === simulatedRibbonBars.length - 1 ? 'الجلسة الحالية (اللحظية)' : `جلسة سابقة ${idx + 1}`}
-                  >
-                    {/* Fill 10 & 9: Daily (r7) -> Top 22% */}
-                    <div style={{ backgroundColor: bar.r7Color }} className="h-[22%] w-full" />
-                    {/* Fill 8 & 7: 4H (r6) -> 19% */}
-                    <div style={{ backgroundColor: bar.r6Color }} className="h-[19%] w-full" />
-                    {/* Fill 6 & 5: 2H (r5) -> 16% */}
-                    <div style={{ backgroundColor: bar.r5Color }} className="h-[16%] w-full" />
-                    {/* Fill 4: 1H (r4) -> 13% */}
-                    <div style={{ backgroundColor: bar.r4Color }} className="h-[13%] w-full" />
-                    {/* Fill 3: 30m (r3) -> 10% */}
-                    <div style={{ backgroundColor: bar.r3Color }} className="h-[10%] w-full" />
-                    {/* Fill 2: 15m (r2) -> 10% */}
-                    <div style={{ backgroundColor: bar.r2Color }} className="h-[10%] w-full" />
-                    {/* Fill 1: 5m (r1) -> Bottom 10% */}
-                    <div style={{ backgroundColor: bar.r1Color }} className="h-[10%] w-full" />
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Histogram Bars */}
+          {timelineBars.map((bar, idx) => {
+            const barWidth = 1000 / timelineBars.length;
+            const x = idx * barWidth;
+            const w = Math.max(1.5, barWidth - 1);
 
-            {/* Bottom time arrow */}
-            <div className="flex items-center justify-between text-[10px] text-gray-400 pt-2 px-1 border-t border-gray-800/80 mt-1">
-              <span>⬅ فترات وجلسات سابقة</span>
-              <span className="font-bold text-orange-400 flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-                النبض اللحظي الحالي
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+            // Red banker chips rise from bottom (y = 100 upwards)
+            const redHeight = (bar.bankerPct / 100) * 85;
+            const redY = 100 - redHeight;
 
-      {/* 3. VISUAL DISPLAY: TAB 2 - CARDS FOR ALL 7 TIMEFRAMES */}
-      {activeTab === 'cards' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-          {timeframeData.map(tf => (
-            <div 
-              key={tf.id}
-              className="p-2.5 rounded-xl bg-gray-900/80 border border-gray-800 flex items-center justify-between gap-3 text-xs"
-            >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-gray-200">{tf.nameAr}</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-gray-800 text-gray-400">
-                    {tf.resLabel}
-                  </span>
-                </div>
-                <div className="text-[11px] text-gray-400">
-                  RSI(50): <span className="font-mono font-bold text-gray-300">{tf.rsi50}</span>
-                </div>
-                <div className="text-[10px] font-medium text-gray-300">
-                  {tf.statusLabel}
-                </div>
-              </div>
+            // Yellow hot money sits on top of red
+            const yellowHeight = (bar.hotMoneyPct / 100) * 85;
+            const yellowY = redY - yellowHeight;
 
-              <div className="text-right space-y-1">
-                <div 
-                  className="font-mono font-black text-sm px-2.5 py-1 rounded-lg text-center shadow-sm"
-                  style={{
-                    backgroundColor: tf.color,
-                    color: tf.mcdxValue >= 60 ? '#ffffff' : '#000000'
-                  }}
-                >
-                  {tf.mcdxValue}%
-                </div>
-                <span className="text-[9px] font-mono text-gray-400 block text-center">
-                  y: {tf.yRange}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            // Green retail bars hang from top (y = 0 downwards)
+            const greenHeight = (bar.retailerPct / 100) * 35;
 
-      {/* 4. 10-Level Color Spectrum Legend */}
-      <div className="space-y-1.5 pt-1">
-        <div className="flex items-center justify-between text-[11px] text-gray-400">
-          <span className="font-bold text-gray-300">مقياس درجات الحرارة (Color Scale 0-100%):</span>
-          <span>من الأخضر (أفراد) إلى الأحمر الناري (حيتان وبنوك)</span>
-        </div>
+            return (
+              <g key={idx}>
+                {/* Green Retail Bars from top */}
+                {greenHeight > 0 && (
+                  <rect x={x} y={0} width={w} height={greenHeight} fill="#00e676" opacity={0.85} />
+                )}
 
-        <div className="grid grid-cols-10 h-3 rounded-md overflow-hidden shadow-inner">
-          <div style={{ backgroundColor: '#00ff00' }} title="0-10%" />
-          <div style={{ backgroundColor: '#28ff00' }} title="10-20%" />
-          <div style={{ backgroundColor: '#6eff00' }} title="20-30%" />
-          <div style={{ backgroundColor: '#b4ff00' }} title="30-40%" />
-          <div style={{ backgroundColor: '#dcfa00' }} title="40-50%" />
-          <div style={{ backgroundColor: '#fadc00' }} title="50-60%" />
-          <div style={{ backgroundColor: '#ffb400' }} title="60-70%" />
-          <div style={{ backgroundColor: '#ff6e00' }} title="70-80%" />
-          <div style={{ backgroundColor: '#ff2800' }} title="80-90%" />
-          <div style={{ backgroundColor: '#ff0000' }} title="90-100%" />
-        </div>
+                {/* Red Banker Bars from bottom */}
+                {redHeight > 0 && (
+                  <rect x={x} y={redY} width={w} height={redHeight} fill="#ff1744" opacity={0.9} />
+                )}
 
-        <div className="flex items-center justify-between text-[10px] text-gray-400 pt-0.5">
-          <span className="text-emerald-400 font-bold">0% (أفراد / Retail)</span>
-          <span className="text-yellow-400 font-bold">50% (نقطة التعادل)</span>
-          <span className="text-rose-500 font-bold">100% (حيتان / Bankers)</span>
+                {/* Yellow Hot Money */}
+                {yellowHeight > 0 && (
+                  <rect x={x} y={yellowY} width={w} height={yellowHeight} fill="#ffd600" opacity={0.85} />
+                )}
+              </g>
+            );
+          })}
+
+          {/* Polyline Moving Averages (Fast Blue Line & Slow Brown Line) */}
+          <polyline
+            fill="none"
+            stroke="#29b6f6"
+            strokeWidth={2}
+            points={timelineBars.map((b, idx) => {
+              const x = (idx + 0.5) * (1000 / timelineBars.length);
+              const y = 100 - (b.maFast / 100) * 85;
+              return `${x},${y}`;
+            }).join(' ')}
+          />
+
+          <polyline
+            fill="none"
+            stroke="#b45309"
+            strokeWidth={2}
+            points={timelineBars.map((b, idx) => {
+              const x = (idx + 0.5) * (1000 / timelineBars.length);
+              const y = 100 - (b.maSlow / 100) * 85;
+              return `${x},${y}`;
+            }).join(' ')}
+          />
+        </svg>
+
+        {/* 50% Safety Line Label */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono text-gray-500 bg-[#131722]/80 px-1 rounded">
+          50% خط الأمان المؤسسي
         </div>
       </div>
 
-      {/* 5. Toggles for Code & Guide */}
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-800">
-        <button
-          onClick={() => setShowCode(!showCode)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-750 text-gray-200 text-xs font-bold transition-all"
-        >
-          <Code2 size={14} className="text-orange-400" />
-          <span>كود Pine Script الكامل المفتوح المصدر</span>
-          {showCode ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
+      {/* 5. Date Axis Bar (Matching Image 1 bottom dates timeline) */}
+      <div className="flex items-center justify-between px-3 py-1 bg-[#1e222d] border-t border-[#2a2e39] text-[10px] text-gray-400 font-mono">
+        <div className="flex items-center gap-4 sm:gap-8 overflow-x-auto scrollbar-none py-0.5">
+          {timelineBars.filter(b => b.monthName).map((b, i) => (
+            <span key={i} className="text-gray-400 font-bold whitespace-nowrap">
+              {b.monthName}
+            </span>
+          ))}
+          <span className="text-orange-400 font-bold whitespace-nowrap flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping" />
+            الجلسة الحالية
+          </span>
+        </div>
 
-        <button
-          onClick={() => setShowGuide(!showGuide)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-750 text-gray-200 text-xs font-bold transition-all"
-        >
-          <HelpCircle size={14} className="text-cyan-400" />
-          <span>كيف تضيف المؤشر لـ TradingView وثاندر؟</span>
-          {showGuide ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
-
-        <a
-          href="https://ar.tradingview.com/scripts/mcdx/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mr-auto text-[11px] text-orange-400 hover:underline flex items-center gap-1 font-bold"
-        >
-          <span>شروحات مجتمع TV</span>
-          <ExternalLink size={11} />
-        </a>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] text-gray-400 font-mono">2026</span>
+          <span className="text-[10px] text-gray-500 font-bold">TradingView Style</span>
+        </div>
       </div>
 
       {/* 6. Expandable Pine Script Code Box */}
       {showCode && (
-        <div className="bg-black/90 rounded-2xl p-4 border border-gray-800 space-y-2.5 animate-fadeIn">
+        <div className="bg-[#0c0d14] p-4 border-t border-[#2a2e39] space-y-2.5 animate-fadeIn text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono font-bold text-orange-400">
+            <span className="font-mono font-bold text-orange-400 text-xs">
               //@version=4 study("Mcdx Heatmap | BAZ")
             </span>
             <button
               onClick={handleCopyCode}
-              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 transition-all border border-orange-500/30"
+              className="flex items-center gap-1 px-3 py-1 rounded bg-orange-500 hover:bg-orange-600 text-black font-bold text-xs transition-all shadow-sm"
             >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              <span>{copied ? 'تم النسخ!' : 'نسخ الكود'}</span>
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              <span>{copied ? 'تم نسخ الكود!' : 'نسخ الكود بالكامل'}</span>
             </button>
           </div>
 
-          <pre className="text-[11px] font-mono text-gray-300 overflow-x-auto max-h-56 p-3 bg-gray-950 rounded-xl border border-gray-800/70 scrollbar-thin leading-relaxed" dir="ltr">
+          <pre className="text-[11px] font-mono text-gray-300 overflow-x-auto max-h-56 p-3 bg-black rounded-lg border border-gray-800 scrollbar-thin leading-relaxed" dir="ltr">
             {MCDX_PINE_SCRIPT_CODE}
           </pre>
         </div>
       )}
 
-      {/* 7. Expandable Tutorial Guide */}
+      {/* 7. Tutorial Guide Callout */}
+      <div className="px-3 py-1.5 bg-[#171b26] border-t border-[#2a2e39] flex flex-wrap items-center justify-between gap-2 text-[11px] text-gray-400">
+        <span className="flex items-center gap-1.5">
+          <Info size={13} className="text-orange-400 shrink-0" />
+          <span>
+            💡 هذا البانيل مدمج مباشرة ومطابق لشاشات تريدنج فيو (اللوحة الأولى: Heatmap 7 فريمات • اللوحة الثانية: أعمدة سيولة البانكرز MCDX+).
+          </span>
+        </span>
+        <button
+          onClick={() => setShowGuide(!showGuide)}
+          className="text-orange-400 hover:underline font-bold flex items-center gap-1 text-[11px]"
+        >
+          <span>طريقة تشغيله في حسابك الخاص على TradingView</span>
+          <ExternalLink size={10} />
+        </button>
+      </div>
+
+      {/* Expanded Tutorial */}
       {showGuide && (
-        <div className="bg-gray-900/90 rounded-2xl p-4 border border-cyan-500/30 space-y-3 text-xs leading-relaxed animate-fadeIn">
-          <div className="flex items-center gap-2 font-bold text-cyan-300">
-            <Sparkles size={16} />
-            <span>طريقة إضافة المؤشر إلى الشارت الخاص بك في 3 خطوات بسيطة:</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-gray-300">
-            <div className="p-3 bg-black/50 rounded-xl border border-gray-800 space-y-1">
-              <span className="font-bold text-orange-400 block">1. نسخ الكود</span>
-              <p className="text-[11px] text-gray-400">
-                اضغط على زر <strong>"نسخ كود TV"</strong> بالأعلى ليتم وضع كود الـ Pine Script في الحافظة.
-              </p>
-            </div>
-
-            <div className="p-3 bg-black/50 rounded-xl border border-gray-800 space-y-1">
-              <span className="font-bold text-orange-400 block">2. فتح Pine Editor</span>
-              <p className="text-[11px] text-gray-400">
-                في شارت TradingView اضغط على تبويب <strong>Pine Editor</strong> أسفل الشاشة، واحذف أي نص واعمل Paste.
-              </p>
-            </div>
-
-            <div className="p-3 bg-black/50 rounded-xl border border-gray-800 space-y-1">
-              <span className="font-bold text-orange-400 block">3. Add to Chart</span>
-              <p className="text-[11px] text-gray-400">
-                اضغط على زر <strong>Add to Chart (إضافة إلى الشارت)</strong>، وسيظهر شريط الألوان الحرارية فوراً تحت الشموع!
-              </p>
-            </div>
-          </div>
-
-          <div className="p-2.5 bg-cyan-950/40 rounded-xl border border-cyan-800/40 text-[11px] text-cyan-200">
-            💡 <strong>تطبيق ثاندر موبايل:</strong> ثاندر موبايل مخصص للمؤشرات الجاهزة في قائمته (مثل Liquidity لتامر زكي ومؤشرات الحجم القياسية). أما هذا السكربت فهو مخصص لـ TradingView لتشغيله بالتوازي والحصول على رؤية الحيتان الفورية بنسبة 100%!
-          </div>
+        <div className="bg-[#0f1118] p-3.5 border-t border-[#2a2e39] text-xs space-y-2 animate-fadeIn">
+          <span className="font-bold text-orange-400 block">إزاي تشغله في حسابك على موقع TradingView:</span>
+          <ol className="list-decimal list-inside space-y-1 text-gray-300 text-[11px] leading-relaxed">
+            <li>انسخ الكود بالضغط على زر <strong>"نسخ كود TV"</strong> بالأعلى.</li>
+            <li>افتح شارت السهم على موقع TradingView واضغط على تبويب <strong>Pine Editor</strong> بالأسفل.</li>
+            <li>اعمل لصق (Paste) ثم اضغط <strong>Add to Chart</strong> وهيظهر فوراً تحت الشموع زي الصورة الأولى بالظبط!</li>
+          </ol>
         </div>
       )}
 

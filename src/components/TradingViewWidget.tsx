@@ -6,6 +6,7 @@ interface Props {
   interval?: string;
   height?: number | string;
   studies?: string[];
+  borderless?: boolean;
 }
 
 export const TradingViewWidget: React.FC<Props> = ({
@@ -17,7 +18,8 @@ export const TradingViewWidget: React.FC<Props> = ({
     'RSI@tv-basicstudies',
     'MASimple@tv-basicstudies',
     'MAExp@tv-basicstudies'
-  ]
+  ],
+  borderless = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -72,8 +74,12 @@ export const TradingViewWidget: React.FC<Props> = ({
 
   return (
     <div 
-      className="relative w-full h-full rounded-2xl overflow-hidden border border-egx-border bg-egx-card shadow-2xl"
-      style={{ height: styleHeight, minHeight: styleHeight === '100%' ? '100%' : '650px' }}
+      className={`relative w-full h-full overflow-hidden ${
+        borderless 
+          ? 'bg-[#131722]' 
+          : 'rounded-2xl border border-egx-border bg-egx-card shadow-2xl'
+      }`}
+      style={{ height: styleHeight, minHeight: styleHeight === '100%' ? '100%' : '440px' }}
     >
       <div 
         ref={containerRef} 

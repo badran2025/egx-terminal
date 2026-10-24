@@ -607,6 +607,36 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 </p>
               </div>
 
+              {/* Step 1 Special Visual Box: فحص الطريق السريع المزدوج (مؤشر EGX30 + اتجاه السهم) */}
+              {currentLayer.layerNumber === 1 && (
+                <div className="p-4 bg-blue-500/10 rounded-[20px] border border-blue-500/30 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
+                      <Gauge size={16} />
+                      <span>فحص الطريق السريع المزدوج: مؤشر السوق العام (EGX30) + اتجاه السهم</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold text-[10px] border border-emerald-500/40 font-mono">
+                      EGX30 صاعد 🟢
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-md-on-surface leading-relaxed">
+                    🛣️ <strong>ليه بنقيس المؤشر العام EGX30 والسهم معاً؟</strong> مقولة "مينفعش تسوق عكس اتجاه الطريق السريع" بتشمل <strong>حركة البورصة ككل كطريق رئيسي</strong> وحركة السهم كعربيتك! لو مؤشر EGX30 كله هابط وبيكسر دعومه، 75% من أسهم السوق بتغرق معاه حتى لو السهم ممتاز؛ أما لو EGX30 صاعد والسهم صاعد فوق متوسطاته، فنسبة نجاح الصفقة تتجاوز 85%!
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 text-[10px] pt-1 font-mono">
+                    <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-0.5">
+                      <span className="text-md-on-surface-variant font-sans block">1. نبض مؤشر البورصة العام (EGX30):</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-[11px]">صاعد (+0.85%) فوق 31,500</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-0.5">
+                      <span className="text-md-on-surface-variant font-sans block">2. توافق السهم مع المؤشر العام:</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-[11px]">متطابق 100% (السوق في صفك)</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Step 3 Special Visual Box: فك شفرة الفوليوم و MCDX Plus والفرق بينهم */}
               {currentLayer.layerNumber === 3 && (
                 <div className="space-y-4">
@@ -774,6 +804,26 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 </p>
               </div>
 
+              {/* MARKET REGIME CONFLUENCE CHECK CARD (فحص حالة السوق العام ومؤشر EGX30) */}
+              <div className="p-3.5 bg-gradient-to-r from-blue-500/15 via-blue-500/10 to-emerald-500/10 rounded-[20px] border border-blue-500/30 flex items-center justify-between gap-3 text-xs shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-sm shrink-0">
+                    🏛️
+                  </div>
+                  <div>
+                    <span className="font-bold text-blue-900 dark:text-blue-200 block text-xs">
+                      نقطة التحقق الذهبية: توافق مؤشر البورصة العام (EGX30)
+                    </span>
+                    <span className="text-[11px] text-md-on-surface-variant">
+                      مؤشر EGX30 في مسار صاعد ويدعم الصفقة؛ لا يوجد أي تعارض بين اتجاه السهم واتجاه السوق العام.
+                    </span>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-bold text-xs shrink-0 font-mono border border-emerald-500/40">
+                  السوق في صفك ✅
+                </span>
+              </div>
+
               {/* Action Decision Pill */}
               <div className="bg-emerald-500/15 border border-emerald-500/40 rounded-[20px] p-4 text-center space-y-1">
                 <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 block">
@@ -925,19 +975,22 @@ export const InteractiveStockLab: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* VIEW MODE 1: SPLIT (Both TradingView and MCDX Heatmap stacked) */}
+          {/* VIEW MODE 1: SPLIT (Single Seamless TradingView Terminal Window: Candlesticks + MCDX Heatmap + MCDX+ Chips Panes) */}
           {chartViewMode === 'split' && (
-            <div className="space-y-3 flex-1 flex flex-col">
-              <div className="w-full rounded-[24px] overflow-hidden border border-md-outline-variant/60 shadow-md-2 bg-md-surface relative h-[460px] shrink-0">
+            <div className="w-full rounded-[24px] overflow-hidden border border-[#2a2e39] bg-[#131722] shadow-2xl flex flex-col shrink-0">
+              {/* TOP PANE: TRADINGVIEW CANDLESTICKS */}
+              <div className="w-full h-[430px] relative">
                 <TradingViewWidget
                   symbol={selectedSymbol}
                   theme={theme}
                   height="100%"
                   studies={activeStudies}
+                  borderless={true}
                 />
               </div>
 
-              <div className="shrink-0 transition-all duration-300">
+              {/* DOCKED BOTTOM PANES: MCDX HEATMAP TIMELINE + MCDX+ VOLUME CHIPS (0 GAP ATTACHED AS IN IMAGE 1) */}
+              <div className="w-full border-t border-[#2a2e39]">
                 <McdxHeatmapVisualizer symbol={selectedSymbol} compact={true} />
               </div>
             </div>
