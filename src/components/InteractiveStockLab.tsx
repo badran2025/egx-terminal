@@ -20,15 +20,13 @@ interface Props {
   theme?: 'dark' | 'light';
   initialSymbol?: string;
   onSelectStockForChart?: (symbol: string) => void;
-  onNavigateToRecommendations?: () => void;
 }
 
 export const InteractiveStockLab: React.FC<Props> = ({ 
   stocks = [],
   theme = 'dark',
   initialSymbol = 'COMI',
-  onSelectStockForChart,
-  onNavigateToRecommendations
+  onSelectStockForChart
 }) => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>(initialSymbol || 'COMI');
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0); // 0 to 6 (layers), 7 (verdict)
@@ -241,16 +239,6 @@ export const InteractiveStockLab: React.FC<Props> = ({
             اختر أي سهم أدناه لفحصه فورياً عبر بوابات الأمان المالي والطبقات الفنية لتحديد سعر الدخول ووقف الخسارة وجني الأرباح.
           </p>
         </div>
-
-        {onNavigateToRecommendations && (
-          <button
-            onClick={onNavigateToRecommendations}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-md-surface hover:bg-md-surface-container-high border border-md-outline-variant/60 text-xs font-bold text-md-primary transition-all shadow-xs shrink-0 self-end md:self-auto"
-          >
-            <span>📋 كروت التوصيات (294 سهم)</span>
-            <ArrowLeft size={12} />
-          </button>
-        )}
       </div>
 
       {/* 2. Unified Universal Stock Search & Benchmark Chips Bar (يدعم كافة أسهم البورصة المصرية بالكامل) */}

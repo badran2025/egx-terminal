@@ -364,3 +364,54 @@
 .live-beacon {
   animation: pulse-dot 2s infinite ease-in-out;
 }
+
+/* ============================================================
+   CONTINUOUS MARQUEE NEWS TICKER TAPE
+   Smooth infinite horizontal scrolling for market indicators
+   ============================================================ */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+
+.ticker-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 55s linear infinite;
+}
+
+.ticker-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* ============================================================
+   3D MODERN GLASSMORPHISM & DEPTH ANIMATIONS
+   ============================================================ */
+.glass-panel-3d {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.card-3d-hover {
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.22s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.card-3d-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes glow-ring {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(120, 218, 142, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(120, 218, 142, 0.55);
+  }
+}
+
+.glow-beacon {
+  animation: glow-ring 2.5s infinite ease-in-out;
+}

@@ -6,6 +6,7 @@ import {
 import { StockData, PortfolioPosition } from './types';
 import { fetchEGXStocks, getFallbackStocks } from './services/egxService';
 import { HeaderTicker } from './components/HeaderTicker';
+import { MarketWatchSidebar } from './components/MarketWatchSidebar';
 import { RadarAndRecommendationsView } from './components/RadarAndRecommendationsView';
 import { BadranStrategyView } from './components/BadranStrategyView';
 import { PortfolioView } from './components/PortfolioView';
@@ -21,6 +22,7 @@ export function App() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [labRequestedSymbol, setLabRequestedSymbol] = useState<string | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const handleOpenLabWithStock = (symbol: string) => {
     setLabRequestedSymbol(symbol.toUpperCase());
@@ -268,73 +270,88 @@ export function App() {
         </div>
       </header>
 
-      {/* Main Material 3 Content Area */}
-      <main className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-8 xl:px-12 py-6">
-        {activeTab === 'radar' && (
-          <RadarAndRecommendationsView 
-            stocks={stocks} 
-            portfolio={portfolio}
-            onSelectStock={(sym) => setSelectedSymbol(sym)}
-            onAddToPortfolio={handleAddPosition}
-            theme={theme}
-            isLoading={isLoading}
-            lastUpdated={lastUpdated}
-            onRefresh={loadData}
-            initialLabSymbol={labRequestedSymbol || undefined}
-          />
-        )}
+      {/* Main Material 3 Content Area (Expansive Width + Right Market Watch Sidebar) */}
+      <main className="flex-1 w-full max-w-[2560px] mx-auto px-2 sm:px-4 lg:px-6 py-4 flex flex-row gap-3 sm:gap-4 items-start">
+        {/* 1. Right Side: Market Watch Sidebar (مراقبة السوق - لكامل الـ 294 سهماً مثل ثاندر) */}
+        <MarketWatchSidebar
+          stocks={stocks}
+          selectedSymbol={labRequestedSymbol || selectedSymbol || 'COMI'}
+          onSelectStock={(sym) => {
+            handleOpenLabWithStock(sym);
+          }}
+          portfolio={portfolio}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        />
 
-        {activeTab === 'badran_strategy' && (
-          <BadranStrategyView 
-            onNavigateToLab={(sym) => handleOpenLabWithStock(sym || 'COMI')}
-            lastUpdated={lastUpdated}
-            onRefresh={loadData}
-            isLoading={isLoading}
-          />
-        )}
+        {/* 2. Main Tab View Area */}
+        <div className="flex-1 min-w-0">
+          {activeTab === 'radar' && (
+            <RadarAndRecommendationsView 
+              stocks={stocks} 
+              portfolio={portfolio}
+              onSelectStock={(sym) => setSelectedSymbol(sym)}
+              onAddToPortfolio={handleAddPosition}
+              theme={theme}
+              isLoading={isLoading}
+              lastUpdated={lastUpdated}
+              onRefresh={loadData}
+              initialLabSymbol={labRequestedSymbol || undefined}
+            />
+          )}
 
-        {activeTab === 'portfolio' && (
-          <PortfolioView 
-            stocks={stocks}
-            portfolio={portfolio}
-            onAddPosition={handleAddPosition}
-            onUpdatePosition={handleUpdatePosition}
-            onDeletePosition={handleDeletePosition}
-            onSelectStock={(sym) => setSelectedSymbol(sym)}
-            onOpenLabWithStock={handleOpenLabWithStock}
-            lastUpdated={lastUpdated}
-            onRefresh={loadData}
-            isLoading={isLoading}
-          />
-        )}
+          {activeTab === 'badran_strategy' && (
+            <BadranStrategyView 
+              onNavigateToLab={(sym) => handleOpenLabWithStock(sym || 'COMI')}
+              lastUpdated={lastUpdated}
+              onRefresh={loadData}
+              isLoading={isLoading}
+            />
+          )}
 
-        {activeTab === 'education' && (
-          <EducationView 
-            lastUpdated={lastUpdated}
-            onRefresh={loadData}
-            isLoading={isLoading}
-            onNavigateToLab={() => setActiveTab('radar')}
-            onNavigateToBadranStrategy={() => setActiveTab('badran_strategy')}
-          />
-        )}
+          {activeTab === 'portfolio' && (
+            <PortfolioView 
+              stocks={stocks}
+              portfolio={portfolio}
+              onAddPosition={handleAddPosition}
+              onUpdatePosition={handleUpdatePosition}
+              onDeletePosition={handleDeletePosition}
+              onSelectStock={(sym) => setSelectedSymbol(sym)}
+              onOpenLabWithStock={handleOpenLabWithStock}
+              lastUpdated={lastUpdated}
+              onRefresh={loadData}
+              isLoading={isLoading}
+            />
+          )}
 
-        {activeTab === 'funds' && (
-          <FundsView 
-            lastUpdated={lastUpdated}
-            onRefresh={loadData}
-            isLoading={isLoading}
-            onAddToPortfolio={handleAddPosition}
-          />
-        )}
+          {activeTab === 'education' && (
+            <EducationView 
+              lastUpdated={lastUpdated}
+              onRefresh={loadData}
+              isLoading={isLoading}
+              onNavigateToLab={() => setActiveTab('radar')}
+              onNavigateToBadranStrategy={() => setActiveTab('badran_strategy')}
+            />
+          )}
 
-        {activeTab === 'news' && (
-          <NewsView 
-            onSelectStock={(sym) => setSelectedSymbol(sym)} 
-            lastUpdated={lastUpdated}
-            onRefresh={loadData}
-            isLoading={isLoading}
-          />
-        )}
+          {activeTab === 'funds' && (
+            <FundsView 
+              lastUpdated={lastUpdated}
+              onRefresh={loadData}
+              isLoading={isLoading}
+              onAddToPortfolio={handleAddPosition}
+            />
+          )}
+
+          {activeTab === 'news' && (
+            <NewsView 
+              onSelectStock={(sym) => setSelectedSymbol(sym)} 
+              lastUpdated={lastUpdated}
+              onRefresh={loadData}
+              isLoading={isLoading}
+            />
+          )}
+        </div>
       </main>
 
       {/* Interactive Huge TradingView Stock Detail Modal (MD3 Fullscreen Sheet) */}
