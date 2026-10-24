@@ -1,0 +1,365 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ============================================================
+       MATERIAL DESIGN 3 (M3) LIGHT PALETTE
+       Based on official material-components M3 design specifications
+       ============================================================ */
+    --md-sys-color-primary: #006D35;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #94F7A8;
+    --md-sys-color-on-primary-container: #00210A;
+
+    --md-sys-color-secondary: #4F6353;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #D2E8D4;
+    --md-sys-color-on-secondary-container: #0D1F13;
+
+    --md-sys-color-tertiary: #3B6470;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    --md-sys-color-tertiary-container: #BEEAF8;
+    --md-sys-color-on-tertiary-container: #001F26;
+
+    --md-sys-color-error: #BA1A1A;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-color-error-container: #FFDAD6;
+    --md-sys-color-on-error-container: #410002;
+
+    --md-sys-color-surface: #F7FBF2;
+    --md-sys-color-on-surface: #181D18;
+    --md-sys-color-surface-variant: #DEE5DB;
+    --md-sys-color-on-surface-variant: #424941;
+
+    --md-sys-color-surface-container-lowest: #FFFFFF;
+    --md-sys-color-surface-container-low: #F1F5EB;
+    --md-sys-color-surface-container: #EBEFE6;
+    --md-sys-color-surface-container-high: #E5EAE0;
+    --md-sys-color-surface-container-highest: #DFE4DA;
+
+    --md-sys-color-outline: #727970;
+    --md-sys-color-outline-variant: #C1C9BF;
+    --md-sys-color-inverse-surface: #2D322C;
+    --md-sys-color-inverse-on-surface: #EEF2E9;
+    --md-sys-color-inverse-primary: #78DA8E;
+    --md-sys-color-scrim: #000000;
+
+    /* Legacy mapping for backward compatibility */
+    --bg-main: var(--md-sys-color-surface);
+    --bg-card: var(--md-sys-color-surface-container);
+    --bg-card-light: var(--md-sys-color-surface-container-high);
+    --border-color: var(--md-sys-color-outline-variant);
+    --text-main: var(--md-sys-color-on-surface);
+    --text-muted: var(--md-sys-color-on-surface-variant);
+    --hover-bg: var(--md-sys-color-surface-container-highest);
+  }
+
+  .dark {
+    /* ============================================================
+       MATERIAL DESIGN 3 (M3) DARK PALETTE
+       Based on official material-components M3 design specifications
+       ============================================================ */
+    --md-sys-color-primary: #78DA8E;
+    --md-sys-color-on-primary: #003917;
+    --md-sys-color-primary-container: #005226;
+    --md-sys-color-on-primary-container: #94F7A8;
+
+    --md-sys-color-secondary: #B6CCB8;
+    --md-sys-color-on-secondary: #223527;
+    --md-sys-color-secondary-container: #384B3D;
+    --md-sys-color-on-secondary-container: #D2E8D4;
+
+    --md-sys-color-tertiary: #A2CEDC;
+    --md-sys-color-on-tertiary: #043541;
+    --md-sys-color-tertiary-container: #224C58;
+    --md-sys-color-on-tertiary-container: #BEEAF8;
+
+    --md-sys-color-error: #FFB4AB;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-error-container: #93000A;
+    --md-sys-color-on-error-container: #FFDAD6;
+
+    --md-sys-color-surface: #101411;
+    --md-sys-color-on-surface: #E0E4DE;
+    --md-sys-color-surface-variant: #424941;
+    --md-sys-color-on-surface-variant: #C1C9BF;
+
+    --md-sys-color-surface-container-lowest: #0B0F0C;
+    --md-sys-color-surface-container-low: #181C19;
+    --md-sys-color-surface-container: #1C201D;
+    --md-sys-color-surface-container-high: #272B27;
+    --md-sys-color-surface-container-highest: #313632;
+
+    --md-sys-color-outline: #8B938A;
+    --md-sys-color-outline-variant: #424941;
+    --md-sys-color-inverse-surface: #E0E4DE;
+    --md-sys-color-inverse-on-surface: #181D18;
+    --md-sys-color-inverse-primary: #006D35;
+    --md-sys-color-scrim: #000000;
+
+    /* Legacy mapping for backward compatibility */
+    --bg-main: var(--md-sys-color-surface);
+    --bg-card: var(--md-sys-color-surface-container);
+    --bg-card-light: var(--md-sys-color-surface-container-high);
+    --border-color: var(--md-sys-color-outline-variant);
+    --text-main: var(--md-sys-color-on-surface);
+    --text-muted: var(--md-sys-color-on-surface-variant);
+    --hover-bg: var(--md-sys-color-surface-container-highest);
+  }
+
+  body {
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* ============================================================
+   MATERIAL 3 STATE LAYERS & INTERACTIVE RIPPLE SIMULATION
+   ============================================================ */
+.md-state-layer {
+  position: relative;
+  overflow: hidden;
+}
+
+.md-state-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(0.2, 0, 0, 1);
+  pointer-events: none;
+}
+
+.md-state-layer:hover::before {
+  opacity: 0.08;
+}
+
+.md-state-layer:active::before {
+  opacity: 0.12;
+}
+
+.md-state-layer:focus-visible::before {
+  opacity: 0.12;
+}
+
+/* ============================================================
+   MATERIAL 3 COMPONENT CLASSES (Cards, Buttons, Chips, Textfields)
+   ============================================================ */
+
+/* M3 Elevated Card */
+.md-card-elevated {
+  background-color: var(--md-sys-color-surface-container-low);
+  box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  border-radius: 24px;
+  transition: box-shadow 200ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.md-card-elevated:hover {
+  box-shadow: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  background-color: var(--md-sys-color-surface-container);
+}
+
+/* M3 Outlined Card */
+.md-card-outlined {
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 24px;
+  transition: border-color 200ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+.md-card-outlined:hover {
+  border-color: var(--md-sys-color-outline);
+}
+
+/* M3 Filled Card */
+.md-card-filled {
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: 24px;
+}
+
+/* M3 Filled Button */
+.md-btn-filled {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: 9999px;
+  font-weight: 600;
+  padding: 10px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  transition: box-shadow 150ms cubic-bezier(0.2, 0, 0, 1), transform 100ms;
+}
+.md-btn-filled:hover {
+  box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+}
+.md-btn-filled:active {
+  transform: scale(0.98);
+}
+
+/* M3 Filled Tonal Button */
+.md-btn-tonal {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container) !important;
+  border-radius: 9999px;
+  font-weight: 600;
+  padding: 10px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1), transform 100ms;
+}
+.md-btn-tonal:hover {
+  filter: brightness(0.96);
+}
+.md-btn-tonal:active {
+  transform: scale(0.98);
+}
+
+/* M3 Outlined Button */
+.md-btn-outlined {
+  background-color: transparent;
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 9999px;
+  font-weight: 600;
+  padding: 9px 23px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+.md-btn-outlined:hover {
+  background-color: rgba(0, 109, 53, 0.08);
+}
+
+/* M3 Extended FAB */
+.md-fab {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.30);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: box-shadow 200ms cubic-bezier(0.2, 0, 0, 1), transform 100ms;
+}
+.md-fab:hover {
+  box-shadow: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px 0px rgba(0, 0, 0, 0.30);
+}
+.md-fab:active {
+  transform: scale(0.98);
+}
+
+/* M3 Filter Chip */
+.md-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md-chip-unselected {
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  color: var(--md-sys-color-on-surface-variant);
+}
+.md-chip-unselected:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+}
+
+.md-chip-selected {
+  background-color: var(--md-sys-color-secondary-container);
+  border: 1px solid transparent;
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+/* M3 Outlined Text Field */
+.md-text-field {
+  background-color: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 12px;
+  color: var(--md-sys-color-on-surface);
+  padding: 12px 16px;
+  font-size: 14px;
+  transition: border-color 150ms cubic-bezier(0.2, 0, 0, 1), box-shadow 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+.md-text-field:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 1px var(--md-sys-color-primary);
+}
+
+/* M3 Navigation Active Indicator Pill */
+.md-nav-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.md-nav-indicator-active {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.md-nav-indicator-inactive {
+  background-color: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.md-nav-indicator-inactive:hover {
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Custom Scrollbar for Material Surface */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--md-sys-color-surface-container-lowest);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-outline);
+}
+
+/* Financial number formatting */
+.num-font {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+
+/* Live pulse beacon */
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.live-beacon {
+  animation: pulse-dot 2s infinite ease-in-out;
+}
