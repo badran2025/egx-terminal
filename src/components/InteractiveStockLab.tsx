@@ -32,7 +32,7 @@ export const InteractiveStockLab: React.FC<Props> = ({
   const [selectedSymbol, setSelectedSymbol] = useState<string>(initialSymbol || 'COMI');
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0); // 0 to 6 (layers), 7 (verdict)
   const [chartHeight, setChartHeight] = useState<'normal' | 'tall'>('normal'); // 760px vs 880px
-  const [showMcdxUnderChart, setShowMcdxUnderChart] = useState<boolean>(true); // Toggle MCDX Heatmap under TradingView chart
+  const [chartViewMode, setChartViewMode] = useState<'split' | 'chart' | 'mcdx'>('split'); // View mode switcher for chart area
   
   // Stock Search state
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -610,6 +610,23 @@ export const InteractiveStockLab: React.FC<Props> = ({
               {/* Step 3 Special Visual Box: فك شفرة الفوليوم و MCDX Plus والفرق بينهم */}
               {currentLayer.layerNumber === 3 && (
                 <div className="space-y-4">
+                  
+                  {/* Alert banner highlighting that MCDX is integrated */}
+                  <div className="p-3 bg-gradient-to-r from-orange-500/20 via-orange-500/10 to-amber-500/10 border border-orange-500/40 rounded-[18px] text-xs flex items-center justify-between gap-2 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Flame size={16} className="text-orange-500 animate-pulse shrink-0" />
+                      <span className="font-bold text-orange-950 dark:text-orange-200 text-[11px]">
+                        🔥 مؤشر MCDX Heatmap المفتوح المصدر مدمج ومفعل في الشارت الحي (على اليسار) وبالأسفل!
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setChartViewMode('mcdx')}
+                      className="px-2.5 py-1 rounded-full bg-orange-500 hover:bg-orange-600 text-black font-extrabold text-[10px] shrink-0 transition-all shadow-sm"
+                    >
+                      عرضه بالشارت ⚡
+                    </button>
+                  </div>
+
                   {/* Keep Institutional Ratio Simulation Intact */}
                   <div className="p-4 bg-emerald-500/10 rounded-[20px] border border-emerald-500/30 space-y-3 text-xs">
                     <div className="flex items-center justify-between">
@@ -854,56 +871,104 @@ export const InteractiveStockLab: React.FC<Props> = ({
         {/* COLUMN 2 (LEFT SIDE in RTL): شارت TradingView المباشر ومؤشر MCDX Heatmap المتزامن */}
         <div className={`lg:col-span-7 space-y-3 ${containerHeightClass} overflow-y-auto pr-1 pl-1 scrollbar-thin flex flex-col`}>
           
-          {/* Chart Header Bar: Stock Name + MCDX Heatmap Toggle Button */}
-          <div className="flex items-center justify-between gap-2 px-1 shrink-0">
+          {/* Chart Header Bar: Stock Name + 3-Mode View Switcher */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1 shrink-0 bg-md-surface-container-low p-2.5 rounded-[22px] border border-md-outline-variant/50 shadow-sm">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-md-on-surface flex items-center gap-1.5">
                 <span>شارت التداول الحي</span>
                 <span className="text-md-primary font-mono font-black">({selectedSymbol})</span>
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-md-surface-container-high border border-md-outline-variant/40 text-md-on-surface-variant font-mono">
-                TradingView Live
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-md-surface border border-md-outline-variant/40 text-md-on-surface-variant font-mono">
+                TradingView + MCDX
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* 3-View Mode Segmented Control */}
+            <div className="flex items-center gap-1 bg-md-surface p-1 rounded-full border border-md-outline-variant/50 text-xs">
               <button
-                onClick={() => setShowMcdxUnderChart(!showMcdxUnderChart)}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-md-full text-[11px] font-bold transition-all border ${
-                  showMcdxUnderChart
-                    ? 'bg-orange-500/15 border-orange-500/40 text-orange-400 shadow-sm'
-                    : 'bg-md-surface-container border-md-outline-variant/40 text-md-on-surface-variant hover:text-md-on-surface'
+                onClick={() => setChartViewMode('split')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all ${
+                  chartViewMode === 'split'
+                    ? 'bg-orange-500 text-black shadow-sm font-extrabold'
+                    : 'text-md-on-surface-variant hover:text-md-on-surface'
                 }`}
-                title="إظهار أو إخفاء مؤشر MCDX Heatmap أسفل الشارت مباشرة"
+                title="عرض شارت الشموع وخريطة السيولة الحرارية معاً في نفس الشاشة"
               >
-                <Flame size={13} className={showMcdxUnderChart ? 'text-orange-500' : ''} />
-                <span>{showMcdxUnderChart ? 'إخفاء مؤشر MCDX' : '🔥 إظهار مؤشر MCDX Heatmap'}</span>
+                <Zap size={12} />
+                <span>عرض مزدوج (شارت + MCDX)</span>
+              </button>
+
+              <button
+                onClick={() => setChartViewMode('chart')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all ${
+                  chartViewMode === 'chart'
+                    ? 'bg-md-primary text-md-on-primary shadow-sm font-extrabold'
+                    : 'text-md-on-surface-variant hover:text-md-on-surface'
+                }`}
+                title="عرض شارت TradingView فقط بالحجم الكامل"
+              >
+                <span>شارت فقط</span>
+              </button>
+
+              <button
+                onClick={() => setChartViewMode('mcdx')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all ${
+                  chartViewMode === 'mcdx'
+                    ? 'bg-orange-500 text-black shadow-sm font-extrabold'
+                    : 'text-md-on-surface-variant hover:text-md-on-surface'
+                }`}
+                title="عرض مؤشر خريطة سيولة المؤسسات MCDX بالحجم الكامل"
+              >
+                <Flame size={12} />
+                <span>مؤشر MCDX فقط</span>
               </button>
             </div>
           </div>
 
-          <div className="w-full rounded-[28px] overflow-hidden border border-md-outline-variant/60 shadow-md-2 bg-md-surface relative min-h-[520px] flex-1">
-            <TradingViewWidget
-              symbol={selectedSymbol}
-              theme={theme}
-              height="100%"
-              studies={activeStudies}
-            />
-          </div>
+          {/* VIEW MODE 1: SPLIT (Both TradingView and MCDX Heatmap stacked) */}
+          {chartViewMode === 'split' && (
+            <div className="space-y-3 flex-1 flex flex-col">
+              <div className="w-full rounded-[24px] overflow-hidden border border-md-outline-variant/60 shadow-md-2 bg-md-surface relative h-[460px] shrink-0">
+                <TradingViewWidget
+                  symbol={selectedSymbol}
+                  theme={theme}
+                  height="100%"
+                  studies={activeStudies}
+                />
+              </div>
 
-          {/* DOCKED MCDX HEATMAP INDICATOR BENEATH THE CHART */}
-          {showMcdxUnderChart && (
-            <div className="shrink-0 transition-all duration-300">
-              <McdxHeatmapVisualizer symbol={selectedSymbol} compact={true} />
+              <div className="shrink-0 transition-all duration-300">
+                <McdxHeatmapVisualizer symbol={selectedSymbol} compact={true} />
+              </div>
+            </div>
+          )}
+
+          {/* VIEW MODE 2: FULL TRADINGVIEW CHART */}
+          {chartViewMode === 'chart' && (
+            <div className="w-full rounded-[28px] overflow-hidden border border-md-outline-variant/60 shadow-md-2 bg-md-surface relative min-h-[560px] flex-1">
+              <TradingViewWidget
+                symbol={selectedSymbol}
+                theme={theme}
+                height="100%"
+                studies={activeStudies}
+              />
+            </div>
+          )}
+
+          {/* VIEW MODE 3: FULL MCDX HEATMAP */}
+          {chartViewMode === 'mcdx' && (
+            <div className="w-full rounded-[28px] overflow-hidden border border-orange-500/40 shadow-md-2 bg-md-surface relative flex-1">
+              <McdxHeatmapVisualizer symbol={selectedSymbol} compact={false} />
             </div>
           )}
 
           <div className="p-3 bg-md-surface-container-low rounded-[18px] border border-md-outline-variant/40 text-[11px] text-md-on-surface-variant flex items-center justify-between gap-2 shrink-0">
             <span>
-              💡 الشارت تم تكبيره بالكامل وتزويده بمؤشر MCDX Heatmap المفتوح المصدر لترى الشموع وسيولة الحيتان في نفس اللحظة جنباً إلى جنب مع الشرح.
+              💡 يمكنك التبديل بين الشارت المباشر ومؤشر MCDX Heatmap أو عرضهما معاً من الأزرار بالأعلى.
             </span>
-            <span className="font-bold text-md-primary shrink-0">
-              TradingView Live Engine
+            <span className="font-bold text-orange-500 dark:text-orange-400 shrink-0 flex items-center gap-1 font-mono">
+              <Flame size={12} />
+              MCDX Live
             </span>
           </div>
         </div>
