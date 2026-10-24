@@ -12,7 +12,7 @@ import {
   PortfolioStockDiagnosis,
   RecommendationType 
 } from '../services/recommendationEngine';
-import { EGYPTIAN_FUNDS_MAP, formatPrice } from '../services/egxService';
+import { EGYPTIAN_FUNDS_MAP, formatPrice, getEGXSessionDates } from '../services/egxService';
 import { MdCard, MdButton, MdChip, MdBadge, MdTextField } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -43,6 +43,8 @@ export const RecommendationsView: React.FC<Props> = ({
   const [sortBy, setSortBy] = useState<'gain' | 'score' | 'risk_reward' | 'volume'>('score');
   const [expandedRationale, setExpandedRationale] = useState<Record<string, boolean>>({});
   const [addedSuccessSymbol, setAddedSuccessSymbol] = useState<string | null>(null);
+
+  const sessionDates = useMemo(() => getEGXSessionDates(lastUpdated || new Date()), [lastUpdated]);
 
   // Map stocks by symbol for fast lookup
   const stockMap = useMemo(() => {
@@ -194,8 +196,8 @@ export const RecommendationsView: React.FC<Props> = ({
                 <h3 className="text-base sm:text-lg font-bold text-md-on-surface">
                   تشخيص مراكز محفظتك والإجراءات المقترحة للجلسة القادمة
                 </h3>
-                <span className="text-xs text-md-on-surface-variant">
-                  تحليل لحظي يحدد لك أسعار جني الأرباح ونقاط الخروج الصارمة لكل أصل تملكه
+                <span className="text-xs text-md-on-surface-variant font-medium">
+                  تحليل لحظي يحدد لك أسعار جني الأرباح ونقاط الخروج الصارمة • بناءً على إغلاق <strong className="font-mono text-md-primary font-bold">({sessionDates.latestSessionName})</strong> مقارنة بـ <strong className="font-mono text-md-tertiary font-bold">({sessionDates.prevSessionName})</strong>
                 </span>
               </div>
             </div>

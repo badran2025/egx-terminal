@@ -6,7 +6,12 @@ import {
   CheckCircle2, ArrowUpRight, Search, Upload, Pencil
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
-import { EGYPTIAN_MUTUAL_FUNDS, LIVE_GOLD_24K_PRICE, formatPrice } from '../services/egxService';
+import { 
+  EGYPTIAN_MUTUAL_FUNDS, 
+  LIVE_GOLD_24K_PRICE, 
+  formatPrice, 
+  getEGXSessionDates 
+} from '../services/egxService';
 import { EGX_ARABIC_NAMES } from '../services/egxArabicNames';
 import { MdCard, MdButton, MdBadge, MdTextField } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
@@ -60,9 +65,13 @@ export const PortfolioView: React.FC<Props> = ({
     fundMap.set(f.code.toLowerCase(), f);
   });
 
+  // Exact Egyptian Stock Exchange session dates (Trading days Sun-Thu, 10:00 to 14:30)
+  const sessionDates = React.useMemo(() => getEGXSessionDates(lastUpdated || new Date()), [lastUpdated]);
+
   // Portfolio calculations
   let totalCost = 0;
   let totalCurrentValue = 0;
+  let totalPreviousValue = 0;
   let totalDailyChange = 0;
   let totalStocksValue = 0;
   let totalFundsValue = 0;
@@ -105,6 +114,21 @@ export const PortfolioView: React.FC<Props> = ({
     let currentValue = currentPrice * pos.shares;
     let breakEvenPrice = 0;
 
+    // Calculate previous session close price (P_prev)
+    let prevPrice = currentPrice;
+    let changeTodayAbs = 0;
+
+    if (liveStock && typeof liveStock.change === 'number' && !isNaN(liveStock.change) && !isGold && !isFund) {
+      changeTodayAbs = liveStock.change;
+      prevPrice = currentPrice - changeTodayAbs;
+    } else if (changeTodayPct !== 0) {
+      prevPrice = currentPrice / (1 + (changeTodayPct / 100));
+      changeTodayAbs = currentPrice - prevPrice;
+    }
+
+    let prevValue = prevPrice * pos.shares;
+    let dailyPnl = 0;
+
     if (isGold) {
       displayName = "دهب ثاندر (عيار 24 بنقاء 99.99%)";
       grams = pos.grams || pos.shares;
@@ -118,16 +142,26 @@ export const PortfolioView: React.FC<Props> = ({
       currentPrice = goldSellPricePerGram;
       // Net cash value upon liquidation after Thndr's 1% sell fee
       currentValue = Number((grams * goldSellPricePerGram * 0.99).toFixed(2));
+
+      // Previous session gold price
+      const prevGoldPrice = changeTodayPct !== 0 ? goldSellPricePerGram / (1 + (changeTodayPct / 100)) : goldSellPricePerGram;
+      prevPrice = prevGoldPrice;
+      changeTodayAbs = goldSellPricePerGram - prevGoldPrice;
+      prevValue = Number((grams * prevGoldPrice * 0.99).toFixed(2));
+      dailyPnl = currentValue - prevValue;
+
       // Break-even price per gram required to cover both buy (1%) and sell (1%) fees:
       breakEvenPrice = grams > 0 ? Number((cost / (grams * 0.99)).toFixed(2)) : Number((pos.buyPrice * 1.0202).toFixed(2));
+    } else {
+      dailyPnl = currentValue - prevValue;
     }
     
     const pnl = currentValue - cost;
     const pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
-    const dailyPnl = (currentValue * changeTodayPct) / 100;
 
     totalCost += cost;
     totalCurrentValue += currentValue;
+    totalPreviousValue += prevValue;
     totalDailyChange += dailyPnl;
 
     if (isGold) {
@@ -180,6 +214,9 @@ export const PortfolioView: React.FC<Props> = ({
       liveStock,
       liveFund,
       currentPrice,
+      prevPrice,
+      prevValue,
+      changeTodayAbs,
       cost,
       currentValue,
       pnl,
@@ -195,6 +232,7 @@ export const PortfolioView: React.FC<Props> = ({
 
   const totalPnl = totalCurrentValue - totalCost;
   const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+  const totalDailyChangePct = totalPreviousValue > 0 ? (totalDailyChange / totalPreviousValue) * 100 : 0;
   const urgentAlerts = positionsWithData.filter(p => p.alertType === 'stop_loss' || p.alertType === 'take_profit');
 
   const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -449,6 +487,36 @@ export const PortfolioView: React.FC<Props> = ({
         tabTitle="محفظة ثاندر الذكية ومتابعة الأرباح"
       />
 
+      {/* EGX Trading Sessions Dates Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-md-surface-container rounded-[20px] border border-md-outline-variant/60 text-xs shadow-sm">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span className="font-bold text-md-on-surface">جلسات تداول البورصة المصرية المقارن بينها:</span>
+          <span className="font-semibold text-md-on-surface-variant">
+            آخر إغلاق: <strong className="font-mono text-md-primary font-bold">{sessionDates.latestSessionName}</strong>
+          </span>
+          <span className="text-md-outline-variant">•</span>
+          <span className="font-semibold text-md-on-surface-variant">
+            مقارنة بإغلاق الجلسة السابقة: <strong className="font-mono text-md-tertiary font-bold">{sessionDates.prevSessionName}</strong>
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] font-bold">
+          {sessionDates.isWeekend ? (
+            <span className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">
+              ☕ عطلة نهاية الأسبوع (السوق مغلق)
+            </span>
+          ) : sessionDates.isMarketOpen ? (
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              🟢 جلسة التداول مفتوحة لحظياً
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30">
+              🔒 إغلاق رسمي للجلسة
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Portfolio KPI Summary Bar (M3 Elevated Cards - Compact) */}
       {portfolio.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -462,9 +530,9 @@ export const PortfolioView: React.FC<Props> = ({
               {totalCurrentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
             </div>
             <div className="flex items-center gap-2 text-xs text-md-on-surface-variant flex-wrap">
-              <span>أسهم: <strong className="font-mono text-md-on-surface">{totalStocksValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
+              <span>أسهم: <strong className="font-mono text-md-on-surface">{totalStocksValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
               <span>•</span>
-              <span>صناديق: <strong className="font-mono text-md-on-surface">{totalFundsValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</strong></span>
+              <span>صناديق: <strong className="font-mono text-md-on-surface">{totalFundsValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
               {totalGoldValue > 0 && (
                 <>
                   <span>•</span>
@@ -489,14 +557,14 @@ export const PortfolioView: React.FC<Props> = ({
               }`}>
                 {totalPnlPct >= 0 ? '+' : ''}{totalPnlPct.toFixed(2)}%
               </span>
-              <span className="text-md-on-surface-variant">من إجمالي التكلفة</span>
+              <span className="text-md-on-surface-variant text-[11px]">مقارنة بإجمالي تكلفة الشراء ({totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م)</span>
             </div>
           </MdCard>
 
           {/* Daily Change */}
           <MdCard variant="elevated" className="p-4 sm:p-5 relative overflow-hidden">
             <div className="flex items-center justify-between text-md-on-surface-variant text-xs mb-1.5">
-              <span className="font-medium">تغير اليوم (عن إغلاق الأمس)</span>
+              <span className="font-medium">تغير الجلسة (عن الإغلاق السابق)</span>
               <DollarSign size={18} className="text-amber-500" />
             </div>
             <div className={`font-mono text-2xl sm:text-3xl font-extrabold mb-1 ${totalDailyChange >= 0 ? 'text-md-primary' : 'text-md-error'}`}>
@@ -506,9 +574,11 @@ export const PortfolioView: React.FC<Props> = ({
               <span className={`font-mono font-bold px-2 py-0.5 rounded-md-sm ${
                 totalDailyChange >= 0 ? 'bg-md-primary-container text-md-on-primary-container' : 'bg-md-error-container text-md-on-error-container'
               }`}>
-                {totalCurrentValue > 0 ? (totalDailyChange >= 0 ? '+' : '') + ((totalDailyChange / Math.max(1, totalCurrentValue - totalDailyChange)) * 100).toFixed(2) + '%' : '0.00%'}
+                {totalDailyChangePct >= 0 ? '+' : ''}{totalDailyChangePct.toFixed(2)}%
               </span>
-              <span className="text-md-on-surface-variant">جلسة تداول اليوم</span>
+              <span className="text-md-on-surface-variant text-[10px] truncate max-w-[180px]" title={sessionDates.comparisonLabel}>
+                عن إغلاق {sessionDates.prevSessionName.split(' ')[0]}
+              </span>
             </div>
           </MdCard>
 
@@ -626,9 +696,9 @@ export const PortfolioView: React.FC<Props> = ({
                   <th className="p-4 text-right min-w-[120px]">النوع والتصنيف</th>
                   <th className="p-4 text-right min-w-[110px]">الكمية</th>
                   <th className="p-4 text-right min-w-[130px]">متوسط سعر الشراء</th>
-                  <th className="p-4 text-right min-w-[120px]">السعر الحالي</th>
+                  <th className="p-4 text-right min-w-[130px]">السعر الحالي / إغلاق سابق</th>
                   <th className="p-4 text-right min-w-[130px]">القيمة السوقية</th>
-                  <th className="p-4 text-right min-w-[140px]">تغير اليوم (عن الأمس)</th>
+                  <th className="p-4 text-right min-w-[160px]">تغير الجلسة (عن الإغلاق السابق)</th>
                   <th className="p-4 text-right min-w-[140px]">إجمالي الربح التراكمي</th>
                   <th className="p-4 text-right min-w-[110px]">وقف الخسارة</th>
                   <th className="p-4 text-right min-w-[110px]">المستهدف</th>
@@ -714,8 +784,8 @@ export const PortfolioView: React.FC<Props> = ({
                             سعر الجرام لحظياً
                           </div>
                         ) : (
-                          <div className={`font-mono text-[11px] font-semibold ${pos.changeTodayPct >= 0 ? 'text-md-primary' : 'text-md-error'}`}>
-                            {pos.changeTodayPct >= 0 ? '+' : ''}{pos.changeTodayPct.toFixed(2)}% اليوم
+                          <div className="font-mono text-[10px] text-md-on-surface-variant font-medium">
+                            إغلاق سابق: {formatAssetPrice(pos.prevPrice, pos.isFund)} ج.م
                           </div>
                         )}
                       </td>
@@ -738,7 +808,10 @@ export const PortfolioView: React.FC<Props> = ({
                           {pos.dailyPnl >= 0 ? '+' : ''}{pos.dailyPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
                         </div>
                         <div className={`font-mono text-[11px] font-semibold ${pos.changeTodayPct >= 0 ? 'text-md-primary' : 'text-md-error'}`}>
-                          {pos.changeTodayPct >= 0 ? '+' : ''}{pos.changeTodayPct.toFixed(2)}% اليوم
+                          {pos.changeTodayPct >= 0 ? '+' : ''}{pos.changeTodayPct.toFixed(2)}%
+                        </div>
+                        <div className="text-[9px] text-md-on-surface-variant font-sans">
+                          عن إغلاق {sessionDates.prevSessionName.split(' ')[0]}
                         </div>
                       </td>
 

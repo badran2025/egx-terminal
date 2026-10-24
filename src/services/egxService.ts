@@ -27,6 +27,81 @@ export function formatPrice(price: number | undefined | null, isFund?: boolean):
   });
 }
 
+export interface EGXSessionDates {
+  latestSessionName: string;
+  prevSessionName: string;
+  comparisonLabel: string;
+  isMarketOpen: boolean;
+  isWeekend: boolean;
+}
+
+/**
+ * Accurately determines the latest completed Egyptian Stock Exchange (EGX) session date
+ * and the previous reference session date it is compared against.
+ * EGX trading is Sunday-Thursday (10:00 to 14:30 Cairo time). Friday & Saturday are weekends.
+ */
+export function getEGXSessionDates(now: Date = new Date()): EGXSessionDates {
+  const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  
+  function formatArDate(d: Date) {
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
+  const day = now.getDay();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const timeInMinutes = hour * 60 + minute;
+  // EGX market trading hours: 10:00 to 14:30 Cairo time
+  const isAfterClose = timeInMinutes >= 870; // 14:30
+
+  let lastSessionDate = new Date(now);
+  let prevSessionDate = new Date(now);
+
+  if (day === 5) { // Friday (weekend)
+    lastSessionDate.setDate(now.getDate() - 1); // Thursday
+    prevSessionDate.setDate(now.getDate() - 2); // Wednesday
+  } else if (day === 6) { // Saturday (weekend)
+    lastSessionDate.setDate(now.getDate() - 2); // Thursday
+    prevSessionDate.setDate(now.getDate() - 3); // Wednesday
+  } else if (day === 0) { // Sunday (start of trading week)
+    if (isAfterClose) {
+      lastSessionDate = new Date(now);
+      prevSessionDate.setDate(now.getDate() - 3); // Thursday
+    } else {
+      lastSessionDate.setDate(now.getDate() - 3); // Thursday
+      prevSessionDate.setDate(now.getDate() - 4); // Wednesday
+    }
+  } else if (day === 1) { // Monday
+    if (isAfterClose) {
+      lastSessionDate = new Date(now);
+      prevSessionDate.setDate(now.getDate() - 1); // Sunday
+    } else {
+      lastSessionDate.setDate(now.getDate() - 1); // Sunday
+      prevSessionDate.setDate(now.getDate() - 4); // Thursday
+    }
+  } else { // Tuesday, Wednesday, Thursday
+    if (isAfterClose) {
+      lastSessionDate = new Date(now);
+      prevSessionDate.setDate(now.getDate() - 1);
+    } else {
+      lastSessionDate.setDate(now.getDate() - 1);
+      prevSessionDate.setDate(now.getDate() - 2);
+    }
+  }
+
+  const isWeekend = day === 5 || day === 6;
+  const isMarketOpen = !isWeekend && (timeInMinutes >= 600 && timeInMinutes <= 870);
+
+  return {
+    latestSessionName: formatArDate(lastSessionDate),
+    prevSessionName: formatArDate(prevSessionDate),
+    isMarketOpen,
+    isWeekend,
+    comparisonLabel: `مقارنة بين إغلاق ${formatArDate(lastSessionDate)} وإغلاق ${formatArDate(prevSessionDate)}`
+  };
+}
+
 const DEFAULT_COLUMNS = [
   'name',
   'description',
