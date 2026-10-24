@@ -84,9 +84,8 @@ export const FundsView: React.FC<Props> = ({
         assetType: 'fund',
         shares: 100,
         buyPrice: fund.nav || 10,
+        currentPriceManual: fund.nav || 10,
         buyDate: new Date().toISOString().split('T')[0],
-        stopLoss: Number(((fund.nav || 10) * 0.95).toFixed(5)),
-        targetPrice: Number(((fund.nav || 10) * 1.10).toFixed(5)),
         notes: `${fund.name} • تصنيف ${fund.category}`
       });
     }

@@ -50,6 +50,7 @@ export interface PortfolioPosition {
   breakEvenPrice?: number; // Required selling price per gram to break even
   targetProfitPrice?: number; // Suggested price for target profit
   totalCostWithFees?: number; // Actual total cash paid including 1% buy fee
+  currentPriceManual?: number; // Manual current certificate/NAV price (for mutual funds only)
 }
 
 export interface MutualFund {

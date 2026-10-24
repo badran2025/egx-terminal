@@ -52,6 +52,7 @@ export const PortfolioView: React.FC<Props> = ({
   const [symbol, setSymbol] = useState('');
   const [shares, setShares] = useState<string>('');
   const [buyPrice, setBuyPrice] = useState<string>('');
+  const [currentPriceManual, setCurrentPriceManual] = useState<string>('');
   const [assetType, setAssetType] = useState<'stock' | 'fund' | 'gold'>('stock');
   const [notes, setNotes] = useState('');
   const [iconUrl, setIconUrl] = useState<string>('');
@@ -92,22 +93,32 @@ export const PortfolioView: React.FC<Props> = ({
                    sym.includes('GOLD') || 
                    (pos.notes && (pos.notes.includes('ذهب') || pos.notes.includes('gold')));
 
-    const isFund = Boolean(!isGold && (liveFund || pos.assetType === 'fund'));
+    const isFund = Boolean(!isGold && (liveFund || pos.assetType === 'fund' || Boolean(pos.isFund)));
     
     let currentPrice = pos.buyPrice;
     let changeTodayPct = 0;
-    let displayName = EGX_ARABIC_NAMES[sym]?.nameAr || pos.symbol;
+    let displayName = EGX_ARABIC_NAMES[sym]?.nameAr || (liveFund ? liveFund.name : pos.symbol);
 
-    if (isFund && liveFund) {
-      currentPrice = liveFund.nav || pos.buyPrice;
-      changeTodayPct = liveFund.dailyChange;
-      displayName = liveFund.name;
+    if (isFund) {
+      if (typeof pos.currentPriceManual === 'number' && pos.currentPriceManual > 0) {
+        currentPrice = pos.currentPriceManual;
+        if (liveFund) {
+          displayName = liveFund.name;
+          changeTodayPct = liveFund.dailyChange || 0;
+        }
+      } else if (liveFund) {
+        currentPrice = liveFund.nav || pos.buyPrice;
+        changeTodayPct = liveFund.dailyChange;
+        displayName = liveFund.name;
+      }
     } else if (liveStock) {
       currentPrice = liveStock.close;
       changeTodayPct = liveStock.changePercent;
       displayName = liveStock.nameAr;
     } else if (liveFund) {
-      currentPrice = liveFund.nav || pos.buyPrice;
+      currentPrice = (typeof pos.currentPriceManual === 'number' && pos.currentPriceManual > 0)
+        ? pos.currentPriceManual
+        : (liveFund.nav || pos.buyPrice);
       changeTodayPct = liveFund.dailyChange;
       displayName = liveFund.name;
     }
@@ -260,6 +271,7 @@ export const PortfolioView: React.FC<Props> = ({
   const currentSelectedStock = stockMap.get(symbol.toUpperCase());
   const parsedBuyPrice = parseFloat(buyPrice) || 0;
   const parsedShares = parseFloat(shares) || 0;
+  const parsedCurrentPriceManual = parseFloat(currentPriceManual) || 0;
   const totalInvestment = Number((parsedBuyPrice * parsedShares).toFixed(2));
   
   // Dedicated Gold Calculations (Thndr Gold 24k official pricing & fees)
@@ -388,9 +400,14 @@ export const PortfolioView: React.FC<Props> = ({
     setEditingPosition(pos);
     setSymbol(pos.symbol);
     const isG = Boolean(pos.isGold || pos.assetType === 'gold' || pos.symbol.toUpperCase() === 'THNDRGOLD');
-    setAssetType(isG ? 'gold' : (pos.isFund ? 'fund' : (pos.assetType || 'stock')));
+    const isF = Boolean(!isG && (pos.isFund || pos.assetType === 'fund' || fundMap.has(pos.symbol.toUpperCase())));
+    setAssetType(isG ? 'gold' : (isF ? 'fund' : (pos.assetType || 'stock')));
     setShares(String(pos.grams || pos.shares));
     setBuyPrice(String(pos.buyPrice));
+    const initialManualPrice = pos.currentPriceManual 
+      ? String(pos.currentPriceManual) 
+      : (isF && (pos as any).currentPrice && (pos as any).currentPrice !== pos.buyPrice ? String((pos as any).currentPrice) : '');
+    setCurrentPriceManual(initialManualPrice);
     setNotes(pos.notes || '');
     setIconUrl(pos.iconUrl || '');
     setShowAddModal(true);
@@ -402,6 +419,7 @@ export const PortfolioView: React.FC<Props> = ({
     setSymbol('');
     setShares('');
     setBuyPrice('');
+    setCurrentPriceManual('');
     setNotes('');
     setIconUrl('');
     setAssetType('stock');
@@ -429,15 +447,17 @@ export const PortfolioView: React.FC<Props> = ({
           isGold: true
         });
       } else {
+        const isFundPos = assetType === 'fund' || fundMap.has(symbol.trim().toUpperCase());
         onUpdatePosition({
           ...editingPosition,
           symbol: symbol.trim().toUpperCase(),
-          assetType,
-          isFund: assetType === 'fund' || fundMap.has(symbol.trim().toUpperCase()),
+          assetType: isFundPos ? 'fund' : assetType,
+          isFund: isFundPos,
           shares: parsedShares,
           buyPrice: parsedBuyPrice,
-          stopLoss: computedStopLoss,
-          targetPrice: computedTarget1,
+          currentPriceManual: isFundPos && parsedCurrentPriceManual > 0 ? parsedCurrentPriceManual : (isFundPos ? editingPosition.currentPriceManual : undefined),
+          stopLoss: isFundPos ? undefined : computedStopLoss,
+          targetPrice: isFundPos ? undefined : computedTarget1,
           notes: notes || `متوسط شراء ${parsedBuyPrice} ج.م • إجمالي تكلفة ${totalInvestment.toLocaleString('en-US')} ج.م`,
           iconUrl: iconUrl || editingPosition.iconUrl
         });
@@ -462,15 +482,17 @@ export const PortfolioView: React.FC<Props> = ({
           totalCostWithFees: totalInvestment
         });
       } else {
+        const isFundPos = assetType === 'fund' || fundMap.has(symbol.trim().toUpperCase());
         onAddPosition({
           symbol: symbol.trim().toUpperCase(),
-          assetType,
-          isFund: assetType === 'fund' || fundMap.has(symbol.trim().toUpperCase()),
+          assetType: isFundPos ? 'fund' : assetType,
+          isFund: isFundPos,
           shares: parsedShares,
           buyPrice: parsedBuyPrice,
+          currentPriceManual: isFundPos && parsedCurrentPriceManual > 0 ? parsedCurrentPriceManual : undefined,
           buyDate: new Date().toISOString().split('T')[0],
-          stopLoss: computedStopLoss,
-          targetPrice: computedTarget1,
+          stopLoss: isFundPos ? undefined : computedStopLoss,
+          targetPrice: isFundPos ? undefined : computedTarget1,
           notes: notes || `متوسط شراء ${parsedBuyPrice} ج.م • إجمالي تكلفة ${totalInvestment.toLocaleString('en-US')} ج.م`,
           iconUrl: iconUrl || undefined
         });
@@ -791,13 +813,30 @@ export const PortfolioView: React.FC<Props> = ({
 
                       {/* Current Price */}
                       <td className="p-4">
-                        <div className="font-mono font-bold text-md-on-surface text-sm">
-                          {formatAssetPrice(pos.currentPrice, pos.isFund)} ج.م
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono font-bold text-md-on-surface text-sm">
+                            {formatAssetPrice(pos.currentPrice, pos.isFund)} ج.م
+                          </span>
+                          {pos.isFund && pos.currentPriceManual && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                              يدوي ✍️
+                            </span>
+                          )}
                         </div>
                         {pos.isGold ? (
                           <div className="font-mono text-[10px] text-amber-500 font-semibold">
                             سعر الجرام لحظياً
                           </div>
+                        ) : pos.isFund ? (
+                          <button
+                            type="button"
+                            onClick={() => handleStartEdit(pos)}
+                            className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-sans mt-0.5"
+                            title="تعديل سعر وثيقة الصندوق يدوياً"
+                          >
+                            <Pencil size={10} />
+                            <span>{pos.currentPriceManual ? 'تحديث السعر اليدوي' : 'إدخال سعر يدوي'}</span>
+                          </button>
                         ) : (
                           <div className="font-mono text-[10px] text-md-on-surface-variant font-medium">
                             إغلاق سابق: {formatAssetPrice(pos.prevPrice, pos.isFund)} ج.م
@@ -841,8 +880,16 @@ export const PortfolioView: React.FC<Props> = ({
                       </td>
 
                       {/* Stop Loss */}
-                      <td className="p-4 font-mono text-md-error font-bold">
-                        {formatAssetPrice(pos.effectiveStop, pos.isFund)} ج.م
+                      <td className="p-4 font-mono">
+                        {pos.isFund ? (
+                          <span className="text-[11px] text-md-on-surface-variant font-sans">
+                            — (صندوق استثمار)
+                          </span>
+                        ) : (
+                          <span className="text-md-error font-bold">
+                            {formatAssetPrice(pos.effectiveStop, pos.isFund)} ج.م
+                          </span>
+                        )}
                       </td>
 
                       {/* Target */}
@@ -860,6 +907,15 @@ export const PortfolioView: React.FC<Props> = ({
                                 متبقي +{(pos.breakEvenPrice! - pos.currentPrice).toFixed(1)} ج.م
                               </div>
                             )}
+                          </div>
+                        ) : pos.isFund ? (
+                          <div className="text-xs font-mono">
+                            <span className="text-[10px] text-md-on-surface-variant font-sans block">
+                              عائد تراكمي
+                            </span>
+                            <span className={`font-bold ${pos.pnl >= 0 ? 'text-md-primary' : 'text-md-error'}`}>
+                              {pos.pnl >= 0 ? '+' : ''}{pos.pnlPct.toFixed(2)}%
+                            </span>
                           </div>
                         ) : (
                           <div className="font-mono text-md-primary font-bold">
@@ -1113,10 +1169,74 @@ export const PortfolioView: React.FC<Props> = ({
 
                 {parsedShares > 0 && parsedBuyPrice > 0 && (
                   <div className="text-left font-mono text-[11px] text-md-on-surface bg-md-surface-container px-3 py-1.5 rounded-full border border-md-outline-variant/40">
-                    <span className="font-bold text-md-primary">{parsedShares}</span> {isGoldActive ? 'جرام' : 'سهم'} × <span className="font-bold text-md-primary">{parsedBuyPrice}</span> ج.م
+                    <span className="font-bold text-md-primary">{parsedShares}</span> {isGoldActive ? 'جرام' : (assetType === 'fund' ? 'وثيقة' : 'سهم')} × <span className="font-bold text-md-primary">{parsedBuyPrice}</span> ج.م
                   </div>
                 )}
               </div>
+
+              {/* Dedicated Manual Current NAV Price for Mutual Funds Only */}
+              {assetType === 'fund' && (
+                <div className="p-4 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border-2 border-blue-500/40 rounded-[22px] space-y-3 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-extrabold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                      <span>✍️</span>
+                      <span>سعر الوثيقة الحالي (ج.م) [إدخال يدوي للصناديق]:</span>
+                    </label>
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                      خاص بالصناديق فقط
+                    </span>
+                  </div>
+
+                  <MdTextField
+                    type="text"
+                    inputMode="decimal"
+                    value={currentPriceManual}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(',', '.');
+                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                        setCurrentPriceManual(val);
+                      }
+                    }}
+                    placeholder="أدخل أحدث سعر للوثيقة معلن في ثاندر (مثال: 1.50439 أو 1.5200)..."
+                  />
+
+                  <p className="text-[11px] text-md-on-surface-variant leading-relaxed font-medium">
+                    💡 وثائق الصناديق بتُعلن دورياً وتختلف عن أسهم البورصة اللحظية. اكتب هنا أحدث سعر للوثيقة في تطبيق ثاندر، وسيتم احتساب الأرباح والخسائر والقيمة الحالية للمحفظة فوراً وبدقة تامة.
+                  </p>
+
+                  {/* Real-time preview of current valuation & profit for fund */}
+                  {parsedCurrentPriceManual > 0 && parsedShares > 0 && (
+                    <div className="pt-2.5 border-t border-blue-500/25 grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2.5 bg-md-surface rounded-[14px] border border-md-outline-variant/50">
+                        <span className="text-md-on-surface-variant text-[10px] block font-semibold">القيمة السوقية الحالية للوثائق:</span>
+                        <span className="font-mono font-black text-md-on-surface text-xs sm:text-sm">
+                          {(parsedCurrentPriceManual * parsedShares).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
+                        </span>
+                      </div>
+                      {parsedBuyPrice > 0 && (
+                        <div className="p-2.5 bg-md-surface rounded-[14px] border border-md-outline-variant/50 text-left">
+                          <span className="text-md-on-surface-variant text-[10px] block font-semibold">صافي الربح / الخسارة الإجمالية:</span>
+                          {(() => {
+                            const pnlDiff = (parsedCurrentPriceManual - parsedBuyPrice) * parsedShares;
+                            const pnlDiffPct = ((parsedCurrentPriceManual - parsedBuyPrice) / parsedBuyPrice) * 100;
+                            const isP = pnlDiff >= 0;
+                            return (
+                              <div>
+                                <span className={`font-mono font-black text-xs sm:text-base ${isP ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                  {isP ? '+' : ''}{pnlDiff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
+                                </span>
+                                <span className={`block text-[10px] font-bold ${isP ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                  ({isP ? '+' : ''}{pnlDiffPct.toFixed(2)}%)
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Dedicated Gold Break-Even & Profit Calculator (If Gold Active) */}
               {isGoldActive ? (
@@ -1252,8 +1372,8 @@ export const PortfolioView: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Automated Technical Levels Display (For Stocks & Funds) */}
-              {!isGoldActive && (
+              {/* Automated Technical Levels Display (For Stocks Only) */}
+              {!isGoldActive && assetType !== 'fund' && (
                 numBuyPrice > 0 ? (
                   <div className="p-3.5 bg-md-surface-container rounded-[18px] border border-md-outline-variant/60 space-y-2.5">
                     <div className="flex items-center justify-between">
@@ -1292,6 +1412,19 @@ export const PortfolioView: React.FC<Props> = ({
                     أدخل رمز السهم وسعر الشراء ليقوم النظام آلياً بحساب وقف الخسارة والمستهدفات الفنية.
                   </div>
                 )
+              )}
+
+              {/* Mutual Funds Performance Clarification Banner */}
+              {assetType === 'fund' && (
+                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-[18px] text-xs text-emerald-800 dark:text-emerald-200 flex items-start gap-2.5 animate-fadeIn">
+                  <CheckCircle2 size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                  <div className="space-y-0.5">
+                    <span className="font-bold block">متابعة خاصة بصناديق الاستثمار:</span>
+                    <p className="text-[11px] text-md-on-surface-variant leading-relaxed">
+                      صناديق الاستثمار تدار بواسطة مديري صناديق محترفين بأصول متنوعة ولا تخضع لنقاط وقف الخسارة والمقاومات الفنية الفردية للأسهم. يتم تتبع أدائها بدقة عبر سعر الوثيقة الدوري المدخل يدوياً.
+                    </p>
+                  </div>
+                </div>
               )}
 
               <MdTextField
