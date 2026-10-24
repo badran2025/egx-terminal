@@ -824,15 +824,49 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 </span>
               </div>
 
-              {/* Action Decision Pill */}
-              <div className="bg-emerald-500/15 border border-emerald-500/40 rounded-[20px] p-4 text-center space-y-1">
-                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 block">
+              {/* Action Decision Pill - Dynamic Colors based on decision */}
+              <div className={`border rounded-[20px] p-4 text-center space-y-1 ${
+                currentCase.finalVerdict.rating === 'strong_buy' || currentCase.finalVerdict.rating === 'buy'
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-200'
+                  : currentCase.finalVerdict.rating === 'take_profit'
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-800 dark:text-amber-200'
+                  : currentCase.finalVerdict.rating === 'avoid_risk' || currentCase.finalVerdict.rating === 'sell'
+                  ? 'bg-rose-500/15 border-rose-500/40 text-rose-800 dark:text-rose-200'
+                  : 'bg-blue-500/15 border-blue-500/40 text-blue-800 dark:text-blue-200'
+              }`}>
+                <span className="text-xs font-semibold block opacity-80">
                   القرار الاستثماري النهائي:
                 </span>
-                <div className="text-lg sm:text-xl font-extrabold text-emerald-800 dark:text-emerald-200">
+                <div className="text-lg sm:text-xl font-extrabold">
                   {currentCase.finalVerdict.ratingLabel}
                 </div>
               </div>
+
+              {/* Fundamental Health Card */}
+              {currentCase.finalVerdict.fundamentalHealth && (
+                <div className={`p-3.5 rounded-[18px] border text-xs space-y-1 ${
+                  currentCase.finalVerdict.fundamentalHealth.grade === 'HIGH_RISK_DISTRESSED'
+                    ? 'bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-200'
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
+                }`}>
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span>📊 الفحص المالي والأساسي للشركة:</span>
+                    </span>
+                    <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-md-surface border border-md-outline-variant/40">
+                      {currentCase.finalVerdict.fundamentalHealth.peRatio > 0 
+                        ? `مضاعف الربحية P/E: ${currentCase.finalVerdict.fundamentalHealth.peRatio}x` 
+                        : 'خسائر مرحلة (P/E سالب)'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-semibold">
+                    {currentCase.finalVerdict.fundamentalHealth.status}
+                  </div>
+                  <p className="text-[11px] text-md-on-surface-variant leading-relaxed">
+                    💡 {currentCase.finalVerdict.fundamentalHealth.summary}
+                  </p>
+                </div>
+              )}
 
               {/* Action Plan Table (أرقام الدخول والوقف والأهداف) */}
               <div className="space-y-2">

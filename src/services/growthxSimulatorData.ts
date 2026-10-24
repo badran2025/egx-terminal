@@ -1,6 +1,7 @@
 import { StockData } from '../types';
 import { EGX_ARABIC_NAMES, StockMeta } from './egxArabicNames';
 import { getFallbackStocks } from './egxService';
+import { getStockFundamentalProfile, StockFundamentalProfile } from './egxFundamentalData';
 
 export interface SimulatorLayerStep {
   layerNumber: number;
@@ -39,7 +40,7 @@ export interface StockSimulationCase {
   layers: SimulatorLayerStep[];
   finalVerdict: {
     scoreText: string;
-    rating: 'strong_buy' | 'buy' | 'wait_pullback' | 'sell';
+    rating: 'strong_buy' | 'buy' | 'wait_pullback' | 'take_profit' | 'avoid_risk' | 'sell';
     ratingLabel: string;
     entryRange: string;
     stopLoss: string;
@@ -48,6 +49,12 @@ export interface StockSimulationCase {
     riskRewardRatio: string;
     overallAnalysisSummary: string;
     friendFinalAdvice: string;
+    fundamentalHealth?: {
+      status: string;
+      peRatio: number;
+      grade: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'HIGH_RISK_DISTRESSED';
+      summary: string;
+    };
     buildingFloorsSummary: {
       floorSupport: string;
       ceilingResistance: string;
@@ -1455,20 +1462,26 @@ export const GROWTHX_SIMULATOR_CASES: Record<string, StockSimulationCase> = {
       }
     ],
     finalVerdict: {
-      scoreText: '7 من 7 طبقات خضراء مكتملة (100% توافق فني ومؤسسي)',
-      rating: 'strong_buy',
-      ratingLabel: '🚀 قرار الشراء: مضاربة سوينج سريعة (من كام يوم لأسبوعين) فوق أرضية 6.08 ج.م',
-      entryRange: '6.20 - 6.35 ج.م (قرب السعر الحالي 6.33)',
-      stopLoss: '5.85 ج.م (كسر أرضية 6.05 ج.م بإغلاق يومي)',
-      target1: '6.85 ج.م (سقف المقاومة الأول بمكسب +8.2%)',
-      target2: '7.45 ج.م (سقف العمارة الرئيسي بمكسب +17.7%)',
-      riskRewardRatio: '1:3.2 (عائد ممتاز مقابل مخاطرة محسوبة)',
-      overallAnalysisSummary: 'بص يا ريس، فحصنا القلعة (CCAP) بالـ 7 طبقات سوا كأننا قاعدين على القهوة:\n• 1. الاتجاه العام (مراية الطريق السريع): مسار صاعد قوي فوق كل المتوسطات (20 و 50 و 200 يوم) ومش هنمشي عكس اتجاه السوق.\n• 2. الزخم (مراية دواسة البنزين): دوسة بنزين ممتازة عند RSI 54.2 في النطاق الذهبي دون أي تضخم.\n• 3. السيولة (مراية تانك البنزين): تانك سيولة نفاث بأكثر من 38.5 مليون سهم تجميع مؤسسي ومفيش أي تصريف.\n• 4. عمارة الأدوار ومساحة المكسب: واقفين فوق أرضية الدور عند 6.08 جنيه، والسقف الأول عند 6.85 جنيه وسقف العمارة 7.45 جنيه.\n• 5. السوستة المضغوطة (البولنجر): أشرطة البولنجر اتلمت في نطاق ضيق تمهيداً لانفجار سعري سريع.\n• 6. الطيارة الهليكوبتر (الأطر الزمنية): الفريم الأسبوعي واليومي متفقين على اختراق قيعان السنوات السابقة.\n• 7. الأموال الذكية وصناع السوق (SMC): ارتكاز صلب ومحمي على كتلة طلب مؤسسية (Demand Block) عند 6.05 - 6.10 جنيه.',
-      friendFinalAdvice: 'ركز معايا يا صاحبي في الخطة التنفيذية بالظبط:\n1. ليه بندخل هنا بالذات؟ عشان سهم القلعة سهم ملايين سريع، وسعره الحالي 6.33 جنيه واقف فوق أرضية دور فولاذية (6.08 ج.م).\n2. تدخل إمتى؟ ادخل على دفعتين بين 6.20 و 6.35 جنيه.\n3. ليه بنعمل وقف خسارة عند 5.85 جنيه؟ عشان كسر أرضية 6.05 ج.م ونزول 5.85 بإغلاق معناه خروج السيولة الحامية ولازم نخرج فوراً لحماية فلوسنا.\n4. تجني أرباحك إزاي؟ لما يوصل لسقف الدور الأول عند 6.85 جنيه بيع نص الكمية واقفل مكسب وارفع وقفك لسعر دخولك، وسيب باقي الكمية تجيب سقف 7.45 جنيه!\n5. مؤشرات ثاندر المناظرة: افتح في ثاندر مؤشر "Order Blocks - [Tamer Zaky]" ومؤشر "Volume" ومؤشر "Trend Signals - [Tamer Zaky]".',
+      scoreText: 'تحذير مالي وأساسي ❌ (مضاربة سريعة عالية الخطورة)',
+      rating: 'avoid_risk',
+      ratingLabel: '⚠️ تحذير مالي عالي المخاطر: سهم مأزوم بالديون والخسائر (لا يصلح للاستثمار نهائياً - مضاربة أفراد خطرة)',
+      entryRange: '6.10 - 6.25 ج.م (للمضاربين المحترفين فقط بأقل كمية)',
+      stopLoss: '5.95 ج.م (كسر فوري لأرضية 6.05 ج.م - خروج بلا تردد)',
+      target1: '6.85 ج.م (سقف مقاومة تصريفي أول)',
+      target2: '7.45 ج.م (سقف العمارة الرئيسي والقمة السابقة)',
+      riskRewardRatio: '1:1.8 (مخاطرة مرتفعة بسبب الوضع المالي)',
+      overallAnalysisSummary: '⚠️ تنبيه صديق بأمانة واضحة: سهم القلعة (CCAP) ممكن تلاقيه بيتحرك بنشاط عالي على الشارت وتانك السيولة مليان، لكن مالياً وأساسياً الشركة تعاني من خسائر مرحلة بالمليارات، ومديونية ضخمة، ونزاعات إعادة هيكلة قروض معقدة، ومبتوزعش أي أرباح نقدية! الفحص المالي يسقط السهم تماماً من أي محفظة استثمارية، وحركته الحالية مضاربة أفراد بحتة معرضة لتصريف فجائي!',
+      friendFinalAdvice: 'أنا مش هغشك يا صاحبي عشان أقولك اشتري وخلاص: سهم القلعة ده مش سهم تحط فيه شقى عمرك وتقول استثمار؛ ده سهم مأزوم مالياً بديون ضخمة. لو غاوي مضاربة سريعة جداً وخاطفة (Scalping) وعايز تستغل نشاط الفوليوم اللحظي، يبقى بفلوس قليلة جداً متعديش 5% من محفظتك وتكون مستعد للمخاطرة، ووقف خسارتك عند 5.95 جنيه لو اتكسر تخرج فوراً لحماية رأس مالك دون أي عواطف! والنصيحة الذهبية: وفر فلوسك لشركات ربحانة وبتوزع كاش زي التجاري الدولي أو السويدي.',
+      fundamentalHealth: {
+        status: 'خسائر مرحلة ومديونية حرجة (لا توجد توزيعات أرباح)',
+        peRatio: -1,
+        grade: 'HIGH_RISK_DISTRESSED',
+        summary: 'شركة متعثرة مالياً ومحملة بقروض ضخمة، تحركاتها مضاربية وعالية المخاطر.'
+      },
       buildingFloorsSummary: {
         floorSupport: 'أرضية الدور الحالية: 6.05 - 6.10 جنيه',
         ceilingResistance: 'سقف الدور الأول: 6.85 جنيه | سقف العمارة: 7.45 جنيه',
-        floorStrengthNotes: 'أرضية صلبة مدعومة بمتوسط 50 يوم وكتلة طلب مؤسسية وسيولة مليونية.'
+        floorStrengthNotes: 'أرضية فنية مضاربية هشة؛ غياب الأمان المالي يجعل كسر الدعم وارد بأي لحظة.'
       }
     }
   }
@@ -1532,6 +1545,56 @@ export function resolve7LayerAnalysis(selectedSymbol: string, liveStock?: StockD
   const downsideRisk = Math.max(0.5, (((price - sup1) / price) * 100)).toFixed(1);
   const stopPrice = Number((sup1 * 0.98).toFixed(2));
   const rrRatio = (Number(upsidePotential) / (Number(downsideRisk) || 1)).toFixed(1);
+
+  // Integrated Fundamental & Technical Assessment
+  const fundamental = getStockFundamentalProfile(upper, meta.sector);
+  let calculatedRating: 'strong_buy' | 'buy' | 'wait_pullback' | 'take_profit' | 'avoid_risk' | 'sell' = 'wait_pullback';
+  let calculatedRatingLabel = '';
+  let calculatedScoreText = '';
+  let calculatedAdvice = '';
+
+  // 1. High Financial Risk / Loss Making / Distressed (Like CCAP or penny speculative stocks)
+  if (fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED' || fundamental.profitabilityStatus === 'LOSS_MAKING') {
+    calculatedRating = 'avoid_risk';
+    calculatedScoreText = 'تحذير مالي وأساسي ❌ (مضاربة عالية الخطورة)';
+    calculatedRatingLabel = `⚠️ تحذير مالي: شركة مأزومة أو خاسرة مالياً (لا تصلح للاستثمار نهائياً)`;
+    calculatedAdvice = `أنا بنصحك لله يا صاحبي كأنك أخويا: سهم ${meta.nameAr} مالياً مأزوم وخاسر ومبيوزعش أرباح، وأي صعود فيه هو مضاربة أفراد سريعة وعالية المخاطر؛ متغامرش بشقى عمرك فيه، ولو مضارب محترف التزم بوقف الخسارة فوراً عند ${stopPrice} ج.م لحماية فلوسك!`;
+  } 
+  // 2. Resistance Ceiling / Overbought (Take Profit & Exit partial)
+  else if (price >= res1 * 0.96 && rsi > 64) {
+    calculatedRating = 'take_profit';
+    calculatedScoreText = 'السهم عند سقف المقاومة (تشبع شرائي 🎯)';
+    calculatedRatingLabel = `🎯 قرار التداول: جني أرباح وتخفيف مراكز (السهم عند سقف الدور الأول ${res1} ج.م)`;
+    calculatedAdvice = `السهم وصل لسقف الدور يا صاحبي ومستوي المقاومة الأول (${res1} ج.م) والـ RSI متشبع؛ بلاش طمع! جني الأرباح سنة في البورصة، بيع نص كميتك واقفل مكسب في جيبك، وبلاش دخول جديد عند السقف!`;
+  }
+  // 3. Broken floor / Downtrend below EMA 200 (Sell / Cut loss)
+  else if (!isTrendBullish && price < sup1) {
+    calculatedRating = 'sell';
+    calculatedScoreText = 'كسر خطوط الأمان الفنية 🛑 (ترند هابط)';
+    calculatedRatingLabel = `🛑 قرار التداول: تحذير خروج ووقف خسارة (كسر أرضية الأمان ${sup1} ج.م ومتوسط 200 يوم)`;
+    calculatedAdvice = `السهم كاسر أرضية الأمان ومتوسط 200 يوم وفي مسار هابط؛ مينفعش نعاند السوق ونمسك سكين واقعة! الخروج وحماية رأس مالك هو القرار الصح.`;
+  }
+  // 4. Strong Buy (Elite fundamentals + bullish technicals at floor support)
+  else if (isTrendBullish && fundamental.financialHealthGrade === 'EXCELLENT' && price <= sup1 * 1.04) {
+    calculatedRating = 'strong_buy';
+    calculatedScoreText = 'توافق فني ومالي ممتاز 🚀 (شركة رابحة وارتكاز صلب)';
+    calculatedRatingLabel = `🚀 قرار الشراء: شراء استثماري ومؤسسي قوي فوق أرضية ${sup1} ج.م`;
+    calculatedAdvice = `سهم استثماري ممتاز يا صاحبي؛ شركة قوية وربحانة وفنياً واقفة فوق أرضية دور صلبة (${sup1} ج.م)، الدخول هنا مدروس بنسبة عائد لمخاطرة 1:${rrRatio}، ووقف الخسارة الصارم عند ${stopPrice} ج.م.`;
+  }
+  // 5. Swing Buy (Good setup at support)
+  else if (isTrendBullish && price <= sup1 * 1.04) {
+    calculatedRating = 'buy';
+    calculatedScoreText = 'ارتكاز فني صاعد فوق أرضية الدور 🎯';
+    calculatedRatingLabel = `🎯 قرار الشراء: مضاربة سوينج سريعة فوق أرضية ${sup1} ج.م`;
+    calculatedAdvice = `نقطة دخول سوينج جيدة فوق أرضية ${sup1} جنيه؛ اشتري بنظام الدفعات، وأول ما يجيب سقف ${res1} ج.م (+${upsidePotential}%) بيع نص الكمية واقفل مكسب، ووقفك عند ${stopPrice} ج.م.`;
+  }
+  // 6. Neutral / Middle of the range (Wait for pullback)
+  else {
+    calculatedRating = 'wait_pullback';
+    calculatedScoreText = 'السهم في منتصف الدور (انتظار تهدئة ⏳)';
+    calculatedRatingLabel = `⏳ قرار التداول: مراقبة وانتظار تهدئة للدعم (السعر بين الدعم والمقاومة)`;
+    calculatedAdvice = `السهم حالياً في نص المسافة بين الأرضية (${sup1} ج.م) والسقف (${res1} ج.م)؛ متجريش ورا الشموع في النص، استنى السعر يريح قرب الدعم واشتريه برخيص وبأقل مخاطرة.`;
+  }
 
   return {
     symbol: upper,
@@ -1721,20 +1784,24 @@ export function resolve7LayerAnalysis(selectedSymbol: string, liveStock?: StockD
       }
     ],
     finalVerdict: {
-      scoreText: 'فحص حي بنظام الـ 7 طبقات (إشارات إيجابية صاعدة)',
-      rating: isTrendBullish ? 'buy' : 'wait_pullback',
-      ratingLabel: isTrendBullish 
-        ? `🎯 قرار الشراء: مضاربة سوينج سريعة (من كام يوم لأسبوعين) فوق أرضية ${sup1} ج.م`
-        : `⏳ قرار التداول: انتظار اكتمال التجميع والتأكد من ثبات أرضية ${sup1} ج.م`,
-      entryRange: `${(price * 0.99).toFixed(2)} - ${(price * 1.01).toFixed(2)} ج.م (بالقرب من السعر الحالي)`,
+      scoreText: calculatedScoreText,
+      rating: calculatedRating,
+      ratingLabel: calculatedRatingLabel,
+      entryRange: calculatedRating.includes('buy') ? `${(price * 0.99).toFixed(2)} - ${(price * 1.01).toFixed(2)} ج.م (بالقرب من السعر الحالي)` : 'غير متاح (تجنب الشراء حالياً)',
       stopLoss: `${stopPrice} ج.م (كسر أرضية ${sup1} ج.م بإغلاق يومي - مخاطرة ${downsideRisk}%)`,
       target1: `${res1} ج.م (سقف المقاومة الأول - جني ربح 50% بمكسب +${upsidePotential}%)`,
       target2: `${res2} ج.م (سقف العمارة الرئيسي والقمة السابقة)`,
-      riskRewardRatio: `1:${rrRatio} (عائد ممتاز)`,
-      overallAnalysisSummary: `بص يا ريس، فحصنا سهم ${meta.nameAr} (${upper}) بالـ 7 طبقات سوا كأننا قاعدين على القهوة:\n• 1. الاتجاه العام (مراية الطريق السريع): ${isTrendBullish ? `صاعد وثابت فوق متوسط 200 يوم (${ema200} ج.م) ومش هنعكس تيار السوق الكلي.` : `مهدئ في تصحيح تحت متوسط 200 يوم (${ema200} ج.م) ومحتاجين تأكيد استعادة خط الأمان.`}\n• 2. الزخم (مراية دواسة البنزين): ${isRsiHealthy ? `مؤشر RSI عند ${rsi} نقطة في النطاق الذهبي للتجميع، يعني دوسة البنزين متوازنة والسهم خفيف.` : `مؤشر RSI عند ${rsi} نقطة، ومحتاجين نراقب استقرار الزخم.`}\n• 3. السيولة (مراية تانك البنزين): تداول ${(vol / 1000000).toFixed(2)} مليون سهم يؤكد تماسك السيولة وغياب تام لأي تصريف بيعي من الحيتان.\n• 4. عمارة الأدوار ومساحة المكسب: واقفين فوق أرضية الدور عند ${sup1} ج.م، والسقف الأول عند ${res1} ج.م بمكسب +${upsidePotential}% بنسبة عائد لمخاطرة 1:${rrRatio}.\n• 5. السوستة المضغوطة (البولنجر): أشرطة البولنجر ضيقة وملمومة ومستعدة لانفراجة صاعدة وشيكة.\n• 6. الطيارة الهليكوبتر (الأطر الزمنية): الفريم الأسبوعي واليومي متفقين على دعم الاتجاه.\n• 7. الأموال الذكية وصناع السوق (SMC): ارتكاز محمي على كتلة أوامر طلب مؤسسية (Demand Order Block) ومستويات الـ Pivot عند ${sup1} ج.م.`,
-      friendFinalAdvice: `بص يا صاحبي وركز معايا كأننا قاعدين بنخطط للصفقة سوا:\n1. ليه بندخل هنا بالذات؟ عشان السعر الحالي (${price} ج.م) قريب جداً من أرضية الدور (${sup1} ج.م) وبيديك أقل نسبة مخاطرة ممكنة.\n2. تدخل إمتى؟ اشتري بنظام الدفعات في النطاق بين ${(price * 0.99).toFixed(2)} و ${(price * 1.01).toFixed(2)} جنيه.\n3. ليه بنعمل وقف خسارة عند ${stopPrice} جنيه؟ عشان ده كسر صريح لأرضية الدور (${sup1} ج.م)، ولو اتكسرت معناها إن الحوت اتخلى عن السهم ولازم نخرج فوراً لحماية فلوسنا وما نتعلقش في السهم.\n4. تجني أرباحك إزاي؟ أول ما يوصل لسقف الدور الأول عند ${res1} جنيه (+${upsidePotential}%) بيع نص الكمية واقفل مكسب في جيبك، وارفع أمر الوقف لسعر دخولك وسيب النص التاني يكمل لسقف ${res2} جنيه!\n5. مؤشرات ثاندر المناظرة: افتح في شارت ثاندر مؤشر "AI Support & Resistance - [Tamer Zaky]" ومؤشر "Moving Average Exponential" عشان تتابع حركة السهم بنفسك.`,
+      riskRewardRatio: `1:${rrRatio}`,
+      overallAnalysisSummary: `بص يا ريس، فحصنا سهم ${meta.nameAr} (${upper}) بالتحليل المالي والفني سوا كأننا قاعدين على القهوة:\n• الوضع المالي والأساسي: ${fundamental.headlineSummary} (مضاعف ربحية: ${fundamental.peRatio > 0 ? fundamental.peRatio : 'سالب / خسائر'})\n• الاتجاه العام ومؤشر EGX30: ${isTrendBullish ? `صاعد وثابت فوق متوسط 200 يوم (${ema200} ج.م) ومش هنعكس تيار السوق الكلي.` : `مهدئ في تصحيح تحت متوسط 200 يوم (${ema200} ج.م) ومحتاجين تأكيد استعادة خط الأمان.`}\n• الزخم والسيولة: RSI عند ${rsi} نقطة مع تداول ${(vol / 1000000).toFixed(2)} مليون سهم.\n• عمارة الأدوار ومساحة الحركة: أرضية الدور عند ${sup1} ج.م، والسقف الأول عند ${res1} ج.م بمكسب +${upsidePotential}%.`,
+      friendFinalAdvice: calculatedAdvice,
+      fundamentalHealth: {
+        status: fundamental.headlineSummary,
+        peRatio: fundamental.peRatio,
+        grade: fundamental.financialHealthGrade,
+        summary: fundamental.baladiAdvice
+      },
       buildingFloorsSummary: {
-        floorSupport: `أرضية الدور الحالية: ${sup1} جنيه (مدعومة بكتلة طلب مؤسسية ومستويات الـ Pivot)`,
+        floorSupport: `أرضية الدور الحالية: ${sup1} جنيه (مدعومة بكتلة طلب ومستويات الـ Pivot)`,
         ceilingResistance: `سقف الدور الأول: ${res1} جنيه | سقف العمارة: ${res2} جنيه`,
         floorStrengthNotes: `أرضية فنية متماسكة مع نسبة عائد لمخاطرة 1:${rrRatio}.`
       }

@@ -80,24 +80,34 @@ export function analyzeStock(stock: StockData): StockRecommendation {
 
   if (v.rating === 'strong_buy') {
     type = 'STRONG_BUY';
-    badgeLabel = 'شراء قوي (توافق الـ 7 طبقات)';
+    badgeLabel = 'شراء قوي (توافق فني ومالي ممتاز)';
     badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
     horizon = 'مضاربة سوينج (3 - 10 أيام)';
   } else if (v.rating === 'buy') {
     type = 'SWING_BUY';
-    badgeLabel = 'شراء سوينج (ارتكاز فني)';
+    badgeLabel = 'شراء سوينج (ارتكاز فني عند الدعم)';
     badgeColor = 'bg-teal-500/10 text-teal-400 border-teal-500/30';
     horizon = 'مضاربة سوينج (3 - 10 أيام)';
-  } else if (v.rating === 'wait_pullback') {
-    type = 'ACCUMULATE';
-    badgeLabel = 'تجميع وانتظار ارتكاز';
-    badgeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
-    horizon = 'استثماري (أسابيع / شهر)';
+  } else if (v.rating === 'take_profit') {
+    type = 'TAKE_PROFIT';
+    badgeLabel = 'جني أرباح وتخفيف مراكز (سقف المقاومة)';
+    badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+    horizon = 'مضاربة لحظية / يومية';
+  } else if (v.rating === 'avoid_risk') {
+    type = 'STOP_LOSS';
+    badgeLabel = '⚠️ تحذير مالي عالي المخاطر (سهم مأزوم)';
+    badgeColor = 'bg-rose-500/15 text-rose-400 border-rose-500/40';
+    horizon = 'مضاربة لحظية / يومية';
   } else if (v.rating === 'sell') {
     type = 'STOP_LOSS';
-    badgeLabel = 'تحذير خروج ووقف خسارة';
+    badgeLabel = 'تحذير خروج ووقف خسارة (كسر الدعم)';
     badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
     horizon = 'مضاربة لحظية / يومية';
+  } else {
+    type = 'ACCUMULATE';
+    badgeLabel = 'مراقبة وانتظار تهدئة للدعم';
+    badgeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+    horizon = 'استثماري (أسابيع / شهر)';
   }
 
   const stopLossPct = Number((((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1));
