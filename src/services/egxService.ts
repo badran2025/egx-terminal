@@ -39,30 +39,59 @@ export function getRecommendationCategory(score: number): StockData['recommendat
 }
 
 export async function fetchEGXStocks(): Promise<StockData[]> {
+  const scanPayload = {
+    filter: [
+      { left: 'type', operation: 'in_range', right: ['stock', 'dr', 'index'] }
+    ],
+    columns: DEFAULT_COLUMNS,
+    sort: { sortBy: 'volume', sortOrder: 'desc' },
+    range: [0, 350] // Expanded to cover all 300+ EGX stocks!
+  };
+
+  let json: any = null;
+
+  // 1. First Attempt: Direct call to TradingView's Egypt Scanner (CORS supported natively by TradingView)
   try {
-    const res = await fetch('/api/egx-scanner', {
+    const directRes = await fetch('https://scanner.tradingview.com/egypt/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filter: [
-          { left: 'type', operation: 'in_range', right: ['stock', 'dr', 'index'] }
-        ],
-        columns: DEFAULT_COLUMNS,
-        sort: { sortBy: 'volume', sortOrder: 'desc' },
-        range: [0, 350] // Expanded to cover all 300+ EGX stocks!
-      })
+      body: JSON.stringify(scanPayload)
     });
-
-    if (!res.ok) {
-      throw new Error(`Server returned ${res.status}`);
+    if (directRes.ok) {
+      const data = await directRes.json();
+      if (data && Array.isArray(data.data) && data.data.length > 0) {
+        json = data;
+      }
     }
+  } catch (err) {
+    console.warn('Direct TradingView fetch bypassed, trying /api/egx-scanner proxy:', err);
+  }
 
-    const json = await res.json();
-    if (!json.data || !Array.isArray(json.data)) {
-      throw new Error('Invalid data format');
+  // 2. Second Attempt: Vercel Serverless Function & Vite dev proxy (/api/egx-scanner)
+  if (!json) {
+    try {
+      const proxyRes = await fetch('/api/egx-scanner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scanPayload)
+      });
+      if (proxyRes.ok) {
+        const contentType = proxyRes.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await proxyRes.json();
+          if (data && Array.isArray(data.data) && data.data.length > 0) {
+            json = data;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Proxy fetch failed:', err);
     }
+  }
 
-    const mappedStocks: StockData[] = json.data.map((item: any) => {
+  if (json && Array.isArray(json.data) && json.data.length > 0) {
+    try {
+      const mappedStocks: StockData[] = json.data.map((item: any) => {
       const d = item.d || [];
       const rawSymbol = d[0] || (item.s ? item.s.replace('EGX:', '') : '');
       const meta: StockMeta = EGX_ARABIC_NAMES[rawSymbol] || { nameAr: rawSymbol, nameEn: rawSymbol };
@@ -206,11 +235,16 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
       }
     });
 
-    return mappedStocks;
-  } catch (err) {
-    console.warn('Using fallback data due to fetch error:', err);
-    return getFallbackStocks();
+      return mappedStocks;
+    } catch (err) {
+      console.warn('Error mapping live stock data, using fallback:', err);
+      return getFallbackStocks();
+    }
   }
+
+  // 3. Fallback if both direct and proxy calls returned empty or failed:
+  console.warn('Live TradingView scanner endpoints unavailable, using calibrated fallback stocks:');
+  return getFallbackStocks();
 }
 
 export function getFallbackStocks(): StockData[] {
@@ -274,25 +308,25 @@ export function getFallbackStocks(): StockData[] {
       ticker: "EGX:SWDY",
       nameAr: "السويدي إليكتريك",
       nameEn: "Elsewedy Electric",
-      close: 84.50,
-      change: 1.5,
-      changePercent: 1.81,
-      volume: 3200150,
-      recommendationScore: 0.42,
+      close: 106.94,
+      change: -3.16,
+      changePercent: -2.87,
+      volume: 3124620,
+      recommendationScore: 0.38,
       recommendationText: "شراء قوي",
-      rsi: 61.2,
-      rsi1h: 65.0,
-      rec1h: 0.55,
-      rec4h: 0.48,
+      rsi: 58.4,
+      rsi1h: 61.0,
+      rec1h: 0.45,
+      rec4h: 0.42,
       rec1w: 0.38,
-      ema20: 82.1,
-      ema50: 79.5,
-      ema200: 71.0,
-      support1: 81.0,
-      support2: 78.5,
-      resistance1: 88.0,
-      resistance2: 92.5,
-      pivot: 83.5,
+      ema20: 104.5,
+      ema50: 98.2,
+      ema200: 82.0,
+      support1: 104.0,
+      support2: 101.5,
+      resistance1: 110.5,
+      resistance2: 114.0,
+      pivot: 107.0,
       isEGX30: true,
       sector: "صناعة ومقاولات كهروميكانيكية"
     },
