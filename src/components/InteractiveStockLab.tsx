@@ -229,9 +229,14 @@ export const InteractiveStockLab: React.FC<Props> = ({
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md-full bg-md-primary text-md-on-primary text-xs font-bold shadow-sm">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md-full bg-emerald-600 text-white text-xs font-bold shadow-sm">
                 <Sparkles size={14} />
-                <span>المحاكي العملي المباشر • فحص أي سهم بالـ 7 طبقات</span>
+                <span>المحاكي العملي المباشر • فحص وتطبيق قالب BADRAN المعتمد (ثاندر)</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md-full bg-blue-500/15 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30">
+                <CheckCircle2 size={13} />
+                <span>8 مؤشرات متزامنة + الفحص المالي الحاسم</span>
               </div>
 
               {onNavigateToRecommendations && (
@@ -239,17 +244,17 @@ export const InteractiveStockLab: React.FC<Props> = ({
                   onClick={onNavigateToRecommendations}
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md-full bg-md-surface hover:bg-md-surface-container-high border border-md-outline-variant/60 text-xs font-bold text-md-primary transition-all shadow-sm"
                 >
-                  <span>🎯 الذهاب لرادار التوصيات اليومية (294 سهم)</span>
+                  <span>🎯 رادار التوصيات الموحد (294 سهم)</span>
                   <ArrowLeft size={12} />
                 </button>
               )}
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-md-on-surface">
-              إزاي بنقرر نشتري السهم ولا لأ خطوة بخطوة على الشارت؟
+              إزاي بنقرر نشتري السهم ولا لأ خطوة بخطوة بقالب BADRAN؟
             </h2>
             <p className="text-sm text-md-on-surface-variant font-medium max-w-3xl leading-relaxed">
-              هنا مش بنقولك كلام نظري؛ الشارت الحي مفتوح قدامك على الشمال، وبنشغل المؤشرات طبقة ورا طبقة، ونحلل بالأرقام هل السهم اجتاز الخطوة ولا فشل، ونطلع بنقاط الدخول والوقف الصريحة!
+              المحاكي العملي يتبع بدقة نفس الخطوات الصارمة: يبدأ بـ <strong>بوابة السلامة المالية (Gate 0)</strong> لاستبعاد الشركات المأزومة الخاسرة، ثم يمر بـ <strong>الطبقات الفنية السبع لقالب BADRAN</strong> على الشارت الحي خطوة بخطوة، وصولاً إلى <strong>التوصية والقرار الميداني النهائي</strong> (سعر الدخول، وقف ATR Fib، وأهداف الربح TP1 و TP2)!
             </p>
           </div>
 
@@ -1273,34 +1278,39 @@ export const InteractiveStockLab: React.FC<Props> = ({
 
               {/* Action Plan Table (أرقام الدخول والوقف والأهداف) */}
               <div className="space-y-2">
-                <span className="text-xs font-bold text-md-on-surface block">
-                  🎯 خطة التداول الميدانية بالأرقام (سهم {currentCase.nameAr}):
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-md-on-surface block">
+                    🎯 خطة التداول الميدانية بالأرقام بقالب BADRAN (سهم {currentCase.nameAr}):
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25">
+                    تطبيق معادلة التنفيذ الصارمة
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 gap-2.5 text-xs">
                   
                   <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-0.5">
-                    <span className="text-[11px] text-md-on-surface-variant block">سعر الدخول المقترح</span>
+                    <span className="text-[10px] text-md-on-surface-variant block font-bold">1. سعر الدخول المعتمد (سقف الأوردر بلوك)</span>
                     <span className="text-sm font-bold font-mono text-md-primary block">
                       {currentCase.finalVerdict.entryRange}
                     </span>
                   </div>
 
                   <div className="p-3 bg-rose-500/10 rounded-[16px] border border-rose-500/30 space-y-0.5">
-                    <span className="text-[11px] text-rose-600 dark:text-rose-400 block font-bold">وقف الخسارة الصارم (Stop Loss)</span>
+                    <span className="text-[10px] text-rose-600 dark:text-rose-400 block font-bold">2. وقف الخسارة الصارم (وقف ATR Fib)</span>
                     <span className="text-sm font-bold font-mono text-rose-700 dark:text-rose-300 block">
                       {currentCase.finalVerdict.stopLoss}
                     </span>
                   </div>
 
                   <div className="p-3 bg-emerald-500/10 rounded-[16px] border border-emerald-500/30 space-y-0.5">
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 block font-bold">الهدف الأول (جني ربح 50%)</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-bold">3. الهدف الأول TP1 (تأمين 50% + Breakeven)</span>
                     <span className="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300 block">
                       {currentCase.finalVerdict.target1}
                     </span>
                   </div>
 
                   <div className="p-3 bg-emerald-500/10 rounded-[16px] border border-emerald-500/30 space-y-0.5">
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 block font-bold">الهدف الثاني (سقف العمارة)</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-bold">4. الهدف الثاني TP2 (حصد الرالي مع خط ATR)</span>
                     <span className="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300 block">
                       {currentCase.finalVerdict.target2}
                     </span>
