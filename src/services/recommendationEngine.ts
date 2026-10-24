@@ -1,6 +1,7 @@
 import { StockData, PortfolioPosition, MutualFund } from '../types';
 import { LIVE_GOLD_24K_PRICE, formatPrice } from './egxService';
 import { resolve7LayerAnalysis, extractPriceFromText } from './growthxSimulatorData';
+import { getStockFundamentalProfile } from './egxFundamentalData';
 
 export type RecommendationType = 
   | 'STRONG_BUY'     // شراء قوي واختراق
@@ -78,11 +79,20 @@ export function analyzeStock(stock: StockData): StockRecommendation {
   let badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/30';
   let horizon: StockRecommendation['horizon'] = 'مضاربة سوينج (3 - 10 أيام)';
 
-  if (v.rating === 'strong_buy') {
+  const fund = getStockFundamentalProfile(stock.symbol);
+  const isDistressed = fund.financialHealthGrade === 'HIGH_RISK_DISTRESSED';
+  const isExcellent = fund.financialHealthGrade === 'EXCELLENT';
+
+  if (isDistressed) {
+    type = 'SWING_BUY';
+    badgeLabel = '⚠️ مضاربة أفراد عالية المخاطر (شركة مأزومة)';
+    badgeColor = 'bg-amber-500/10 text-amber-500 border-amber-500/30';
+    horizon = 'مضاربة لحظية / يومية';
+  } else if (v.rating === 'strong_buy') {
     type = 'STRONG_BUY';
-    badgeLabel = 'شراء قوي (توافق فني ومالي ممتاز)';
+    badgeLabel = isExcellent ? '🏛️ شراء استثماري قوي (مركز مالي ممتاز)' : 'شراء قوي (توافق فني ومالي ممتاز)';
     badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-    horizon = 'مضاربة سوينج (3 - 10 أيام)';
+    horizon = isExcellent ? 'استثماري (أسابيع / شهر)' : 'مضاربة سوينج (3 - 10 أيام)';
   } else if (v.rating === 'buy') {
     type = 'SWING_BUY';
     badgeLabel = 'شراء سوينج (ارتكاز فني عند الدعم)';
@@ -332,13 +342,39 @@ export function diagnosePortfolioPosition(
     };
   }
 
-  // 3. Strong Buy / 7-Layers Verified Bullish Setup (e.g. COMI, TMGH, SWDY, CCAP):
+  const fundProfile = getStockFundamentalProfile(pos.symbol);
+  const isDistressed = fundProfile.financialHealthGrade === 'HIGH_RISK_DISTRESSED';
+  const isExcellent = fundProfile.financialHealthGrade === 'EXCELLENT';
+
+  // 3. High Risk Distressed Warning (e.g. CCAP, CERA):
+  // CRITICAL: NEVER call a distressed/indebted company an "استثمار رابح وتماسك إيجابي"!
+  if (isDistressed) {
+    return {
+      position: pos,
+      liveStock,
+      status: 'HOLD_CAUTIOUS',
+      statusTitle: '⚠️ مضاربة عالية المخاطر (شركة مأزومة مالياً)',
+      statusColor: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+      currentPnlPct: Number(pnlPct.toFixed(2)),
+      currentValue,
+      currentPrice,
+      actionTitle: `مضاربة أفراد سريعة • حجز أرباح عند ${formatPrice(techTarget1, liveStock?.isFund)} ج.م مع وقف صارم`,
+      actionDetails: `تحذير بوابة الأمان المالي (Gate 0): سهم ${pos.symbol} (${fundProfile.nameAr}) مأزوم مالياً ومحمل بديون وخسائر مرحلة، ولا يصلح نهائياً للاستثمار طويل أو متوسط الأجل. الصعود الحالي حركة مضاربة سريعة للأفراد؛ احرص على حجز أي أرباح عند الاقتراب من المستهدف (${formatPrice(techTarget1, liveStock?.isFund)} ج.م)، مع الالتزام الصارم بوقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م بدون تهاون.`,
+      suggestedStopLoss: techStop,
+      suggestedTarget: techTarget1,
+      priority: 'high'
+    };
+  }
+
+  // 4. Strong Buy / 7-Layers Verified Bullish Setup (e.g. COMI, TMGH, SWDY):
   if (v.rating === 'strong_buy') {
     return {
       position: pos,
       liveStock,
       status: 'TRENDING_UP',
-      statusTitle: '🚀 توافق الـ 7 طبقات - ارتكاز سوينج مؤسسي (احتفاظ كامل)',
+      statusTitle: isExcellent 
+        ? '🏛️ استثمار مؤسسي رابح وتوافق الـ 7 طبقات (مركز مالي ممتاز)' 
+        : '🚀 توافق الـ 7 طبقات - ارتكاز سوينج مؤسسي (احتفاظ كامل)',
       statusColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
       currentPnlPct: Number(pnlPct.toFixed(2)),
       currentValue,
@@ -351,7 +387,7 @@ export function diagnosePortfolioPosition(
     };
   }
 
-  // 4. Swing Buy:
+  // 5. Swing Buy:
   if (v.rating === 'buy') {
     return {
       position: pos,
@@ -370,12 +406,12 @@ export function diagnosePortfolioPosition(
     };
   }
 
-  // 5. Default Healthy Hold:
+  // 6. Default Healthy Hold:
   return {
     position: pos,
     liveStock,
     status: 'HOLD_CAUTIOUS',
-    statusTitle: '📈 استثمار رابح وتماسك إيجابي',
+    statusTitle: isExcellent ? '🏛️ استثمار رابح وتماسك إيجابي' : '📈 مسار مستقر وتماسك إيجابي',
     statusColor: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30',
     currentPnlPct: Number(pnlPct.toFixed(2)),
     currentValue,

@@ -60,6 +60,20 @@ export interface MutualFund {
   dailyChange: number; // Daily change %
   nav?: number;        // Latest net asset value
   thndrAvailable: boolean;
+  isSavingPot?: boolean;
+}
+
+export interface SavingPotProduct {
+  id: string;
+  name: string;
+  code: string;
+  type: 'daily' | 'monthly';
+  expectedAnnualRate: string;
+  payoutFrequency: string;
+  minDeposit: number;
+  fee: string;
+  navPriceText: string;
+  description: string;
 }
 
 export interface EGXNewsItem {

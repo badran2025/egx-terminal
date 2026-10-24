@@ -1,11 +1,38 @@
-import { StockData, MutualFund, EGXNewsItem } from '../types';
+import { StockData, MutualFund, EGXNewsItem, SavingPotProduct } from '../types';
 import { EGX_ARABIC_NAMES, StockMeta } from './egxArabicNames';
 
 // Live Exact Market Benchmarks & Fund NAVs (Unified Source of Truth - No Forced Rounding)
-export const LIVE_GOLD_24K_PRICE = 7203.00; // Live 24k Gold per gram in Egypt and Thndr
-export const LIVE_T70_NAV = 1.39832;        // Live Thndr T70 Fund NAV (exact 5 decimals)
+export const LIVE_GOLD_24K_PRICE = 4150.00; // Live 24k Gold per gram in Egypt and Thndr
+export const LIVE_T70_NAV = 1.4429;         // Live Thndr T70 Fund NAV (exact 5 decimals)
 export const LIVE_BMM_NAV = 2.14964;        // Live Belton Myeh Myeh Fund NAV
-export const LIVE_ABR_NAV = 218.27304;      // Live Bareeq Fund NAV
+export const LIVE_ABR_NAV = 217.87;         // Live Bareeq Fund NAV
+
+export const THNDR_SAVING_POTS: SavingPotProduct[] = [
+  {
+    id: "cloud-daily",
+    name: "كلاودز اليومي (Daily Clouds)",
+    code: "CLOUD-DAILY",
+    type: "daily",
+    expectedAnnualRate: "19.25% سنوياً",
+    payoutFrequency: "عائد يومي يُصرف تلقائياً كل يوم",
+    minDeposit: 1,
+    fee: "0% بدون مصاريف أو قيود على السحب",
+    navPriceText: "لا يوجد وثيقة (حساب نقدي بعائد يومي)",
+    description: "وعاء ادخار نقدي من ثاندر بالتعاون مع أزيموت مصر. رصيد كاش بعائد تراكمي يومي مركب مع إمكانية السحب الفوري في أي لحظة."
+  },
+  {
+    id: "cloud-monthly",
+    name: "كلاودز الشهري (Monthly Clouds)",
+    code: "CLOUD-MONTHLY",
+    type: "monthly",
+    expectedAnnualRate: "21.50% سنوياً",
+    payoutFrequency: "عائد دوري يُصرف نهاية كل شهر",
+    minDeposit: 1,
+    fee: "0% سحب شهري بدون قيود",
+    navPriceText: "لا يوجد وثيقة (حساب نقدي بعائد شهري)",
+    description: "وعاء ادخار بعائد أعلى يمنحك أرباحاً شهرية منتظمة لأصحاب المدخرات والأهداف المالية الممتدة."
+  }
+];
 
 /**
  * Unified price formatter for Egyptian Stock Exchange (EGX) & Mutual Funds / Gold.
@@ -1421,19 +1448,19 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
   {
     "id": "cloud-daily",
     "code": "اليومي",
-    "name": "كلاودز اليومي",
+    "name": "كلاودز اليومي (ادخار كاش)",
     "category": "كلاودز",
-    "dailyChange": 0.04,
-    "nav": 100,
+    "dailyChange": 0.05,
+    "isSavingPot": true,
     "thndrAvailable": true
   },
   {
     "id": "cloud-monthly",
     "code": "الشهري",
-    "name": "كلاودز الشهري",
+    "name": "كلاودز الشهري (ادخار كاش)",
     "category": "كلاودز",
-    "dailyChange": 0.05,
-    "nav": 1000,
+    "dailyChange": 0.06,
+    "isSavingPot": true,
     "thndrAvailable": true
   },
   {
@@ -1451,7 +1478,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق أزيموت جولد",
     "category": "ذهب وفضة",
     "dailyChange": 0.18,
-    "nav": 28.45,
+    "nav": 25.80,
     "thndrAvailable": true
   },
   {
@@ -1460,7 +1487,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بلتون سبائك",
     "category": "ذهب وفضة",
     "dailyChange": 0.18,
-    "nav": 28.25,
+    "nav": 25.60,
     "thndrAvailable": true
   },
   {
@@ -1469,7 +1496,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق الأهلي دهب",
     "category": "ذهب وفضة",
     "dailyChange": 0.18,
-    "nav": 27.8,
+    "nav": 25.40,
     "thndrAvailable": true
   },
   {
@@ -1478,7 +1505,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق سي آي جولد",
     "category": "ذهب وفضة",
     "dailyChange": 0.18,
-    "nav": 28.15,
+    "nav": 25.50,
     "thndrAvailable": true
   },
   {
@@ -1487,7 +1514,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بوليون للمعادن",
     "category": "ذهب وفضة",
     "dailyChange": 0.11,
-    "nav": 28.1,
+    "nav": 25.45,
     "thndrAvailable": true
   },
   {
@@ -1496,7 +1523,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بلتون فضة",
     "category": "ذهب وفضة",
     "dailyChange": -0.01,
-    "nav": 16.8,
+    "nav": 16.85,
     "thndrAvailable": true
   },
   {
@@ -1505,7 +1532,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق مباشر فضة",
     "category": "ذهب وفضة",
     "dailyChange": -0.06,
-    "nav": 16.95,
+    "nav": 16.90,
     "thndrAvailable": true
   },
   {
@@ -1856,7 +1883,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بلتون EGX70",
     "category": "أسهم مؤشرات (سلبية)",
     "dailyChange": -0.96,
-    "nav": 1.52,
+    "nav": 1.485,
     "thndrAvailable": true
   },
   {
@@ -1874,7 +1901,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق آفاق",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 185.4,
+    "nav": 214.20,
     "thndrAvailable": true
   },
   {
@@ -1883,7 +1910,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بريق (دخل ثابت وسيولة)",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.06,
-    "nav": 218.27304,
+    "nav": LIVE_ABR_NAV,
     "thndrAvailable": true
   },
   {
@@ -1982,7 +2009,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق مصر للتأمين التكافلي",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 188.7,
+    "nav": 217.85,
     "thndrAvailable": true
   },
   {
@@ -1991,7 +2018,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق أودن الرابع",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 135.2,
+    "nav": 152.40,
     "thndrAvailable": true
   },
   {
@@ -2000,7 +2027,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق كاشي PFI",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 122.1,
+    "nav": 148.60,
     "thndrAvailable": true
   },
   {
@@ -2009,7 +2036,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق زالدي ستار",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 140.5,
+    "nav": 165.20,
     "thndrAvailable": true
   },
   {
@@ -2018,7 +2045,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق ثروتي",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 178,
+    "nav": 212.50,
     "thndrAvailable": true
   },
   {
@@ -2027,7 +2054,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق وثاق",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.05,
-    "nav": 166.4,
+    "nav": 198.40,
     "thndrAvailable": true
   },
   {
@@ -2036,7 +2063,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق أزيموت ناصر",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.04,
-    "nav": 195.2,
+    "nav": 218.40,
     "thndrAvailable": true
   },
   {
@@ -2045,7 +2072,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق AZ ادخار",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.04,
-    "nav": 18.9,
+    "nav": 21.55,
     "thndrAvailable": true
   },
   {
@@ -2054,7 +2081,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بي سيكيور",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.04,
-    "nav": 154.3,
+    "nav": 182.60,
     "thndrAvailable": true
   },
   {
@@ -2063,7 +2090,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق بي جي آي للتأمين النقدي للسيولة",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.04,
-    "nav": 147.8,
+    "nav": 176.40,
     "thndrAvailable": true
   },
   {
@@ -2072,7 +2099,7 @@ export const EGYPTIAN_MUTUAL_FUNDS: MutualFund[] = [
     "name": "صندوق تارجت الأول",
     "category": "دخل ثابت ونقدي",
     "dailyChange": 0.04,
-    "nav": 163.5,
+    "nav": 192.10,
     "thndrAvailable": true
   }
 ];
