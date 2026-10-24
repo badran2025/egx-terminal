@@ -4,7 +4,7 @@ import {
   BarChart2, Filter, Briefcase, FlaskConical
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
-import { formatPrice } from '../services/egxService';
+import { formatPrice, formatTurnover, formatVolumeShares } from '../services/egxService';
 import { getStockFundamentalProfile } from '../services/egxFundamentalData';
 import { MdCard, MdChip, MdTextField, MdBadge, MdButton } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
@@ -30,7 +30,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'owned' | 'egx30' | 'egx70' | 'egx100' | 'funds' | 'strong_buy' | 'oversold' | 'sell'>('all');
   const [search, setSearch] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'volume' | 'change' | 'rsi' | 'score'>('volume');
+  const [sortBy, setSortBy] = useState<'volume' | 'turnover' | 'change' | 'rsi' | 'score'>('turnover');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Fast set of user owned tickers
@@ -66,7 +66,11 @@ export const TechnicalRadarView: React.FC<Props> = ({
   filtered.sort((a, b) => {
     let valA = 0;
     let valB = 0;
-    if (sortBy === 'volume') { valA = a.volume; valB = b.volume; }
+    if (sortBy === 'turnover') {
+      valA = a.turnover || (a.volume * a.close);
+      valB = b.turnover || (b.volume * b.close);
+    }
+    else if (sortBy === 'volume') { valA = a.volume; valB = b.volume; }
     else if (sortBy === 'change') { valA = a.changePercent; valB = b.changePercent; }
     else if (sortBy === 'rsi') { valA = a.rsi; valB = b.rsi; }
     else if (sortBy === 'score') { valA = a.recommendationScore; valB = b.recommendationScore; }
@@ -74,7 +78,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
     return sortOrder === 'desc' ? valB - valA : valA - valB;
   });
 
-  const toggleSort = (field: 'volume' | 'change' | 'rsi' | 'score') => {
+  const toggleSort = (field: 'volume' | 'turnover' | 'change' | 'rsi' | 'score') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
     } else {
@@ -187,10 +191,25 @@ export const TechnicalRadarView: React.FC<Props> = ({
                     <ArrowUpDown size={13} />
                   </div>
                 </th>
-                <th className="p-4 text-right cursor-pointer hover:text-md-on-surface min-w-[120px]" onClick={() => toggleSort('volume')}>
-                  <div className="flex items-center gap-1.5">
-                    <span>حجم التداول</span>
-                    <ArrowUpDown size={13} />
+                <th className="p-4 text-right min-w-[155px]">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button 
+                      onClick={() => toggleSort('turnover')}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-md-surface-container transition-colors ${sortBy === 'turnover' ? 'text-md-primary font-extrabold bg-md-primary/10' : 'hover:text-md-on-surface'}`}
+                      title="فرز حسب سيولة وقيمة التداول بالجنيه المصري (Turnover EGP)"
+                    >
+                      <span>قيمة التداول</span>
+                      <ArrowUpDown size={12} className={sortBy === 'turnover' ? 'text-md-primary' : ''} />
+                    </button>
+                    <span className="text-md-outline-variant/60">/</span>
+                    <button 
+                      onClick={() => toggleSort('volume')}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-md-surface-container transition-colors ${sortBy === 'volume' ? 'text-md-primary font-extrabold bg-md-primary/10' : 'hover:text-md-on-surface'}`}
+                      title="فرز حسب عدد الأسهم المتداولة (Shares Volume)"
+                    >
+                      <span>الأسهم</span>
+                      <ArrowUpDown size={12} className={sortBy === 'volume' ? 'text-md-primary' : ''} />
+                    </button>
                   </div>
                 </th>
                 <th className="p-4 text-right cursor-pointer hover:text-md-on-surface min-w-[150px]" onClick={() => toggleSort('score')}>
@@ -308,9 +327,14 @@ export const TechnicalRadarView: React.FC<Props> = ({
                       </div>
                     </td>
 
-                    {/* 4. Volume */}
-                    <td className="p-4 text-right font-mono text-md-on-surface-variant font-semibold text-sm">
-                      {stock.volume.toLocaleString('en-US')}
+                    {/* 4. Volume & Turnover (قيمة وسيولة التداول بالجنيه + عدد الأسهم) */}
+                    <td className="p-4 text-right">
+                      <div className="font-mono font-extrabold text-sm text-md-on-surface">
+                        {formatTurnover(stock.turnover || (stock.volume * stock.close))}
+                      </div>
+                      <div className="font-mono text-[11px] text-md-on-surface-variant font-medium mt-0.5">
+                        {formatVolumeShares(stock.volume)}
+                      </div>
                     </td>
 
                     {/* 5. Technical Rating */}

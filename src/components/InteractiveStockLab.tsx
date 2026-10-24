@@ -224,51 +224,33 @@ export const InteractiveStockLab: React.FC<Props> = ({
   return (
     <div className="space-y-6 text-md-on-surface w-full max-w-[1920px] mx-auto" dir="rtl">
       
-      {/* 1. Header Banner: كلام صحاب بالبلدي */}
-      <div className="bg-gradient-to-r from-md-primary/10 via-md-primary-container/40 to-md-secondary-container/30 border border-md-primary/30 rounded-[28px] p-6 shadow-sm relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md-full bg-emerald-600 text-white text-xs font-bold shadow-sm">
-                <Sparkles size={14} />
-                <span>المحاكي العملي المباشر • فحص وتطبيق قالب BADRAN المعتمد (ثاندر)</span>
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md-full bg-blue-500/15 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30">
-                <CheckCircle2 size={13} />
-                <span>8 مؤشرات متزامنة + الفحص المالي الحاسم</span>
-              </div>
-
-              {onNavigateToRecommendations && (
-                <button
-                  onClick={onNavigateToRecommendations}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md-full bg-md-surface hover:bg-md-surface-container-high border border-md-outline-variant/60 text-xs font-bold text-md-primary transition-all shadow-sm"
-                >
-                  <span>🎯 رادار التوصيات الموحد (294 سهم)</span>
-                  <ArrowLeft size={12} />
-                </button>
-              )}
-            </div>
-
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-md-on-surface">
-              إزاي بنقرر نشتري السهم ولا لأ خطوة بخطوة بقالب BADRAN؟
-            </h2>
-            <p className="text-sm text-md-on-surface-variant font-medium max-w-3xl leading-relaxed">
-              المحاكي العملي يتبع بدقة نفس الخطوات الصارمة: يبدأ بـ <strong>بوابة السلامة المالية (Gate 0)</strong> لاستبعاد الشركات المأزومة الخاسرة، ثم يمر بـ <strong>الطبقات الفنية السبع لقالب BADRAN</strong> على الشارت الحي خطوة بخطوة، وصولاً إلى <strong>التوصية والقرار الميداني النهائي</strong> (سعر الدخول، وقف ATR Fib، وأهداف الربح TP1 و TP2)!
-            </p>
+      {/* 1. Compact Header Bar: فحص وتطبيق قالب BADRAN المعتمد */}
+      <div className="bg-gradient-to-r from-md-primary/10 via-md-primary-container/25 to-md-secondary-container/20 border border-md-primary/25 rounded-[22px] px-5 py-3.5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs">
+              <Sparkles size={13} />
+              <span>قالب BADRAN المعتمد في ثاندر</span>
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/25">
+              <CheckCircle2 size={12} />
+              <span>بوابة Gate 0 المالية + الـ 7 طبقات الفنية</span>
+            </span>
           </div>
-
-          {/* Quick concept pill */}
-          <div className="bg-md-surface/90 backdrop-blur-sm border border-md-outline-variant/60 rounded-[20px] p-4 text-center min-w-[220px] shadow-sm">
-            <span className="text-[11px] text-md-primary font-bold block mb-1">فلسفة التداول الذكي</span>
-            <div className="text-xs font-extrabold text-md-on-surface">
-              المؤشرات "تأكيد" وليست "قراراً"
-            </div>
-            <div className="text-[10px] text-md-on-surface-variant mt-1">
-              4 مرايات + 3 طبقات = قرار مؤسسي صارم
-            </div>
-          </div>
+          <p className="text-xs text-md-on-surface-variant font-medium">
+            اختر أي سهم أدناه لفحصه فورياً عبر بوابات الأمان المالي والطبقات الفنية لتحديد سعر الدخول ووقف الخسارة وجني الأرباح.
+          </p>
         </div>
+
+        {onNavigateToRecommendations && (
+          <button
+            onClick={onNavigateToRecommendations}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-md-surface hover:bg-md-surface-container-high border border-md-outline-variant/60 text-xs font-bold text-md-primary transition-all shadow-xs shrink-0 self-end md:self-auto"
+          >
+            <span>📋 كروت التوصيات (294 سهم)</span>
+            <ArrowLeft size={12} />
+          </button>
+        )}
       </div>
 
       {/* 2. Unified Universal Stock Search & Benchmark Chips Bar (يدعم كافة أسهم البورصة المصرية بالكامل) */}

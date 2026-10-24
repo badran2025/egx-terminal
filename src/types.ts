@@ -7,6 +7,7 @@ export interface StockData {
   change: number;
   changePercent: number;
   volume: number;
+  turnover?: number; // Total cash turnover in EGP (Value.Traded)
   recommendationScore: number; // -1 to 1
   recommendationText: 'شراء قوي' | 'شراء' | 'مراقبة / محايد' | 'بيع' | 'بيع قوي / خروج';
   rsi: number;

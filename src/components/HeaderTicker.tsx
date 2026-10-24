@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Clock, Activity, ShieldCheck, DollarSign } from 'lucide-react';
 import { StockData } from '../types';
-import { LIVE_GOLD_24K_PRICE, formatPrice } from '../services/egxService';
+import { LIVE_GOLD_24K_PRICE, LIVE_USD_MARKET_RATE, formatPrice } from '../services/egxService';
 
 interface Props {
   stocks: StockData[];
@@ -28,10 +28,11 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
   const tmgh = stocks.find(s => s.symbol === 'TMGH');
   const goldStock = stocks.find(s => s.symbol.toUpperCase() === 'THNDRGOLD');
   
-  // Real-time market prices: Gold 24k in Thndr (7,203.00 EGP), 21k (6,302.63 EGP), USD/EGP (~50.50 EGP)
+  // Real-time market prices: Gold 24k (7,180 EGP), 21k (6,282.50 EGP), Gold Pound (50,260 EGP), USD Real Market Rate (~55.50 EGP)
   const gold24Price = (goldStock?.close && goldStock.close > 1000) ? goldStock.close : LIVE_GOLD_24K_PRICE;
   const gold21Price = (gold24Price * (21 / 24));
-  const usdRate = 50.50;
+  const goldPoundPrice = gold21Price * 8; // 8 grams 21k
+  const usdMarketRate = LIVE_USD_MARKET_RATE;
 
   return (
     <div className="bg-md-surface-container-lowest border-b border-md-outline-variant/60 text-xs px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-md-on-surface">
@@ -107,19 +108,19 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
           </span>
         </div>
 
-        {/* Gold & Currency Micro Tickers (Real market rates for Egypt & Thndr) */}
+        {/* Gold & Currency Micro Tickers (Real market rates for Egypt & Sagha) */}
         <div className="flex items-center gap-3 pl-3 border-r border-md-outline-variant/60 flex-shrink-0 font-mono text-[11px]">
           <div 
             onClick={() => onSelectStock('THNDRGOLD')}
             className="flex items-center gap-1.5 cursor-pointer hover:bg-amber-500/10 px-2 py-0.5 rounded-full transition-colors text-amber-600 dark:text-amber-400 font-bold"
-            title="سعر جرام الذهب عيار 24 الرسمي في مصر ودهب ثاندر (اضغط للشارت)"
+            title="سعر جرام الذهب عيار 24 بسعر السوق الحقيقي (اضغط للشارت)"
           >
-            <span>🥇 ذهب 24 (ثاندر):</span>
+            <span>🥇 ذهب 24 (سعر السوق):</span>
             <strong className="text-md-on-surface font-extrabold">{formatPrice(gold24Price)} ج.م</strong>
           </div>
 
           <div 
-            className="flex items-center gap-1.5 text-amber-700/80 dark:text-amber-300/80 font-medium"
+            className="flex items-center gap-1.5 text-amber-700/90 dark:text-amber-300 font-medium"
             title="سعر جرام الذهب عيار 21 الأكثر تداولاً في الصاغة المصرية"
           >
             <span>✨ عيار 21:</span>
@@ -127,11 +128,19 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
           </div>
 
           <div 
-            className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium"
-            title="سعر صرف الدولار الرسمي بالبنوك المصرية"
+            className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium hidden sm:flex"
+            title="سعر الجنيه الذهب في الصاغة (8 جرام عيار 21)"
           >
-            <span>💵 دولار البنك:</span>
-            <strong className="text-md-on-surface font-extrabold">{usdRate.toFixed(2)} ج.م</strong>
+            <span>🪙 جنيه الذهب:</span>
+            <strong className="text-md-on-surface font-extrabold">{formatPrice(goldPoundPrice)} ج.م</strong>
+          </div>
+
+          <div 
+            className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium"
+            title="سعر صرف الدولار الحقيقي بسوق الصاغة والتحوط (وليس البنك المركزي)"
+          >
+            <span>💵 دولار السوق الحقيقي:</span>
+            <strong className="text-md-on-surface font-extrabold">{usdMarketRate.toFixed(2)} ج.م</strong>
           </div>
         </div>
       </div>

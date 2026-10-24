@@ -1,8 +1,10 @@
 import { StockData, MutualFund, EGXNewsItem, SavingPotProduct } from '../types';
 import { EGX_ARABIC_NAMES, StockMeta } from './egxArabicNames';
 
-// Live Exact Market Benchmarks & Fund NAVs (Unified Source of Truth - No Forced Rounding)
-export const LIVE_GOLD_24K_PRICE = 4150.00; // Live 24k Gold per gram in Egypt and Thndr
+// Live Exact Market Benchmarks & Fund NAVs (Unified Source of Truth - Real Market & Gold Prices)
+export const LIVE_GOLD_24K_PRICE = 7180.00; // Live 24k Gold per gram real market price in Egypt
+export const LIVE_GOLD_21K_PRICE = 6282.50; // Live 21k Gold per gram in Egyptian Sagha
+export const LIVE_USD_MARKET_RATE = 55.50;  // Live USD/EGP Real Market Rate
 export const LIVE_T70_NAV = 1.4429;         // Live Thndr T70 Fund NAV (exact 5 decimals)
 export const LIVE_BMM_NAV = 2.14964;        // Live Belton Myeh Myeh Fund NAV
 export const LIVE_ABR_NAV = 217.87;         // Live Bareeq Fund NAV
@@ -52,6 +54,37 @@ export function formatPrice(price: number | undefined | null, isFund?: boolean):
     minimumFractionDigits: Math.min(2, maxDecimals),
     maximumFractionDigits: maxDecimals
   });
+}
+
+/**
+ * Formats cash turnover in EGP with official Egyptian financial notation (مليار / مليون / ألف ج.م)
+ */
+export function formatTurnover(turnover: number | undefined | null): string {
+  if (turnover === undefined || turnover === null || isNaN(turnover) || turnover <= 0) return '0 ج.م';
+  if (turnover >= 1_000_000_000) {
+    return `${(turnover / 1_000_000_000).toFixed(2)} مليار ج.م`;
+  }
+  if (turnover >= 1_000_000) {
+    return `${(turnover / 1_000_000).toFixed(2)} مليون ج.م`;
+  }
+  if (turnover >= 1_000) {
+    return `${(turnover / 1_000).toFixed(1)} ألف ج.م`;
+  }
+  return `${turnover.toLocaleString('en-US')} ج.م`;
+}
+
+/**
+ * Formats shares volume with compact notation (M سهم / K سهم)
+ */
+export function formatVolumeShares(volume: number | undefined | null): string {
+  if (volume === undefined || volume === null || isNaN(volume) || volume <= 0) return '0 سهم';
+  if (volume >= 1_000_000) {
+    return `${(volume / 1_000_000).toFixed(2)}M سهم`;
+  }
+  if (volume >= 1_000) {
+    return `${(volume / 1_000).toFixed(1)}K سهم`;
+  }
+  return `${volume.toLocaleString('en-US')} سهم`;
 }
 
 export interface EGXSessionDates {
@@ -136,6 +169,7 @@ const DEFAULT_COLUMNS = [
   'change',
   'change_abs',
   'volume',
+  'Value.Traded',
   'Recommend.All',
   'Recommend.All|60',
   'Recommend.All|240',
@@ -221,20 +255,21 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
       const close = d[2] || 0;
       const changePct = d[3] || 0;
       const volume = d[5] || 0;
-      const recScore = d[6] ?? 0;
-      const rec1h = d[7] ?? 0;
-      const rec4h = d[8] ?? 0;
-      const rec1w = d[9] ?? 0;
-      const rsi = d[10] || 50;
-      const rsi1h = d[11] || 50;
-      const ema20 = d[12] || close;
-      const ema50 = d[13] || close;
-      const ema200 = d[14] || close;
-      const s1 = d[15] || (close * 0.95);
-      const s2 = d[16] || (close * 0.90);
-      const r1 = d[17] || (close * 1.05);
-      const r2 = d[18] || (close * 1.10);
-      const pivot = d[19] || close;
+      const turnover = d[6] || (volume * close);
+      const recScore = d[7] ?? 0;
+      const rec1h = d[8] ?? 0;
+      const rec4h = d[9] ?? 0;
+      const rec1w = d[10] ?? 0;
+      const rsi = d[11] || 50;
+      const rsi1h = d[12] || 50;
+      const ema20 = d[13] || close;
+      const ema50 = d[14] || close;
+      const ema200 = d[15] || close;
+      const s1 = d[16] || (close * 0.95);
+      const s2 = d[17] || (close * 0.90);
+      const r1 = d[18] || (close * 1.05);
+      const r2 = d[19] || (close * 1.10);
+      const pivot = d[20] || close;
 
       return {
         symbol: rawSymbol,
@@ -245,6 +280,7 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
         change: d[4] || 0,
         changePercent: changePct,
         volume,
+        turnover,
         recommendationScore: recScore,
         recommendationText: getRecommendationCategory(recScore),
         rsi,
@@ -1403,7 +1439,10 @@ export function getFallbackStocks(): StockData[] {
     }
   });
 
-  return allFallback;
+  return allFallback.map(s => ({
+    ...s,
+    turnover: s.turnover || Number((s.volume * s.close).toFixed(2))
+  }));
 }
 
 // All 71 Funds + 2 Clouds from Thndr Community
@@ -1411,6 +1450,7 @@ export function getFallbackStocks(): StockData[] {
 export function convertFundToStockData(fund: MutualFund): StockData {
   const price = fund.nav || 10.0;
   const isGold = fund.id === 'thndr-gold' || fund.code.toUpperCase() === 'THNDRGOLD' || fund.category === 'ذهب وفضة';
+  const fundVolume = isGold ? 650000 : 250000;
   return {
     symbol: fund.code.toUpperCase(),
     ticker: `EGX:${fund.code.toUpperCase()}`,
@@ -1419,7 +1459,8 @@ export function convertFundToStockData(fund: MutualFund): StockData {
     close: price,
     change: Number(((price * fund.dailyChange) / 100).toFixed(2)),
     changePercent: fund.dailyChange,
-    volume: 500000,
+    volume: fundVolume,
+    turnover: Number((fundVolume * price).toFixed(2)),
     recommendationScore: fund.dailyChange >= 0 ? 0.35 : -0.15,
     recommendationText: fund.dailyChange >= 0.5 ? 'شراء قوي' : (fund.dailyChange >= 0 ? 'شراء' : 'مراقبة / محايد'),
     rsi: fund.dailyChange >= 0 ? 55 + (fund.dailyChange * 5) : 45 + (fund.dailyChange * 5),
