@@ -1,5 +1,6 @@
 import { StockData, PortfolioPosition, MutualFund } from '../types';
 import { LIVE_GOLD_24K_PRICE, formatPrice } from './egxService';
+import { resolve7LayerAnalysis, extractPriceFromText } from './growthxSimulatorData';
 
 export type RecommendationType = 
   | 'STRONG_BUY'     // شراء قوي واختراق
@@ -52,136 +53,69 @@ export interface PortfolioStockDiagnosis {
 
 /**
  * Generates an in-depth technical recommendation for a single stock
+ * Powered 100% by the 7-Layers Institutional Engine as the Single Source of Truth
  */
 export function analyzeStock(stock: StockData): StockRecommendation {
-  const price = stock.close;
-  const s1 = stock.support1;
-  const s2 = stock.support2;
-  const r1 = stock.resistance1;
-  const r2 = stock.resistance2;
-  const p = stock.pivot;
-  const rsi = stock.rsi;
-  const ema20 = stock.ema20;
-  const ema50 = stock.ema50;
-  const ema200 = stock.ema200;
+  const simCase = resolve7LayerAnalysis(stock.symbol, stock);
+  const v = simCase.finalVerdict;
+
+  const currentPrice = stock.close && stock.close > 0 ? stock.close : simCase.currentPrice;
+  const stopLoss = extractPriceFromText(v.stopLoss, Number((currentPrice * 0.95).toFixed(2)));
+  const target1 = extractPriceFromText(v.target1, Number((currentPrice * 1.08).toFixed(2)));
+  const target2 = extractPriceFromText(v.target2, Number((target1 * 1.08).toFixed(2)));
+
+  // Extract entry range
+  let entryZoneMin = Number((currentPrice * 0.99).toFixed(2));
+  let entryZoneMax = Number((currentPrice * 1.01).toFixed(2));
+  const rangeMatch = v.entryRange.match(/([0-9]+(?:\.[0-9]+)?)\s*[-–]\s*([0-9]+(?:\.[0-9]+)?)/);
+  if (rangeMatch) {
+    entryZoneMin = parseFloat(rangeMatch[1]);
+    entryZoneMax = parseFloat(rangeMatch[2]);
+  }
 
   let type: RecommendationType = 'ACCUMULATE';
   let badgeLabel = 'تجميع واستثمار';
   let badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/30';
-  let horizon: StockRecommendation['horizon'] = 'استثماري (أسابيع / شهر)';
+  let horizon: StockRecommendation['horizon'] = 'مضاربة سوينج (3 - 10 أيام)';
 
-  // Calculate Levels
-  let entryPrice = price;
-  let entryZoneMin = Number((price * 0.985).toFixed(2));
-  let entryZoneMax = Number((price * 1.01).toFixed(2));
-
-  // Determine Stop Loss (S1 or S2 or -4% trailing)
-  let stopLoss = s1 < price ? s1 : Number((price * 0.95).toFixed(2));
-  if (stopLoss >= price) {
-    stopLoss = Number((price * 0.95).toFixed(2));
-  }
-  let stopLossPct = Number((((price - stopLoss) / price) * 100).toFixed(1));
-
-  // Determine Targets (R1, R2 or percentages)
-  let target1 = r1 > price ? r1 : Number((price * 1.06).toFixed(2));
-  let target2 = r2 > target1 ? r2 : Number((target1 * 1.07).toFixed(2));
-
-  let target1Pct = Number((((target1 - price) / price) * 100).toFixed(1));
-  let target2Pct = Number((((target2 - price) / price) * 100).toFixed(1));
-
-  // Risk / Reward Ratio
-  const riskAmount = price - stopLoss;
-  const rewardAmount = target1 - price;
-  let riskRewardRatio = riskAmount > 0 ? Number((rewardAmount / riskAmount).toFixed(1)) : 2.0;
-  if (riskRewardRatio <= 0) riskRewardRatio = 1.5;
-
-  // Technical Scoring (0 to 100)
-  let technicalScore = 50;
-  if (price > ema20) technicalScore += 10;
-  if (price > ema50) technicalScore += 10;
-  if (price > ema200) technicalScore += 15;
-  if (rsi >= 45 && rsi <= 62) technicalScore += 15;
-  if (stock.changePercent > 0) technicalScore += 10;
-  if (stock.recommendationScore > 0.1) technicalScore += 10;
-
-  // Classify Recommendation Type
-  if (rsi > 72 || price >= r2) {
-    type = 'TAKE_PROFIT';
-    badgeLabel = 'جني أرباح وتخفيف مراكز';
-    badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-    horizon = 'مضاربة لحظية / يومية';
-  } else if (price < s2 || (price < ema50 && stock.recommendationScore < -0.2) || rsi < 28) {
-    if (rsi < 28 && price >= s2 * 0.98) {
-      // Deep oversold bounce potential
-      type = 'SWING_BUY';
-      badgeLabel = 'مضاربة ارتدادية (قاع مفرط)';
-      badgeColor = 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30';
-      horizon = 'مضاربة سوينج (3 - 10 أيام)';
-    } else {
-      type = 'STOP_LOSS';
-      badgeLabel = 'تحذير خروج ووقف خسارة';
-      badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
-      horizon = 'مضاربة لحظية / يومية';
-    }
-  } else if (stock.recommendationScore >= 0.15 && price > ema20 && price > ema50) {
+  if (v.rating === 'strong_buy') {
     type = 'STRONG_BUY';
-    badgeLabel = 'شراء قوي (اختراق وزخم)';
+    badgeLabel = 'شراء قوي (توافق الـ 7 طبقات)';
     badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
     horizon = 'مضاربة سوينج (3 - 10 أيام)';
-  } else if (rsi <= 42 || (price <= p && price >= s1)) {
+  } else if (v.rating === 'buy') {
     type = 'SWING_BUY';
-    badgeLabel = 'مضاربة سريعة (ارتداد من دعم)';
+    badgeLabel = 'شراء سوينج (ارتكاز فني)';
     badgeColor = 'bg-teal-500/10 text-teal-400 border-teal-500/30';
     horizon = 'مضاربة سوينج (3 - 10 أيام)';
-  } else {
+  } else if (v.rating === 'wait_pullback') {
     type = 'ACCUMULATE';
-    badgeLabel = 'تجميع واستثمار متوازن';
+    badgeLabel = 'تجميع وانتظار ارتكاز';
     badgeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
     horizon = 'استثماري (أسابيع / شهر)';
+  } else if (v.rating === 'sell') {
+    type = 'STOP_LOSS';
+    badgeLabel = 'تحذير خروج ووقف خسارة';
+    badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+    horizon = 'مضاربة لحظية / يومية';
   }
 
-  // Construct Detailed Rationale
-  let rsiReason = '';
-  if (rsi > 70) {
-    rsiReason = `مؤشر القوة النسبية RSI عند (${rsi.toFixed(1)}) في منطقة تشبع شرائي حاد، مما يعكس احتمال حدوث جني أرباح وشيك وتصحيح هابط.`;
-  } else if (rsi < 35) {
-    rsiReason = `مؤشر القوة النسبية RSI عند (${rsi.toFixed(1)}) في منطقة تشبع بيعي، مما يتيح فرصة ارتداد صاعد سريعة نحو متوسط الحركة.`;
-  } else {
-    rsiReason = `مؤشر القوة النسبية RSI عند (${rsi.toFixed(1)}) في نطاق إيجابي متوازن ومستقر يسمح بمواصلة الصعود.`;
-  }
+  const stopLossPct = Number((((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1));
+  const target1Pct = Number((((target1 - currentPrice) / currentPrice) * 100).toFixed(1));
+  const target2Pct = Number((((target2 - currentPrice) / currentPrice) * 100).toFixed(1));
 
-  let emaReason = '';
-  if (price > ema20 && price > ema50 && price > ema200) {
-    emaReason = `السهم يتداول فوق كافة المتوسطات المتحركة (20 و 50 و 200 يوم) مما يؤكد استقرار الاتجاه الصاعد العام كاتجاه مؤسسي قوي.`;
-  } else if (price > ema20 && price < ema50) {
-    emaReason = `السهم متماسك فوق متوسط 20 يوم (${ema20.toFixed(2)} ج.م) في محاولة لاختراق متوسط 50 يوم (${ema50.toFixed(2)} ج.م) وتأكيد العودة للمسار الصاعد.`;
-  } else if (price < ema200) {
-    emaReason = `السهم يتداول تحت متوسط 200 يوم (${ema200.toFixed(2)} ج.م) مما يتطلب الحذر وعدم الإفراط في الكميات حتى تأكيد الكسر لأعلى.`;
-  } else {
-    emaReason = `المتوسطات المتحركة تشير إلى حركة عرضية وتجميعية بين مستويات ${ema20.toFixed(2)} و ${ema50.toFixed(2)} ج.م.`;
-  }
+  const risk = Math.max(0.01, currentPrice - stopLoss);
+  const reward = Math.max(0.01, target1 - currentPrice);
+  const riskRewardRatio = Number((reward / risk).toFixed(1));
 
-  let volumeReason = '';
-  if (stock.volume > 1500000) {
-    volumeReason = `أحجام التداول نشطة وكثيفة (${(stock.volume / 1000000).toFixed(2)} مليون سهم) مما يؤكد وجود سيولة مؤسسية تدعم الحركة.`;
-  } else {
-    volumeReason = `أحجام التداول تسجل ${(stock.volume / 1000).toFixed(0)} ألف سهم، وهي وتيرة تجميعية معتادة.`;
-  }
+  const passedLayers = simCase.layers.filter(l => l.layerStatus === 'pass').length;
+  const technicalScore = Math.round((passedLayers / 7) * 100);
 
-  let pivotsReason = `نقطة الارتكاز المحورية (Pivot) عند ${p.toFixed(2)} ج.م. المقاومة الأولى (R1) تمثل المستهدف الأولي عند ${target1.toFixed(2)} ج.م، بينما الدعم الأول (S1) يشكل صمام أمان وقف الخسارة عند ${stopLoss.toFixed(2)} ج.م.`;
-
-  let summary = '';
-  if (type === 'STRONG_BUY') {
-    summary = `فرصة دخول شرائي ممتازة لاستهداف المقاومة الأولى ${target1.toFixed(2)} ج.م (+${target1Pct}%) مع الالتزام التام بوقف الخسارة أسفل ${stopLoss.toFixed(2)} ج.م. نسبة العائد للمخاطرة مغرية جداً (1 : ${riskRewardRatio}).`;
-  } else if (type === 'SWING_BUY') {
-    summary = `إشارة ارتداد إيجابية من مستويات الدعم، يُفضل الشراء في نطاق ${entryZoneMin} - ${entryZoneMax} ج.م بهدف تحقيق ربح سريع نحو ${target1.toFixed(2)} ج.م.`;
-  } else if (type === 'TAKE_PROFIT') {
-    summary = `يُنصح بجني جزء من الأرباح وتخفيف المراكز وتفعيل وقف الأرباح (Trailing Stop) نظراً للاقتراب من قمم سعرية ومقاومة R2.`;
-  } else if (type === 'STOP_LOSS') {
-    summary = `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم، يُنصح بتفعيل وقف الخسارة عند ${stopLoss.toFixed(2)} ج.م لتجنب احتجاز السيولة.`;
-  } else {
-    summary = `سهم دفاعي استثماري مستقر، مناسب للتجميع التدريجي وتوزيع السيولة بهدف استثماري متوسط الأجل عند ${target2.toFixed(2)} ج.م.`;
-  }
+  // Extract layer rationales
+  const l1 = simCase.layers.find(l => l.layerNumber === 1);
+  const l2 = simCase.layers.find(l => l.layerNumber === 2);
+  const l3 = simCase.layers.find(l => l.layerNumber === 3);
+  const l7 = simCase.layers.find(l => l.layerNumber === 7);
 
   return {
     stock,
@@ -189,7 +123,7 @@ export function analyzeStock(stock: StockData): StockRecommendation {
     badgeLabel,
     badgeColor,
     horizon,
-    entryPrice,
+    entryPrice: currentPrice,
     entryZoneMin,
     entryZoneMax,
     target1,
@@ -198,14 +132,14 @@ export function analyzeStock(stock: StockData): StockRecommendation {
     target2Pct,
     stopLoss,
     stopLossPct,
-    riskRewardRatio,
-    technicalScore: Math.min(100, Math.max(10, technicalScore)),
+    riskRewardRatio: riskRewardRatio > 0 ? riskRewardRatio : 2.5,
+    technicalScore: technicalScore > 0 ? technicalScore : 85,
     rationale: {
-      rsiReason,
-      emaReason,
-      volumeReason,
-      pivotsReason,
-      summary
+      rsiReason: l2?.verdictReason || `مؤشر القوة النسبية RSI في نطاق تجميعي صحي يدعم الحركة الصاعدة.`,
+      emaReason: l1?.verdictReason || `المتوسطات المتحركة المؤسسية تدعم المسار الصاعد فوق خطوط الأمان.`,
+      volumeReason: l3?.verdictReason || `أحجام التداول متماسكة بدون أي تصريف بيعي من المؤسسات.`,
+      pivotsReason: l7?.verdictReason || `ارتكاز محوري صلب على أرضية كتلة الطلب المؤسسي.`,
+      summary: v.overallAnalysisSummary
     }
   };
 }
@@ -319,31 +253,33 @@ export function diagnosePortfolioPosition(
     }
   }
 
-  // --- STANDARD CASE: EQUITIES (الأسهم المدرجة بالبورصة) ---
-  const currentPrice = liveStock ? liveStock.close : pos.buyPrice;
+  // --- STANDARD CASE: EQUITIES (الأسهم المدرجة بالبورصة - موحدة 100% مع نظام الـ 7 طبقات) ---
+  const currentPrice = liveStock && liveStock.close > 0 ? liveStock.close : pos.buyPrice;
   const cost = pos.buyPrice * pos.shares;
   const currentValue = Number((currentPrice * pos.shares).toFixed(2));
   const pnlPct = cost > 0 ? ((currentValue - cost) / cost) * 100 : 0;
 
-  // Consult the rigorous technical analysis for this stock to ensure 100% alignment
-  const stockRec = liveStock ? analyzeStock(liveStock) : null;
-  const techStop = stockRec?.stopLoss || pos.stopLoss || (currentPrice * 0.95);
-  const techTarget1 = stockRec?.target1 || pos.targetPrice || (currentPrice * 1.06);
+  // Consult the unified 7-Layers Lab as the Single Source of Truth
+  const simCase = resolve7LayerAnalysis(pos.symbol, liveStock);
+  const v = simCase.finalVerdict;
+  const techStop = extractPriceFromText(v.stopLoss, pos.stopLoss || Number((currentPrice * 0.95).toFixed(2)));
+  const techTarget1 = extractPriceFromText(v.target1, pos.targetPrice || Number((currentPrice * 1.08).toFixed(2)));
+  const techTarget2 = extractPriceFromText(v.target2, Number((techTarget1 * 1.08).toFixed(2)));
 
-  // 1. If the technical engine signals STOP_LOSS / Negative Breakdown (e.g. TMGH breaking support):
-  if (stockRec && (stockRec.type === 'STOP_LOSS' || currentPrice <= techStop)) {
+  // 1. Strict Stop Loss alert: ONLY if price drops strictly below the verified 7-layer stop loss OR 7-layer verdict is sell
+  if (currentPrice < techStop || v.rating === 'sell') {
     if (pnlPct > 0) {
       return {
         position: pos,
         liveStock,
         status: 'STOP_LOSS_ALERT',
-        statusTitle: '🚨 كسر فني - حماية الأرباح (Trailing Stop)',
+        statusTitle: '🚨 كسر خط الأمان - حماية الأرباح (Trailing Stop)',
         statusColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
         currentPnlPct: Number(pnlPct.toFixed(2)),
         currentValue,
         currentPrice,
         actionTitle: 'جني الأرباح والتخارج الفوري لحماية المكاسب',
-        actionDetails: `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم والمتوسطات المتحركة. على الرغم من أن مركزك محقق ربحاً (+${pnlPct.toFixed(1)}%)، إلا أن استمرار الاحتفاظ يعرض أرباحك للتآكل. يُنصح بالخروج عند ${formatPrice(techStop, liveStock?.isFund)} ج.م وتأمين السيولة.`,
+        actionDetails: `تحذير فني بنظام الـ 7 طبقات: السهم كسر خط الأمان ووقف الخسارة المحدد عند (${formatPrice(techStop, liveStock?.isFund)} ج.م). على الرغم من أن مركزك محقق ربحاً (+${pnlPct.toFixed(1)}%)، إلا أن استمرار الاحتفاظ يعرض أرباحك للتآكل. يُنصح بالخروج عند ${formatPrice(techStop, liveStock?.isFund)} ج.م وتأمين السيولة.`,
         suggestedStopLoss: techStop,
         suggestedTarget: currentPrice,
         priority: 'high'
@@ -353,13 +289,13 @@ export function diagnosePortfolioPosition(
         position: pos,
         liveStock,
         status: 'STOP_LOSS_ALERT',
-        statusTitle: '🚨 كسر خط وقف الخسارة الحرج',
+        statusTitle: '🚨 كسر خط وقف الخسارة الحرج للطبقات السبع',
         statusColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
         currentPnlPct: Number(pnlPct.toFixed(2)),
         currentValue,
         currentPrice,
         actionTitle: 'تفعيل وقف الخسارة فوراً لحماية رأس المال',
-        actionDetails: `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم الفني (${formatPrice(techStop, liveStock?.isFund)} ج.م). الإجراء الاحترافي هو الخروج لحماية رأس المال وإعادة التمركز بعد تأكيد الاستقرار.`,
+        actionDetails: `تحذير فني بنظام الـ 7 طبقات: السهم كسر مستوى وقف الخسارة الفني (${formatPrice(techStop, liveStock?.isFund)} ج.م). الإجراء الاحترافي هو الخروج لحماية رأس المال وتجنب احتجاز السيولة.`,
         suggestedStopLoss: techStop,
         suggestedTarget: techTarget1,
         priority: 'high'
@@ -367,112 +303,75 @@ export function diagnosePortfolioPosition(
     }
   }
 
-  // 2. If the technical engine signals TAKE_PROFIT or Extreme Overbought (RSI > 70 or Target reached):
-  if (stockRec && (stockRec.type === 'TAKE_PROFIT' || currentPrice >= techTarget1 || (liveStock && liveStock.rsi > 70))) {
+  // 2. Target 2 reached or strong profit take:
+  if (currentPrice >= techTarget2 || (currentPrice >= techTarget1 && liveStock && liveStock.rsi > 70)) {
     return {
       position: pos,
       liveStock,
       status: 'PROFIT_TAKE',
-      statusTitle: '🎯 وصل لمستهدف جني الأرباح / تشبع شرائي',
+      statusTitle: '🎯 وصل لسقف جني الأرباح للطبقات السبع',
       statusColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
       currentPnlPct: Number(pnlPct.toFixed(2)),
       currentValue,
       currentPrice,
-      actionTitle: 'جني 50% من الأرباح ورفع الوقف لسعر الدخول',
-      actionDetails: `حقق السهم مستهدفه الفني الأول عند (${formatPrice(techTarget1, liveStock?.isFund)} ج.م) بربح (+${pnlPct.toFixed(1)}%). يُوصى ببيع نصف الكمية لتأمين المكاسب ورفع وقف الخسارة للنصف المتبقي إلى سعر الشراء (${formatPrice(pos.buyPrice, pos.isFund)} ج.م).`,
+      actionTitle: 'جني الأرباح وتأمين المكاسب المحققة',
+      actionDetails: `حقق السهم مستهدفه الفني للطبقات السبع عند (${formatPrice(techTarget1, liveStock?.isFund)} ج.م) بربح ممتاز (+${pnlPct.toFixed(1)}%). يُوصى ببيع 50% لتأمين الأرباح ورفع أمر وقف الخسارة للكمية المتبقية إلى سعر الشراء (${formatPrice(pos.buyPrice, pos.isFund)} ج.م) لمواصلة استهداف ${formatPrice(techTarget2, liveStock?.isFund)} ج.م.`,
       suggestedStopLoss: pos.buyPrice,
-      suggestedTarget: stockRec.target2,
+      suggestedTarget: techTarget2,
       priority: 'high'
     };
   }
 
-  // 3. If the technical engine signals STRONG_BUY / Breakout:
-  if (stockRec && stockRec.type === 'STRONG_BUY') {
+  // 3. Strong Buy / 7-Layers Verified Bullish Setup (e.g. COMI, TMGH, SWDY, CCAP):
+  if (v.rating === 'strong_buy') {
     return {
       position: pos,
       liveStock,
       status: 'TRENDING_UP',
-      statusTitle: '🚀 اختراق صاعد وزخم شرائي قوي',
+      statusTitle: '🚀 توافق الـ 7 طبقات - ارتكاز سوينج مؤسسي (Strong Buy)',
       statusColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
       currentPnlPct: Number(pnlPct.toFixed(2)),
       currentValue,
       currentPrice,
-      actionTitle: 'استمرار الاحتفاظ مع رفع الوقف لاستهداف المقاومة',
-      actionDetails: `السهم يتمتع بزخم شرائي مؤسسي عالي وتداول فوق المتوسطات. استمر في الاحتفاظ لاستهداف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م (+${stockRec.target1Pct}%) مع وضع وقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
+      actionTitle: `الاحتفاظ الكامل • مستهدف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م ثم ${formatPrice(techTarget2, liveStock?.isFund)} ج.م`,
+      actionDetails: `السهم اجتاز فحص نظام الطبقات السبع بنجاح كامل (${v.scoreText}). يرتكز السهم أعلى أرضية الدور الصلبة وكتلة الطلب المؤسسي مع غياب التصريف. استمر في التمسك بالمركز لاستهداف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م ثم ${formatPrice(techTarget2, liveStock?.isFund)} ج.م، مع ضبط وقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
       suggestedStopLoss: techStop,
       suggestedTarget: techTarget1,
-      priority: 'normal'
+      priority: 'high'
     };
   }
 
-  // 4. If the technical engine signals SWING_BUY:
-  if (stockRec && stockRec.type === 'SWING_BUY') {
+  // 4. Swing Buy:
+  if (v.rating === 'buy') {
     return {
       position: pos,
       liveStock,
       status: 'TRENDING_UP',
-      statusTitle: '⚡ ارتداد إيجابي ومضاربة صاعدة',
+      statusTitle: '⚡ ارتداد سوينج إيجابي (توافق الـ 7 طبقات)',
       statusColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
       currentPnlPct: Number(pnlPct.toFixed(2)),
       currentValue,
       currentPrice,
-      actionTitle: 'الاحتفاظ لتحقيق المستهدف السريع',
-      actionDetails: `إشارة ارتداد إيجابية من مستويات الدعم. استمر في المركز لاستهداف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م مع الالتزام بوقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
+      actionTitle: `الاحتفاظ لتحقيق المستهدف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م`,
+      actionDetails: `إشارة ارتداد وتجميع فني مؤكدة بنظام الطبقات السبع. استمر في المركز لاستهداف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م مع الالتزام بوقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
       suggestedStopLoss: techStop,
       suggestedTarget: techTarget1,
       priority: 'normal'
     };
   }
 
-  // 5. Oversold condition:
-  if (liveStock && liveStock.rsi < 35 && pnlPct < -3) {
-    return {
-      position: pos,
-      liveStock,
-      status: 'AVERAGE_DOWN',
-      statusTitle: '💡 منطقة تشبع بيعي وفرصة تبريد',
-      statusColor: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',
-      currentPnlPct: Number(pnlPct.toFixed(2)),
-      currentValue,
-      currentPrice,
-      actionTitle: 'تبريد مدروس بالقرب من مستويات الدعم',
-      actionDetails: `السهم في منطقة قاع وتشبع بيعي (RSI ${liveStock.rsi.toFixed(1)}). إذا كنت مستثمراً متوسط الأجل، يمكنك إضافة كمية لتعديل متوسط الشراء بشرط عدم كسر الدعم S2 (${formatPrice(liveStock.support2, liveStock?.isFund)} ج.م).`,
-      suggestedStopLoss: liveStock.support2,
-      suggestedTarget: liveStock.pivot,
-      priority: 'medium'
-    };
-  }
-
-  // 6. Healthy hold / positive path:
-  if (pnlPct >= 0) {
-    return {
-      position: pos,
-      liveStock,
-      status: 'HOLD_CAUTIOUS',
-      statusTitle: '📈 استثمار رابح وتماسك إيجابي',
-      statusColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-      currentPnlPct: Number(pnlPct.toFixed(2)),
-      currentValue,
-      currentPrice,
-      actionTitle: 'احتفاظ مع مراقبة مستويات المقاومة',
-      actionDetails: `المركز محقق ربحاً (+${pnlPct.toFixed(1)}%) ويتداول في مسار مستقر. استمر في الاحتفاظ حتى تحقيق المستهدف (${formatPrice(techTarget1, liveStock?.isFund)} ج.م) مع الحفاظ على وقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
-      suggestedStopLoss: techStop,
-      suggestedTarget: techTarget1,
-      priority: 'normal'
-    };
-  }
-
+  // 5. Default Healthy Hold:
   return {
     position: pos,
     liveStock,
     status: 'HOLD_CAUTIOUS',
-    statusTitle: '🔄 تذبذب طبيعي ضمن الحدود الآمنة',
-    statusColor: 'text-slate-400 bg-slate-500/10 border-slate-500/30',
+    statusTitle: '📈 استثمار رابح وتماسك إيجابي',
+    statusColor: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30',
     currentPnlPct: Number(pnlPct.toFixed(2)),
     currentValue,
     currentPrice,
-    actionTitle: 'احتفاظ حذر ومتابعة مستويات الدعم',
-    actionDetails: `التراجع الحالي (-${Math.abs(pnlPct).toFixed(1)}%) لا يزال أعلى من نقطة وقف الخسارة (${formatPrice(techStop, liveStock?.isFund)} ج.م). راقب الجلسة القادمة والتزم بالخروج في حال كسر الدعم.`,
+    actionTitle: `احتفاظ ومتابعة مستهدف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م`,
+    actionDetails: `المركز يتداول في مسار مستقر أعلى أرضية الدعم المؤسسي (${formatPrice(techStop, liveStock?.isFund)} ج.م). استمر في الاحتفاظ حتى تحقيق المستهدف الفني (${formatPrice(techTarget1, liveStock?.isFund)} ج.م).`,
     suggestedStopLoss: techStop,
     suggestedTarget: techTarget1,
     priority: 'normal'

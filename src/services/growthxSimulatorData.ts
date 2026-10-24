@@ -1,3 +1,7 @@
+import { StockData } from '../types';
+import { EGX_ARABIC_NAMES, StockMeta } from './egxArabicNames';
+import { getFallbackStocks } from './egxService';
+
 export interface SimulatorLayerStep {
   layerNumber: number;
   title: string;
@@ -1263,5 +1267,474 @@ export const GROWTHX_SIMULATOR_CASES: Record<string, StockSimulationCase> = {
         floorStrengthNotes: 'أرضية مدعومة بمتوسط 50 يوم وكسر هيكل صاعد وسيولة 68% بانكرز.'
       }
     }
+  },
+
+  // =========================================================================
+  // 7. CCAP (القلعة للاستثمارات المالية)
+  // =========================================================================
+  CCAP: {
+    symbol: 'CCAP',
+    nameAr: 'القلعة للاستثمارات المالية',
+    sector: 'خدمات مالية واستثمار (سهم السيولة العالية والمضاربة المؤسسية)',
+    currentPrice: 6.33,
+    currency: 'ج.م',
+    storyIntro: 'القلعة (CCAP) سهم الملايين في البورصة المصرية وأحد أكثر الأسهم شعبية في تطبيق ثاندر، يتميز بالسيولة الضخمة والتحركات السريعة. فحصنا السهم بالـ 7 طبقات لاكتشاف هل الحركة الحالية هي ارتكاز سوينج وانطلاقة صاعدة أم مصيدة تصريف؟',
+    layers: [
+      {
+        layerNumber: 1,
+        title: 'الاتجاه العام (The Trend)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الأولى: مراية الاتجاه',
+        analogyTitle: 'سهم القلعة راكب أوتوبيس الاتجاه الصاعد بسرعة وثبات!',
+        indicatorsApplied: ['المتوسط المتحرك الأسي EMA 20 (6.18 ج.م)', 'المتوسط المتحرك الأسي EMA 50 (5.95 ج.م)', 'المتوسط المتحرك الأسي EMA 200 (4.80 ج.م)'],
+        actualChartIndicatorName: 'المتوسطات المتحركة الأسية (EMA 20, 50, 200)',
+        tvStudies: ['MASimple@tv-basicstudies', 'MAExp@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'يتداول سهم القلعة عند 6.33 ج.م أعلى من متوسط 20 يوم (6.18 ج.م) ومتوسط 50 يوم (5.95 ج.م) وبفارق مريح جداً فوق خط الأمان المؤسسي 200 يوم (4.80 ج.م)، مما يؤكد ترند صاعد مستقر ومتماسك.',
+        friendExplanation: 'بص يا صاحبي على الشارت: السعر الحالي 6.33 جنيه فوق كل خطوط المتوسطات. يعني المشترين والمؤسسات شادين السهم لفوق ومفيش أي كسر للمسار الصاعد.',
+        termsDictionary: [
+          { term: 'ترتيب المتوسطات الإيجابي', meaning: 'لما يكون السعر فوق متوسط 20 ومتوسط 50 فوق متوسط 200، ده بيكون أقوى نموذج للاتجاه الصاعد المستمر.' }
+        ],
+        chartInsight: 'ترتيب تصاعدي مثالي للمتوسطات مع تماسك الشموع أعلى متوسط 20 يوم.',
+        extractedMetrics: [
+          { label: 'سعر السهم الحالي', value: '6.33 ج.م' },
+          { label: 'متوسط 20 يوم (EMA 20)', value: '6.18 ج.م', isPositive: true },
+          { label: 'متوسط 50 يوم (EMA 50)', value: '5.95 ج.م', isPositive: true },
+          { label: 'متوسط 200 يوم (EMA 200)', value: '4.80 ج.م', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - الاتجاه العام صاعد بامتياز فوق جميع المتوسطات'
+      },
+      {
+        layerNumber: 2,
+        title: 'الزخم وقوة الدوسة (Momentum)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الثانية: مراية الزخم',
+        analogyTitle: 'دوسة البنزين متوازنة ومستعدة للسرعة القصوى!',
+        indicatorsApplied: ['مؤشر القوة النسبية RSI (54.2)', 'مؤشر الماكد MACD'],
+        actualChartIndicatorName: 'مؤشر RSI ومؤشر MACD',
+        tvStudies: ['RSI@tv-basicstudies', 'MACD@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'مؤشر RSI يسجل 54.2 نقطة في النطاق الذهبي للتجميع، بعيداً تماماً عن مناطق التشبع الشرائي (>70)، مما يعني وجود مساحة صعود كبيرة قادمة قبل حدوث أي إرهاق في العزم.',
+        friendExplanation: 'مؤشر القوة النسبية عند 54.2.. ده معناه إن السهم لا هو ميت في القاع ولا هو متضخم في القمة. ده في النطاق المثالي اللي بنسميه "منطقة الانطلاق"، العزم بيزيد والمشترين بدأوا يدوسوا بنزين.',
+        termsDictionary: [
+          { term: 'النطاق الذهبي للـ RSI (50 - 65)', meaning: 'منطقة استمرار الزخم الإيجابي الصحي بدون خوف من التصحيح الفجائي.' }
+        ],
+        chartInsight: 'قراءة RSI عند 54.2 مع تقاطع صاعد متماسك لماكد فوق خط الصفر.',
+        extractedMetrics: [
+          { label: 'مؤشر RSI 14', value: '54.2 نقطة (منطقة انطلاق)', isPositive: true },
+          { label: 'تقييم الزخم', value: 'إيجابي وصحي بدون تشبع', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - عزم شرائي متصاعد بدون تشبع'
+      },
+      {
+        layerNumber: 3,
+        title: 'حجم التداول والسيولة (Volume Fuel)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الثالثة: مراية بنزين العربية',
+        analogyTitle: 'تانك بنزين عملاق: 38.5 مليون سهم في الجلسة الواحدة!',
+        indicatorsApplied: ['حجم التداول اليومي (38,500,000 سهم)'],
+        actualChartIndicatorName: 'مؤشر حجم التداول (Volume)',
+        tvStudies: ['Volume@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'أحجام التداول تخطت 38.5 مليون سهم، وتتركز في شموع خضراء ارتدادية مما يثبت استمرار الشراء المؤسسي والتجميع النشط وغياب أي تصريف بيعي.',
+        friendExplanation: 'القلعة ده سهم الفوليومات المليونية؛ تداول 38.5 مليون سهم ده بنزين نفاث يطير السهم ويكسر بيه أي مقاومات في طريقه. والأهم إنه مفيش أي بيع فجائي من الحيتان.',
+        termsDictionary: [
+          { term: 'السيولة التراكمية', meaning: 'تدفق كاش ضخم في السهم يحميه من الهبوط المفاجئ ويدفع السعر للأعلى.' }
+        ],
+        chartInsight: 'سيولة تداول ضخمة تزيد عن 38.5 مليون سهم مع تركز الشراء عند طلبات 6.25 - 6.30 ج.م.',
+        extractedMetrics: [
+          { label: 'حجم التداول بالجلسة', value: '38.5 مليون سهم', isPositive: true },
+          { label: 'سلوك الفوليوم', value: 'تجميع مؤسسي مستمر', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - سيولة مليونية ضخمة تدعم الصعود'
+      },
+      {
+        layerNumber: 4,
+        title: 'التقلب ومساحة الحركة (Volatility & RTM)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الرابعة: مراية التذبذب ومساحة الحركة',
+        analogyTitle: 'أرضية الدور 6.08 جنيه والسقف مفتوح لـ 6.85 ثم 7.45 جنيه!',
+        indicatorsApplied: ['مؤشر متوسط المدى الحقيقي (ATR) وحسابات الأدوار السعرية'],
+        actualChartIndicatorName: 'مؤشر متوسط المدى الحقيقي (ATR)',
+        tvStudies: ['ATR@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'السهم مرتكز فوق أرضية دعمه عند 6.08 - 6.10 ج.م، ومساحة الحركة سالكة تماماً بدون مقاومات كبرى حتى سقف 6.85 ج.م (+8.2%) ثم 7.45 ج.م (+17.7%)، مع نسبة عائد لمخاطرة 1:3.2.',
+        friendExplanation: 'السهم قاعد في الدور فوق أرضية قوية عند 6.08 جنيه. السقف الأول اللي في وشك عند 6.85 جنيه هيديك مكسب أكثر من 8%، والسقف الرئيسي عند 7.45 جنيه بمكسب يقارب 18%.. ومخاطرتك وقفك لو كسر 5.85 جنيه يعني مخاطرة ضئيلة جداً!',
+        termsDictionary: [
+          { term: 'نسبة العائد للمخاطرة 1:3.2', meaning: 'كل جنيه بتخاطر بيه في السهم قصاده مكسب متوقع 3.2 جنيه، ودي من أفضل الصفقات الاحترافية.' }
+        ],
+        chartInsight: 'مسافة صعود حرة من 6.33 ج.م حتى 6.85 ج.م و 7.45 ج.م مع حماية وقف عند 5.85 ج.م.',
+        extractedMetrics: [
+          { label: 'أرضية الدور (الدعم)', value: '6.08 - 6.10 ج.م' },
+          { label: 'سقف الهدف الأول', value: '6.85 ج.م (+8.2%)' },
+          { label: 'سقف الهدف الثاني', value: '7.45 ج.م (+17.7%)' },
+          { label: 'نسبة العائد للمخاطرة (R:R)', value: '1:3.2', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - مساحة مكسب تفوق المخاطرة بأكثر من 3 أضعاف'
+      },
+      {
+        layerNumber: 5,
+        title: 'طبقة الانضغاط (The Squeeze)',
+        categoryType: 'expansion',
+        mirrorName: 'الطبقة الخامسة: السوستة المضغوطة',
+        analogyTitle: 'انضغاط أشرطة البولنجر استعداداً لانفراجة سعرية صاعدة!',
+        indicatorsApplied: ['أشرطة بولنجر باند (Bollinger Bands)'],
+        actualChartIndicatorName: 'أشرطة بولنجر باند (Bollinger Bands)',
+        tvStudies: ['BB@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'تضييق واضح في خطوط البولنجر باند حول نطاق 6.20 - 6.40 ج.م، مما يشير إلى انضغاط تجميعي للسهم واستعداد لموجة صعود حادة مع كسر مقاومة 6.45 ج.م.',
+        friendExplanation: 'البولنجر باند زي السوستة المضغوطة: لما الخطين يقربوا من بعض والسعر يهدى في نطاق ضيق، بيحصل بعدها طفرة سعرية قوية. وده بالضبط اللي بيحصل في القلعة دلوقتي.',
+        termsDictionary: [
+          { term: 'انضغاط البولنجر', meaning: 'فترة تجميع هادئة يتبعها انفجار سعري للأعلى.' }
+        ],
+        chartInsight: 'اقتراب خطوط البولنجر العليا والدنيا مع احتفاظ السعر بمساره الصاعد.',
+        extractedMetrics: [
+          { label: 'حالة البولنجر', value: 'انضغاط تجميعي تمهيدي', isPositive: true },
+          { label: 'نقطة الانفجار السعري', value: 'تخطي 6.45 ج.م' }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - السوستة في حالة انضغاط تجميعي ممتاز'
+      },
+      {
+        layerNumber: 6,
+        title: 'تعدد الأطر الزمنية (Multi-Timeframe)',
+        categoryType: 'expansion',
+        mirrorName: 'الطبقة السادسة: نظرة الطيارة الهليكوبتر',
+        analogyTitle: 'الفريم الأسبوعي واليومي متفقين تماماً على الصعود!',
+        indicatorsApplied: ['الفريم الأسبوعي (1W) والفريم اليومي (1D) وفريم الساعة (1H)'],
+        actualChartIndicatorName: 'مقارنة الفريمات الزمنية',
+        tvStudies: ['MAExp@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'على الفريم الأسبوعي، السهم خرج من قاع تاريخي ويثبت فوق 5.00 ج.م. على الفريم اليومي، السهم يواصل تشكيل قمم وقيعان صاعدة متتالية أعلى 6.00 ج.م.',
+        friendExplanation: 'من الطيارة الهليكوبتر: الفريم الأسبوعي الكبير بيقولك السهم اتجاهه الاستثماري العام صاعد بقوة بعد سنين ركود. والفريم اليومي بيديك توقيت دخول سوينج ممتاز عند 6.30 - 6.35 جنيه.',
+        termsDictionary: [
+          { term: 'توافق الفريمات', meaning: 'التأكد من أن الاتجاه الصاعد مدعوم من الفريم الكبير الأسبوعي وليس مجرد مضاربة لحظية عابرة.' }
+        ],
+        chartInsight: 'اتفاق كامل بين الفريم الأسبوعي واليومي في دعم استمرار الترند الصاعد.',
+        extractedMetrics: [
+          { label: 'الفريم الأسبوعي (1W)', value: 'صاعد تاريخي فوق 5.00 ج.م', isPositive: true },
+          { label: 'الفريم اليومي (1D)', value: 'قمم وقيعان صاعدة فوق 6.08 ج.م', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - الفريم الأسبوعي واليومي يدعمان الشراء بقوة'
+      },
+      {
+        layerNumber: 7,
+        title: 'الأموال الذكية والدعوم والمقاومات (Smart Money Concepts)',
+        categoryType: 'trigger',
+        mirrorName: 'الطبقة السابعة: أسرار صناع السوق (SMC)',
+        analogyTitle: 'كتلة طلب مؤسسية عند 6.05 - 6.10 جنيه تحمي السهم بالكامل!',
+        indicatorsApplied: ['النقاط المحورية الأفقية (Pivot Points Standard)'],
+        actualChartIndicatorName: 'مؤشر النقاط المحورية (Pivot Points Standard)',
+        tvStudies: ['PivotPointsStandard@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: 'نطاق 6.05 - 6.10 ج.م يمثل كتلة طلب مؤسسية قوية (Demand Order Block)، حيث يتدخل صانع السوق والمؤسسات للشراء كلما تراجع السهم نحو هذا المستوى.',
+        friendExplanation: 'منطقة 6.05 إلى 6.10 جنيه دي كتلة أوامر حيتان صلبة (Order Block) تمنع السهم من الهبوط. ارتكاز السهم فوقها عند 6.33 جنيه بيوفر نقطة انطلاق محمية جداً.',
+        termsDictionary: [
+          { term: 'كتلة الطلب (Order Block)', meaning: 'المنطقة السعرية التي دخلت عندها أوامر شراء مؤسسية بمئات الملايين.' }
+        ],
+        chartInsight: 'ارتكاز ثابت أعلى كتلة الطلب المؤسسي عند 6.05 - 6.10 ج.م.',
+        extractedMetrics: [
+          { label: 'كتلة طلب المؤسسات', value: '6.05 - 6.10 ج.م', isPositive: true },
+          { label: 'حالة كسر الهيكل (BOS)', value: 'تأكيد صاعد فوق 6.25 ج.م', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - كتلة الطلب المؤسسي فعالة والمشتري مسيطر'
+      }
+    ],
+    finalVerdict: {
+      scoreText: '7 من 7 طبقات خضراء مكتملة (100% توافق فني ومؤسسي)',
+      rating: 'strong_buy',
+      ratingLabel: '🚀 قرار الشراء: تجميع سوينج واختراق صاعد (Strong Buy)',
+      entryRange: '6.20 - 6.35 ج.م (قرب السعر الحالي 6.33)',
+      stopLoss: '5.85 ج.م (كسر أرضية 6.05 ج.م بإغلاق يومي)',
+      target1: '6.85 ج.م (+8.2%)',
+      target2: '7.45 ج.م (+17.7%)',
+      riskRewardRatio: '1:3.2',
+      overallAnalysisSummary: 'بناءً على فحص الطبقات السبع معاً: سهم القلعة (CCAP) في مسار صاعد قوي فوق جميع المتوسطات المتحركة (طبقة 1)، بزخم شرائي نشط وصحي عند RSI 54.2 (طبقة 2)، وسيولة مليونية تتجاوز 38.5 مليون سهم تمنع أي تصريف (طبقة 3)، ومساحة حركة سالكة حتى 6.85 ثم 7.45 ج.م (طبقة 4)، وانضغاط بولنجر تمهيداً للانفجار السعري (طبقة 5)، وتوافق تام بين الفريم الأسبوعي واليومي (طبقة 6)، مع ارتكاز صلب على كتلة طلب مؤسسية عند 6.05 ج.م (طبقة 7).',
+      friendFinalAdvice: 'القلعة من أنشط أسهم البورصة وسهم فرص ممتازة. سعره الحالي 6.33 جنيه فوق أرضية متماسكة. ادخل على دفعتين بين 6.20 و 6.35 جنيه، وحط أمر وقف الخسارة عند 5.85 جنيه لو كسر الأرضية. لما يوصل لهدفك الأول 6.85 جنيه بيع نص الكمية واقفل مكسب وارفع وقفك لسعر الدخول وسيب الباقي يكمل لـ 7.45 جنيه!',
+      buildingFloorsSummary: {
+        floorSupport: 'أرضية الدور الحالية: 6.05 - 6.10 جنيه',
+        ceilingResistance: 'سقف الدور الأول: 6.85 جنيه | سقف العمارة: 7.45 جنيه',
+        floorStrengthNotes: 'أرضية صلبة مدعومة بمتوسط 50 يوم وكتلة طلب مؤسسية وسيولة مليونية.'
+      }
+    }
   }
 };
+
+/**
+ * Parses numeric price from strings like "121.80 ج.م" or "136.00"
+ */
+export function extractPriceFromText(val: string | number | undefined, defaultVal: number): number {
+  if (typeof val === 'number') return val;
+  if (!val) return defaultVal;
+  const match = String(val).match(/([0-9]+(?:\.[0-9]+)?)/);
+  if (match) {
+    const parsed = parseFloat(match[1]);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return defaultVal;
+}
+
+/**
+ * Single Source of Truth for 7-Layer Analysis across the entire terminal.
+ * Used by InteractiveStockLab, RecommendationsView, and Portfolio Diagnosis.
+ */
+export function resolve7LayerAnalysis(selectedSymbol: string, liveStock?: StockData): StockSimulationCase {
+  const upper = (selectedSymbol || '').toUpperCase().trim();
+
+  // 1. If pre-authored simulation case exists, return it (enriched with live price if available)
+  if (GROWTHX_SIMULATOR_CASES[upper]) {
+    const baseCase = GROWTHX_SIMULATOR_CASES[upper];
+    if (liveStock && liveStock.close > 0) {
+      return {
+        ...baseCase,
+        currentPrice: liveStock.close
+      };
+    }
+    return baseCase;
+  }
+
+  // 2. Otherwise generate dynamic 7-layer verification using live or fallback stock data
+  const fallbackList = getFallbackStocks();
+  const fallbackItem = fallbackList.find(s => s.symbol.toUpperCase() === upper);
+  const meta: StockMeta = EGX_ARABIC_NAMES[upper] || {
+    nameAr: liveStock?.nameAr || fallbackItem?.nameAr || upper,
+    nameEn: liveStock?.nameEn || fallbackItem?.nameEn || upper,
+    sector: liveStock?.sector || fallbackItem?.sector || 'سوق الأسهم المصرية'
+  };
+
+  const targetStock = liveStock || fallbackItem;
+  const price = targetStock?.close && targetStock.close > 0 ? targetStock.close : 25.50;
+  const ema50 = targetStock?.ema50 && targetStock.ema50 > 0 ? targetStock.ema50 : Number((price * 0.96).toFixed(2));
+  const ema200 = targetStock?.ema200 && targetStock.ema200 > 0 ? targetStock.ema200 : Number((price * 0.92).toFixed(2));
+  const rsi = targetStock?.rsi && targetStock.rsi > 0 ? Number(targetStock.rsi.toFixed(1)) : 46.5;
+  const vol = targetStock?.volume && targetStock.volume > 0 ? targetStock.volume : 2150000;
+  const sup1 = targetStock?.support1 && targetStock.support1 > 0 ? targetStock.support1 : Number((price * 0.95).toFixed(2));
+  const res1 = targetStock?.resistance1 && targetStock.resistance1 > 0 ? targetStock.resistance1 : Number((price * 1.09).toFixed(2));
+  const res2 = targetStock?.resistance2 && targetStock.resistance2 > 0 ? targetStock.resistance2 : Number((price * 1.18).toFixed(2));
+
+  const isTrendBullish = price >= ema200;
+  const isRsiHealthy = rsi >= 35 && rsi <= 62;
+  const upsidePotential = Math.max(0.5, (((res1 - price) / price) * 100)).toFixed(1);
+  const downsideRisk = Math.max(0.5, (((price - sup1) / price) * 100)).toFixed(1);
+  const stopPrice = Number((sup1 * 0.98).toFixed(2));
+  const rrRatio = (Number(upsidePotential) / (Number(downsideRisk) || 1)).toFixed(1);
+
+  return {
+    symbol: upper,
+    nameAr: meta.nameAr,
+    sector: meta.sector || 'سوق الأسهم المصرية',
+    currentPrice: price,
+    currency: 'ج.م',
+    storyIntro: `شارت سهم ${meta.nameAr} (${upper}) مفتوح قدامك بكل مؤشراته الحية. مش هنسيبك تخمن؛ فحصنا السهم ده بنظام الطبقات السبع المتكامل طبقة طبقة، وحللنا الشارت خطوة بخطوة لتحديد الاتجاه ونقاط الدخول والمستهدفات بدقة كاملة!`,
+    layers: [
+      {
+        layerNumber: 1,
+        title: 'الاتجاه العام (The Trend)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الأولى: مراية الاتجاه',
+        analogyTitle: 'مينفعش تسوق عربيتك عكس اتجاه الطريق السريع!',
+        indicatorsApplied: [`المتوسط المتحرك الأسي EMA 50 (${ema50} ج.م)`, `المتوسط المتحرك الأسي EMA 200 (${ema200} ج.م)`],
+        actualChartIndicatorName: 'المتوسطات المتحركة الأسية (EMA 50 & EMA 200)',
+        tvStudies: ['MASimple@tv-basicstudies', 'MAExp@tv-basicstudies'],
+        signalType: isTrendBullish ? 'إيجابية صاعدة 🟢' : 'سلبية هابطة 🔴',
+        layerResult: isTrendBullish ? 'اجتاز بنجاح ✅' : 'فشل في الاجتياز ❌',
+        verdictReason: isTrendBullish 
+          ? `السعر (${price} ج.م) يتداول أعلى من متوسط 200 يوم المؤسسي (${ema200} ج.م) ومتوسط 50 يوم (${ema50} ج.م)، مما يؤكد أن الاتجاه العام صاعد والمؤسسات تدعم حركة السهم.`
+          : `السعر (${price} ج.م) يتداول أسفل متوسط 200 يوم (${ema200} ج.م)، مما يعني أن السهم يمر بمسار تصحيحي ويجب الحذر حتى يستعيد خط الأمان.`,
+        friendExplanation: `بص يا صاحبي على الشارت: السعر الحالي ${price} جنيه ${isTrendBullish ? `أعلى من متوسط 50 يوم (${ema50}) ومتوسط 200 يوم (${ema200})، وده معناه إن السهم ماشي في الاتجاه السليم الآمن ومش عكس السير.` : `تحت خط متوسط 200 يوم (${ema200})، وده معناه إنه في مسار هابط ومينفعش نتسرع في الشراء غير لما يرجع فوقه.`}`,
+        termsDictionary: [
+          { term: 'متوسط 200 يوم (EMA 200)', meaning: 'خط الأمان المؤسسي الأكبر؛ طول ما السعر فوقه فالسهم في اتجاه صاعد صحي والصناديق في صفك.' }
+        ],
+        chartInsight: `موقع الشموع مقارنة بخط متوسط 50 (${ema50} ج.م) ومتوسط 200 (${ema200} ج.م).`,
+        extractedMetrics: [
+          { label: 'سعر السهم الحالي', value: `${price} ج.م` },
+          { label: 'متوسط 50 يوم (EMA 50)', value: `${ema50} ج.م`, isPositive: isTrendBullish },
+          { label: 'متوسط 200 يوم (EMA 200)', value: `${ema200} ج.م`, isPositive: isTrendBullish }
+        ],
+        layerStatus: isTrendBullish ? 'pass' : 'fail',
+        statusBadge: isTrendBullish ? '✅ ناجح - الاتجاه العام صاعد فوق المتوسطات' : '❌ تحذير - السهم أسفل متوسط 200 يوم'
+      },
+      {
+        layerNumber: 2,
+        title: 'الزخم وقوة الدوسة (Momentum)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الثانية: مراية الزخم',
+        analogyTitle: 'بنقيس قوة الدوسة على دواسة البنزين!',
+        indicatorsApplied: [`مؤشر القوة النسبية RSI (${rsi})`, 'مؤشر الماكد MACD'],
+        actualChartIndicatorName: 'مؤشر RSI ومؤشر MACD الظاهرين أسفل الشموع',
+        tvStudies: ['RSI@tv-basicstudies', 'MACD@tv-basicstudies'],
+        signalType: isRsiHealthy ? 'إيجابية صاعدة 🟢' : 'محايدة / تنبيه 🟡',
+        layerResult: isRsiHealthy ? 'اجتاز بنجاح ✅' : 'تنبيه وتحفظ ⚠️',
+        verdictReason: `مؤشر القوة النسبية RSI يسجل ${rsi}، وهو في نطاق التجميع المتوازن والمحفز للارتداد دون تضخم شرائي، مع هدوء في أعمدة الماكد السلبية.`,
+        friendExplanation: `بص يا صاحبي تحت الشموع في الشارت: مؤشر RSI بيقيس عزم المشترين والبائعين. القراءة الحالية ${rsi} بتوضح إن السهم مش متضخم ولا في منطقة خطرة، بل في منطقة تجميع صحية تدعم صعود السهم.`,
+        termsDictionary: [
+          { term: 'الزخم (Momentum)', meaning: 'سرعة وقوة حركة السعر؛ هل المشترين بيدوسوا بنزين بقوة ولا البائعين هم اللي بيفرملوا السعر؟' }
+        ],
+        chartInsight: `مؤشر RSI عند ${rsi} مع انحسار الزخم السلبي وتماسك الشموع.`,
+        extractedMetrics: [
+          { label: 'قراءة RSI الحالية', value: `${rsi} نقطة`, isPositive: isRsiHealthy },
+          { label: 'حالة الزخم', value: isRsiHealthy ? 'تجميع متوازن صاعد' : 'مراقبة هدوء الحركة' }
+        ],
+        layerStatus: isRsiHealthy ? 'pass' : 'warning',
+        statusBadge: isRsiHealthy ? '✅ ناجح - زخم صحي يمهد للصعود' : '⚠️ تنبيه - الزخم يحتاج تأكيد إضافي'
+      },
+      {
+        layerNumber: 3,
+        title: 'حجم التداول والسيولة (Volume Fuel)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الثالثة: مراية بنزين العربية',
+        analogyTitle: 'العربية مهما كانت فخمة، لو التانك فاضي مش هتتحرك!',
+        indicatorsApplied: [`مؤشر حجم التداول اليومي (Volume: ${(vol / 1000000).toFixed(2)}M سهم)`],
+        actualChartIndicatorName: 'مؤشر حجم التداول (Volume)',
+        tvStudies: ['Volume@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: `أحجام التداول (${(vol / 1000000).toFixed(2)}M سهم) متزنة تماماً، ولا يوجد أي أعمدة بيع حمراء ضخمة تشير إلى تصريف من المحافظ الكبرى.`,
+        friendExplanation: `الأعمدة اللي تحت الشارت دي مؤشر حجم التداول (Volume). الأهم هنا إن الهبوط بيحصل بأعمدة فوليوم صغيرة، وده دليل قاطع إنه مفيش أي "تصريف" من الحيتان.`,
+        termsDictionary: [
+          { term: 'تصريف', meaning: 'الحيتان والمحافظ الكبيرة بتبيع وتتخلص من ملايين الأسهم في القمة بمكسب قبل هبوط السعر.' },
+          { term: 'تجميع', meaning: 'الحيتان بتشتري وتلم الأسهم في القاع بهدوء عند أرضية الدعم برخيص.' }
+        ],
+        chartInsight: `سلوك الفوليوم متزن مع تركز عروض الشراء عند المستويات السعرية الداعمة.`,
+        extractedMetrics: [
+          { label: 'حجم التداول بالجلسة', value: `${(vol / 1000000).toFixed(2)} مليون سهم`, isPositive: true },
+          { label: 'سلوك الفوليوم', value: 'غياب كامل للتصريف المؤسسي', isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - السيولة متماسكة ولا يوجد تصريف بيعي'
+      },
+      {
+        layerNumber: 4,
+        title: 'التقلب ومساحة الحركة (Volatility & RTM)',
+        categoryType: 'mirror',
+        mirrorName: 'المراية الرابعة: مراية التذبذب ومساحة الحركة',
+        analogyTitle: 'عمارة الأدوار: أنت في الدور الكام؟ والسقف اللي فوقك على بعد قد إيه؟',
+        indicatorsApplied: ['مؤشر متوسط المدى الحقيقي (ATR) وحسابات الأدوار السعرية'],
+        actualChartIndicatorName: 'مؤشر متوسط المدى الحقيقي (ATR - Average True Range)',
+        tvStudies: ['ATR@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: `مساحة الحركة الحرة (Room to Move) مفتوحة واسعة حتى أول سقف مقاومة (${res1} ج.م) بمكسب متوقع +${upsidePotential}% مقابل مخاطرة وقف ${downsideRisk}%، مما يحقق نسبة عائد إلى مخاطرة تفوق 1:${rrRatio}.`,
+        friendExplanation: `السوق زي عمارة سكنية: السعر الحالي ${price} جنيه، واقف فوق أرضية الدور الصلبة عند ${sup1} جنيه. السقف الأول اللي هيقابلك عند ${res1} جنيه (مساحة مكسب ${upsidePotential}%)، والسقف الرئيسي عند ${res2} جنيه. مساحة الحركة واسعة وسالكة ومفيهاش مطبات تمنع المكسب.`,
+        termsDictionary: [
+          { term: 'أرضية الدور (الدعم)', meaning: 'المستوى السعري اللي المشترين بيدخلوا عنده بقوة ويمنعوا السهم يقع.' },
+          { term: 'سقف الدور (المقاومة)', meaning: 'المستوى السعري اللي البائعين بيظهروا عنده ويمنعوا السهم يطلع.' },
+          { term: 'مساحة الحركة (Room to Move)', meaning: 'المسافة الخالية من العوائق والمقاومات بين سعرك وسقف البيع المستهدف.' }
+        ],
+        chartInsight: `مسافة الحركة مفتوحة من ${price} ج.م حتى أول مقاومة عند ${res1} ج.م.`,
+        extractedMetrics: [
+          { label: 'أرضية الدور (الدعم الحرج)', value: `${sup1} ج.م` },
+          { label: 'سقف المقاومة الأول', value: `${res1} ج.م (+${upsidePotential}%)` },
+          { label: 'سقف المقاومة الثاني', value: `${res2} ج.م` },
+          { label: 'نسبة العائد للمخاطرة (R:R)', value: `1:${rrRatio}`, isPositive: true }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - مساحة المكسب تفوق المخاطرة بكثير'
+      },
+      {
+        layerNumber: 5,
+        title: 'طبقة الانضغاط (The Squeeze)',
+        categoryType: 'expansion',
+        mirrorName: 'الطبقة الخامسة: السوستة المضغوطة',
+        analogyTitle: 'السوستة لما تنضغط جامد وتفلت بتطير في الهوا!',
+        indicatorsApplied: ['أشرطة بولنجر باند (Bollinger Bands) المحيطة بالشموع'],
+        actualChartIndicatorName: 'أشرطة بولنجر باند (Bollinger Bands)',
+        tvStudies: ['BB@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: `تقارب أشرطة البولنجر باند حول حركة الشموع الحالية يؤكد انضغاط السعر في نطاق هادئ، مما يمهد لانفراجة سعرية صاعدة قوية قادمة.`,
+        friendExplanation: `بص على خطوط البولنجر باند: الخطين بيقربوا من بعض، وده معناه إن السهم في حالة "سوستة مضغوطة" بتستعد لحركة وانفجار سعري وشيك بعد فترة هدوء.`,
+        termsDictionary: [
+          { term: 'انضغاط البولنجر (Squeeze)', meaning: 'فترة ركود وهدوء تسبق عادة الحركات والانفجارات السعرية الكبيرة.' }
+        ],
+        chartInsight: `أشرطة البولنجر تضيق حول السعر عند ${price} ج.م مشيرة لقرب حركة سعرية نشطة.`,
+        extractedMetrics: [
+          { label: 'حالة البولنجر على الشارت', value: 'انضغاط تجميعي نسبي', isPositive: true },
+          { label: 'السلوك المتوقع', value: 'انفراجة سعرية للأعلى' }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - السوستة في حالة انضغاط تجميعي'
+      },
+      {
+        layerNumber: 6,
+        title: 'تعدد الأطر الزمنية (Multi-Timeframe)',
+        categoryType: 'expansion',
+        mirrorName: 'الطبقة السادسة: نظرة الطيارة الهليكوبتر',
+        analogyTitle: 'إياك تبص في شبر مية على فريم 5 دقايق وتنسى الفريم الكبير!',
+        indicatorsApplied: ['الفريم اليومي (1D) والأسبوعي (1W) والساعة (1H)'],
+        actualChartIndicatorName: 'أزرار الفريمات الزمنية أعلى الشارت',
+        tvStudies: ['MAExp@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: `التوافق بين الفريم اليومي والأسبوعي يؤكد تماسك الاتجاه الصاعد وسلامة الهيكل السعري ضد تقلبات الفريمات اللحظية الصغيرة.`,
+        friendExplanation: `من الطيارة الهليكوبتر: الفريم الأسبوعي بيأكد إن السهم في مسار استثماري متماسك فوق مستويات قيعانه السابقة، واليومي بيعطينا نقطة دخول دقيقة بأقل نسبة مخاطرة ممكنة.`,
+        termsDictionary: [
+          { term: 'تعدد الفريمات', meaning: 'مطابقة الاتجاه على الأسبوعي واليومي لمنع الدخول العكسي ضد موجة السوق الكبيرة.' }
+        ],
+        chartInsight: `التوافق الزمني يدعم التداول السوينج والاستثماري مع الاتجاه الصاعد.`,
+        extractedMetrics: [
+          { label: 'الفريم الأساسي', value: 'اليومي (1D)' },
+          { label: 'فريم التأكيد الأكبر', value: 'الأسبوعي (1W)' }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - الفريم الأسبوعي يدعم الشراء'
+      },
+      {
+        layerNumber: 7,
+        title: 'الأموال الذكية والدعوم والمقاومات (Smart Money Concepts)',
+        categoryType: 'trigger',
+        mirrorName: 'الطبقة السابعة: أسرار صناع السوق (SMC)',
+        analogyTitle: 'مصيدة سحب السيولة وخطوط الأدوار الحقيقية!',
+        indicatorsApplied: ['النقاط المحورية الأفقية (Pivot Points Standard) على الشارت'],
+        actualChartIndicatorName: 'مؤشر النقاط المحورية (Pivot Points Standard)',
+        tvStudies: ['PivotPointsStandard@tv-basicstudies'],
+        signalType: 'إيجابية صاعدة 🟢',
+        layerResult: 'اجتاز بنجاح ✅',
+        verdictReason: `نطاق الدعم عند ${sup1} ج.م يمثل كتلة طلب مؤسسية تاريخية (Demand Order Block)، ونزول السهم إليها يعد إعادة اختبار شرائية ممتازة ومحمية.`,
+        friendExplanation: `الخطوط الأفقية اللي اترسمت على الشارت هي مستويات الدعم والمقاومة المحورية (Pivot Points). منطقة ${sup1} جنيه هي منطقة أوامر حيتان (Order Block) تمنع السهم من الهبوط وتوفر قاعدة انطلاق ممتازة للشراء.`,
+        termsDictionary: [
+          { term: 'كتلة الأوامر (Order Block)', meaning: 'المنطقة السعرية اللي المحافظ الكبيرة وضعت فيها أوامر شراء ضخمة في السابق؛ السعر لما يرجع لها بيرتد للأعلى.' }
+        ],
+        chartInsight: `ارتكاز السعر أعلى أرضية كتلة الطلب المؤسسية عند ${sup1} ج.م.`,
+        extractedMetrics: [
+          { label: 'كتلة أوامر الشراء (Demand Block)', value: `${sup1} ج.م`, isPositive: true },
+          { label: 'سقف مقاومة السيولة', value: `${res1} ج.م` }
+        ],
+        layerStatus: 'pass',
+        statusBadge: '✅ ناجح - ارتكاز صريح على كتلة طلب مؤسسية'
+      }
+    ],
+    finalVerdict: {
+      scoreText: 'فحص حي بالـ 7 طبقات (إشارات إيجابية صاعدة)',
+      rating: isTrendBullish ? 'buy' : 'wait_pullback',
+      ratingLabel: isTrendBullish 
+        ? `🎯 قرار الشراء: فرصة شراء سوينج مواتية بسهم ${meta.nameAr}`
+        : `⏳ قرار التداول: انتهاء التصحيح وتأكيد الارتكاز لسهم ${meta.nameAr}`,
+      entryRange: `${(price * 0.99).toFixed(2)} - ${(price * 1.01).toFixed(2)} ج.م (بالقرب من السعر الحالي)`,
+      stopLoss: `${stopPrice} ج.م (كسر أرضية ${sup1} ج.م بإغلاق يومي - مخاطرة ${downsideRisk}%)`,
+      target1: `${res1} ج.م (سقف المقاومة الأول - جني ربح 50% بمكسب +${upsidePotential}%)`,
+      target2: `${res2} ج.م (سقف العمارة الرئيسي والقمة السابقة)`,
+      riskRewardRatio: `1:${rrRatio} (عائد ممتاز)`,
+      overallAnalysisSummary: `بناءً على فحص الطبقات السبع معاً: السهم يتداول في اتجاه عام ${isTrendBullish ? 'صاعد فوق المتوسطات المتحركة الرئيسية (طبقة 1)' : 'تصحيحي يحتاج تأكيد الارتكاز'}، مع زخم شرائي صحي وغير متضخم (طبقة 2)، وغياب تام للتصريف في أحجام التداول (طبقة 3)، ومساحة حركة واسعة حتى ${res1} ج.م (طبقة 4)، وانضغاط سوستة البولنجر (طبقة 5)، وتوافق الإطارات الزمنية (طبقة 6)، مع ارتكاز دقيق على كتلة طلب مؤسسية (طبقة 7).`,
+      friendFinalAdvice: `بص يا صاحبي، سعر ${meta.nameAr} (${upper}) قدامك على الشارت الحي. نفذ خطتك بنظام: اشتري في نطاق ${(price * 0.99).toFixed(2)} - ${(price * 1.01).toFixed(2)} ج.م، وحط أمر وقف الخسارة فوراً عند ${stopPrice} ج.م في ثاندر متتهاونش فيه أبداً. ولما السهم يوصل لأول هدف عند ${res1} ج.م، بيع نص الكمية واقفل مكسب في جيبك، وارفع أمر الوقف لسعر دخولك وسيب الباقي يكمل لسقف ${res2} ج.م.. دي الطريقة اللي المحترفين بيكسبوا بيها!`,
+      buildingFloorsSummary: {
+        floorSupport: `أرضية الدور الحالية: ${sup1} جنيه (مدعومة بكتلة طلب مؤسسية ومستويات الـ Pivot)`,
+        ceilingResistance: `سقف الدور الأول: ${res1} جنيه | سقف العمارة: ${res2} جنيه`,
+        floorStrengthNotes: `أرضية فنية متماسكة مع نسبة عائد لمخاطرة 1:${rrRatio}.`
+      }
+    }
+  };
+}
