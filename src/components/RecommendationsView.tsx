@@ -184,6 +184,21 @@ export const RecommendationsView: React.FC<Props> = ({
         </div>
       </div>
 
+      {/* Friendly Baladi Glossary Quick Strip */}
+      <div className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[18px] p-3.5 text-xs flex flex-wrap items-center justify-between gap-2 shadow-sm">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="w-6 h-6 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0">
+            💡
+          </span>
+          <span className="font-bold text-md-on-surface">
+            قاموس كلام صحاب بالبلدي:
+          </span>
+          <span className="text-md-on-surface-variant leading-relaxed">
+            <strong>سوينج:</strong> يعني مضاربة سريعة من كام يوم لأسبوعين تخطف ربحك وتطلع • <strong>أرضية الدور:</strong> منطقة الدعم الحرج اللي بتمنع السهم يقع • <strong>سقف الدور:</strong> منطقة المقاومة اللي بنقفل مكسب عندها • <strong>وقف الخسارة:</strong> حزام أمان صارم يمنع احتجاز فلوسك.
+          </span>
+        </div>
+      </div>
+
       {/* 2. Personalized Portfolio Action Plan in M3 Elevated Card */}
       {portfolio.length > 0 && (
         <MdCard variant="elevated" className="space-y-4">
@@ -273,6 +288,11 @@ export const RecommendationsView: React.FC<Props> = ({
                     <p className="text-[11px] text-md-on-surface-variant leading-relaxed">
                       {diag.actionDetails}
                     </p>
+                    {!diag.position.isFund && !diag.position.isGold && (
+                      <div className="pt-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 border-t border-md-outline-variant/30">
+                        <span>📱 في شارت ثاندر: افتح مؤشر Order Blocks ومؤشر AI Support & Resistance لمتابعة الأوردر بلوك والأدوار.</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -4,12 +4,13 @@ import {
   HelpCircle, Sparkles, ShieldCheck, Compass, Eye,
   Building, Gauge, Car, Zap, Layers, BarChart2, TrendingUp, TrendingDown, Play,
   Search, Maximize2, Minimize2, BookOpen, ExternalLink, Info, Check, X, ShieldAlert,
-  Flame, Filter
+  Flame, Filter, Smartphone
 } from 'lucide-react';
 import { StockData } from '../types';
 import { GROWTHX_SIMULATOR_CASES, StockSimulationCase, SimulatorLayerStep, resolve7LayerAnalysis } from '../services/growthxSimulatorData';
 import { EGX_ARABIC_NAMES, StockMeta } from '../services/egxArabicNames';
 import { getFallbackStocks, formatPrice } from '../services/egxService';
+import { THNDR_SEVEN_LAYERS_MAPPING } from '../services/thndrIndicatorsData';
 import { TradingViewWidget } from './TradingViewWidget';
 
 interface Props {
@@ -560,6 +561,25 @@ export const InteractiveStockLab: React.FC<Props> = ({
                   {currentLayer.actualChartIndicatorName}
                 </span>
               </div>
+
+              {/* Thndr Indicator Match Box */}
+              {(() => {
+                const thndrMap = THNDR_SEVEN_LAYERS_MAPPING.find(m => m.layerNumber === currentLayer.layerNumber);
+                if (!thndrMap) return null;
+                return (
+                  <div className="p-3 bg-emerald-500/10 rounded-[16px] border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Smartphone size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="font-bold text-md-on-surface">
+                        المؤشر المقابل في تطبيق ثاندر (Thndr):
+                      </span>
+                    </div>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[11px] bg-md-surface px-2.5 py-1 rounded-full border border-emerald-500/30">
+                      {thndrMap.thndrPrimaryIndicator}
+                    </span>
+                  </div>
+                );
+              })()}
 
               {/* Analogy Box: التشبيه البلدي */}
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-[18px] p-3 flex items-start gap-2.5 text-xs">
