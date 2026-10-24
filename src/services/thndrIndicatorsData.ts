@@ -50,13 +50,13 @@ export interface SevenLayerThndrMapping {
 export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
   {
     layerNumber: 1,
-    layerName: 'الاتجاه العام المزدوج للسوق والسهم (The Dual Trend)',
-    mirrorName: 'مراية الطريق السريع (EGX30 + السهم)',
-    analogyTitle: 'مينفعش تسوق عربيتك عكس اتجاه الطريق السريع!',
-    installedInBadranTemplate: 'Trend Signals - [Tamer Zaky]',
-    equivalentInOurSystem: 'المتوسطات المتحركة الأسية (EMA 50 & EMA 200) + اتجاه مسار الطريق السريع ومؤشر EGX30',
+    layerName: 'الاتجاه العام المزدوج ونشاط السوق (The Dual Trend & Market Activity)',
+    mirrorName: 'مراية الطريق السريع ونشاط البورصة (EGX30 + EGX Activity)',
+    analogyTitle: 'مينفعش تسوق عربيتك عكس اتجاه الطريق السريع ولا في طريق ميت!',
+    installedInBadranTemplate: 'Trend Signals + EGX Activity - [Tamer Zaky]',
+    equivalentInOurSystem: 'المتوسطات المتحركة الأسية (EMA 50 & EMA 200) + فلتر سيولة ونشاط السوق ومؤشر EGX30',
     coverageType: 'شارت ثاندر المباشر',
-    thndrPrimaryIndicator: 'Trend Signals - [Tamer Zaky]',
+    thndrPrimaryIndicator: 'Trend Signals + EGX Activity - [Tamer Zaky]',
     thndrSecondaryIndicator: 'Moving Average Exponential (EMA 50 & EMA 200) / RMI Trend',
     thndrIndicatorsList: [
       {
@@ -66,22 +66,22 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
         badge: 'مثبت في قالب BADRAN ✅'
       },
       {
-        nameEn: 'Moving Average Exponential (EMA 50)',
-        nameAr: 'المتوسط المتحرك الأسي 50 يوم',
-        role: 'خط الدعم الحركي السريع لاتجاه الأسابيع ولحركة مؤشر EGX30 العام.',
-        badge: 'مؤشر أساسي'
+        nameEn: 'EGX Activity - [Tamer Zaky]',
+        nameAr: 'مؤشر نشاط وسيولة السوق المصري',
+        role: 'المؤشر المثبت في قالب BADRAN: قياس النشاط والسيولة الساخنة في السهم مقارنة بالبورصة المصرية لاختيار الأسهم الحية.',
+        badge: 'مثبت في قالب BADRAN ✅'
       },
       {
-        nameEn: 'Moving Average Exponential (EMA 200)',
-        nameAr: 'المتوسط المتحرك الأسي 200 يوم',
+        nameEn: 'Moving Average Exponential (EMA 50 & 200)',
+        nameAr: 'المتوسطات الأسية 50 و 200 يوم',
         role: 'خط الأمان المؤسسي الأكبر للمحافظ والصناديق؛ طول ما السهم والمؤشر فوقه فالسوق في أمان استثماري.',
-        badge: 'خط الأمان الأكبر'
+        badge: 'خط الأمان المؤسسي'
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'مثبت مسبقاً وجاهز في قالب BADRAN باسم "Trend Signals - [Tamer Zaky]". يلون الشموع تلقائياً ويضع أسهم الإشارات على الشارت مباشرة.',
-    explanationBaladi: 'الاتجاه العام يا صاحبي هو البوصلة. في قالب BADRAN مثبتين مؤشر "Trend Signals - [Tamer Zaky]"، وهو بيلون الشموع تلقائياً ويحدد لك المسار، وده بيوازي مباشرة متوسطات EMA 50 و EMA 200 في موقعنا وتريدنج فيو. طول ما الشموع خضراء والمؤشر العام مستقر، السكة سالكة وتقدر تشتري في أمان.',
-    whatToLookFor: 'شموع خضراء وإشارة صعود مؤكدة من Trend Signals مع ثبات مؤشر EGX30 العام.'
+    howToApplyInThndr: 'مثبت مسبقاً وجاهز في قالب BADRAN بمؤشري "Trend Signals" و "EGX Activity"؛ يلون الشموع ويقيس كثافة النشاط اليومي.',
+    explanationBaladi: 'الاتجاه العام ونشاط البورصة هما البوصلة! في قالب BADRAN دمجنا مؤشر "Trend Signals" لتلوين المسار الصاعد، مع مؤشر "EGX Activity" عشان نتأكد إن السهم مش نايم في الظل وفيه سيولة بتضخ بجد. الاتنين مع بعض بيمنعوك تشتري في أسهم ميتة أو تعوم ضد تيار السوق.',
+    whatToLookFor: 'شموع خضراء صاعدة وإشارة دخول من Trend Signals متزامنة مع ارتفاع مؤشر EGX Activity فوق متوسطه.'
   },
   {
     layerNumber: 2,
@@ -143,32 +143,38 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
   },
   {
     layerNumber: 4,
-    layerName: 'التقلب وعمارة الأدوار ومساحة الحركة (Volatility & RTM)',
-    mirrorName: 'مراية مساحة الحركة وعمارة الأدوار',
+    layerName: 'عمارة الأدوار ومساحة الحركة والوقف المتحرك (S/R & Trailing Stop)',
+    mirrorName: 'مراية الأدوار والوقف المتحرك (AI Support + ATR Fib Trend)',
     analogyTitle: 'عمارة الأدوار: أنت في الدور الكام؟ والسقف اللي فوقك على بعد قد إيه؟',
-    installedInBadranTemplate: 'Bollinger Bands (20, 2, SMA) - النطاقات ومساحة الحركة',
-    equivalentInOurSystem: 'عمارة الأدوار ومساحة الحركة الحرة (Room to Move) + مؤشر ATR',
+    installedInBadranTemplate: 'AI Support & Resistance + ATR Fibonacci Trend - [Tamer Zaky]',
+    equivalentInOurSystem: 'عمارة الأدوار ومساحة الحركة الحرة (Room to Move) + الوقف المتحرك (Trailing Stop) + ATR',
     coverageType: 'شارت ثاندر المباشر',
-    thndrPrimaryIndicator: 'Bollinger Bands (20, 2, SMA)',
-    thndrSecondaryIndicator: 'Average True Range (ATR) / AI Support & Resistance - [Tamer Zaky]',
+    thndrPrimaryIndicator: 'AI Support & Resistance + ATR Fibonacci Trend',
+    thndrSecondaryIndicator: 'Bollinger Bands (20, 2, SMA) / Average True Range (ATR)',
     thndrIndicatorsList: [
       {
-        nameEn: 'Bollinger Bands (20, 2, SMA)',
-        nameAr: 'نطاقات بولنجر باند',
-        role: 'المؤشر المثبت في قالب BADRAN: تحديد أرضية الدور (الخط السفلي) وسقف المقاومة (الخط العلوي) ونقطة الارتكاز (الخط الأوسط SMA 20).',
+        nameEn: 'AI Support & Resistance - [Tamer Zaky]',
+        nameAr: 'سكربت الدعوم والمقاومات بالذكاء الاصطناعي',
+        role: 'المؤشر المثبت في قالب BADRAN: رسم خطوط أفقية آلية للأدوار (الدعوم بالأخضر والمقاومات بالأحمر) مع أرقام الأسعار الصريحة.',
         badge: 'مثبت في قالب BADRAN ✅'
       },
       {
-        nameEn: 'Average True Range (ATR)',
-        nameAr: 'متوسط المدى الحقيقي (ATR)',
-        role: 'حساب متوسط التذبذب اليومي بالجنيهات لتحديد مسافة وقف الخسارة المناسبة دون ضربها عشوائياً.',
-        badge: 'مؤشر قياسي'
+        nameEn: 'ATR Fibonacci Trend',
+        nameAr: 'مؤشر اتجاه فيبوناتشي ومتوسط المدى',
+        role: 'المؤشر المثبت في قالب BADRAN: حارس الأرباح التلقائي وخط الوقف المتحرك (Trailing Stop) وأهداف الامتداد الذهبي.',
+        badge: 'مثبت في قالب BADRAN ✅'
+      },
+      {
+        nameEn: 'Bollinger Bands (20, 2, SMA)',
+        nameAr: 'نطاقات بولنجر باند',
+        role: 'قياس قناة الحركة الحرة ودعم متوسط 20 يوم.',
+        badge: 'مؤشر مكمل'
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'مثبت مسبقاً على شارت قالب BADRAN باسم "Bollinger Bands"؛ يحيط بالشموع بخطين علوي وسفلي مع خط متوسط 20 يوم في المنتصف.',
-    explanationBaladi: 'السوق زي عمارة سكنية: "أرضية الدور" هي الدعم اللي السهم واقف عليه، و"سقف الدور" هو المقاومة اللي فوقك. خطوط البولنجر (Bollinger Bands) بتحدد لك مساحة الحركة الحرة بالمليم؛ لما تشتري من عند الخط الأوسط أو السفلي ويكون قدامك مساحة مفتوحة حتى الخط العلوي، يبقى عندك Room to Move ممتاز بأقل مخاطرة.',
-    whatToLookFor: 'ارتكاز السهم أعلى الخط الأوسط للبولنجر مع وجود مسافة صعود كافية (على الأقل 8% إلى 12%) للخط العلوي.'
+    howToApplyInThndr: 'مثبت مسبقاً في قالب BADRAN بمؤشري "AI Support & Resistance" لرسم خطوط المستويات الرقمية، و "ATR Fibonacci Trend" لرسم خط الوقف المتحرك.',
+    explanationBaladi: 'عمارة الأدوار والأمان الاستثماري: مؤشر AI Support بيرسم لك خطوط الأدوار الخرسانية وأرقام المقاومات بدقة متناهية عشان تعرف مساحة المكسب الحرة (Room to Move)، ومؤشر ATR Fib Trend بيرسم خط أخضر تحت الشموع يرفع وقفك أوتوماتيك مع كل صعود، ويمنعك تفرط في أرباحك!',
+    whatToLookFor: 'ارتكاز الشموع أعلى خط دعم ذكي أخضر مع تداول السهم فوق خط ATR Fib الأخضر المتحرك وبعد كافٍ عن أول مقاومة حمراء.'
   },
   {
     layerNumber: 5,
@@ -782,3 +788,206 @@ export const EGX_FRIEND_GLOSSARY: BaladiTerm[] = [
     practicalRule: 'لو السهم في قمة تاريخية ومؤشر RSI فوق 75 وظهر عمود بيع أحمر عملاق، اخرج فوراً واقفل أرباحك ومتطمعش.'
   }
 ];
+
+// =========================================================================
+// 4. استراتيجية وخريطة طريق التحليل واتخاذ القرار بقالب BADRAN على ثاندر
+// =========================================================================
+
+export interface AnalysisStep {
+  stepNumber: number;
+  stepName: string;
+  indicatorUsed: string;
+  indicatorLocation: string;
+  coreQuestion: string;
+  bullishSignal: string;
+  bearishSignal: string;
+  commonPitfall: string;
+  proTrick: string;
+}
+
+export interface TraderProfileGuide {
+  type: 'long_term' | 'swing' | 'day_trader';
+  title: string;
+  timeframeUsed: string;
+  holdingPeriod: string;
+  primaryIndicators: string[];
+  entryCondition: string;
+  stopLossRule: string;
+  takeProfitRule: string;
+  riskRewardMin: string;
+  baladiSummary: string;
+}
+
+export interface ExecutionFormula {
+  entryPriceRule: string;
+  stopLossExactRule: string;
+  takeProfitStage1Rule: string;
+  takeProfitStage2Rule: string;
+  goldenRiskRule: string;
+}
+
+export interface BadranStrategyPlaybook {
+  suiteTitle: string;
+  suiteSubtitle: string;
+  totalIndicators: number;
+  steps: AnalysisStep[];
+  profiles: TraderProfileGuide[];
+  execution: ExecutionFormula;
+  top5Mistakes: {
+    id: number;
+    title: string;
+    mistakeBaladi: string;
+    howToAvoid: string;
+  }[];
+}
+
+export const BADRAN_STRATEGY_PLAYBOOK: BadranStrategyPlaybook = {
+  suiteTitle: 'دليل استراتيجية التحليل واتخاذ القرار الاحترافي (قالب BADRAN)',
+  suiteSubtitle: 'خارطة طريق تسلسلية تبدأ من فحص تيار السوق وتنتهي بنقطة الدخول والوقف وجني الأرباح بالمليم',
+  totalIndicators: 8,
+  steps: [
+    {
+      stepNumber: 1,
+      stepName: 'فحص البوصلة والبيئة العامة (Market Context & Dual Trend)',
+      indicatorUsed: 'Trend Signals + EGX Activity - [Tamer Zaky] + فريم 1W الأسبوعي',
+      indicatorLocation: 'الشارت الرئيسي (تلوين الشموع + شريط النشاط)',
+      coreQuestion: 'هل تيار السوق ككل والسهم في مسار صاعد، وهل السهم فيه سيولة ونشاط ساخن يستاهل تدخله؟',
+      bullishSignal: 'شموع السهم ملونة بالأخضر من Trend Signals، ومؤشر EGX Activity يعطي عمود نشاط أخضر متصاعد فوق متوسط 20 يوم.',
+      bearishSignal: 'شموع حمراء هابطة أو مؤشر EGX Activity خامد تحت خط الصفر (سهم ميت السيولة تبتعد عنه فوراً).',
+      commonPitfall: 'الدخول في سهم معطي شمعة خضراء يومية خادعة بينما هو على فريم الأسبوع في مسار هابط وبيغرق، أو مؤشر النشاط ميت فالسهم ينام بفلوسك شهور!',
+      proTrick: 'افتح فريم 1W (الأسبوعي) أولاً؛ لو الشمعة الأسبوعية خضراء ومستقرة، ارجع لليومي ونفذ وإنت مسنود بقوة المسار الأكبر.'
+    },
+    {
+      stepNumber: 2,
+      stepName: 'كشف قاع صانع السوق وعمارة الأدوار (Institutional Floor & Levels)',
+      indicatorUsed: 'Order Blocks + AI Support & Resistance - [Tamer Zaky]',
+      indicatorLocation: 'الشارت الرئيسي (مستطيلات كتل الطلب + خطوط المستويات الأفقية)',
+      coreQuestion: 'السعر واقف فين بالنسبة لمستطيل طلب الحيتان الأخضر؟ وفين أقرب سقف مقاومة أفقي خرساني؟',
+      bullishSignal: 'السعر يريح بالقرب من مستطيل الطلب المؤسسي الأخضر (Demand Order Block) أو يرتكز فوق خط دعم ذكي أخضر، مع وجود مسافة حرة لا تقل عن 8% إلى 15% لأقرب خط مقاومة أحمر.',
+      bearishSignal: 'السعر واقف تحت خط مقاومة أحمر خرساني مباشرة (المسافة أقل من 3%) أو كسر المستطيل الأخضر للأسفل.',
+      commonPitfall: 'الشراء بعد ما السهم يطير ويوصل لسقف المقاومة الأحمر بدافع الطمع (FOMO)، فالأفراد يشتروا في القمة والحيتان تبيع عليهم!',
+      proTrick: 'ضع أمر الشراء المعلق (Limit Order) عند الحافة العلوية لمستطيل الأوردر بلوك الأخضر، وليس أثناء الشمعة الخضراء وهي بتجري.'
+    },
+    {
+      stepNumber: 3,
+      stepName: 'اختبار تانك البنزين وسحب السيولة (Volume Fuel & Liquidity Sweeps)',
+      indicatorUsed: 'Liquidity - [Tamer Zaky] + أعمدة الفوليوم (Volume)',
+      indicatorLocation: 'الشارت الرئيسي (إشارات السيولة) + قاع الشارت (أعمدة الفوليوم)',
+      coreQuestion: 'هل الحوت نزل ضرب وقوف الأفراد الصبح ولم الأسهم برخيص؟ وهل الصعود مدعوم بمليارات الكاش؟',
+      bullishSignal: 'ظهور إشارة سحب سيولة (Liquidity Sweep) عند القاع بشمعة ذات ذيل سفلي طويل (Hammer/Pinbar) يعقبها عمود فوليوم شرائي أخضر طويل يفوق متوسط 20 جلسة.',
+      bearishSignal: 'صعود سعري بأعمدة فوليوم هزيلة وضعيفة جداً، أو ظهور أعمدة بيع حمراء ضخمة بعد صعود طويل.',
+      commonPitfall: 'الخوف والهلع عندما ينزل السعر صباحاً يكسر الدعم بقرشين، فيبيع المتداول بخسارة ليجد الحوت سحب السيولة وطار بالسهم في نفس الجلسة!',
+      proTrick: 'لما مؤشر Liquidity يعطي علامة سحب سيولة بالتزامن مع ملامسة مستطيل Order Block، دي أقوى نقطة ارتداد وانفجار صاعد في البورصة.'
+    },
+    {
+      stepNumber: 4,
+      stepName: 'فحص عزم ودواسة البنزين (Momentum & Throttle)',
+      indicatorUsed: 'MACD (12, 26, close, 9, EMA, EMA)',
+      indicatorLocation: 'اللوحة السفلية المستقلة (Pane 2)',
+      coreQuestion: 'هل المشتري دايس بنزين بجد وعنده عزم يرفع السهم، ولا ده مجرد ارتداد ميت للتصريف؟',
+      bullishSignal: 'تقاطع خط الماكد الأزرق السريع للأعلى فوق خط الإشارة البرتقالي، وتحول أعمدة الهستوجرام للون الأخضر الصاعد فوق خط الصفر.',
+      bearishSignal: 'تقاطع هابط لخطوط الماكد أو هبوط أعمدة الهستوجرام باللون الأحمر المتزايد أسفل خط الصفر.',
+      commonPitfall: 'الشراء بمجرد تقاطع الماكد لوحده بدون دعم مؤسسي؛ الماكد مؤشر زخم لاحق يؤكد الحركة ولا يصنعها بمفرده، وممنوع استخدامه كسبب وحيد للشراء.',
+      proTrick: 'راقب "الدايفرجنس الإيجابي"؛ لما السعر يعمل قاعين متساويين بينما خطوط وأعمدة الماكد تسجل قاعاً أعلى من قاع، ده إعلان إنفجار صاعد وشيك.'
+    },
+    {
+      stepNumber: 5,
+      stepName: 'رصد السوستة المضغوطة وتوقيت الانطلاق (Volatility Squeeze)',
+      indicatorUsed: 'Bollinger Bands (BB 20 2 0 SMA)',
+      indicatorLocation: 'الشارت الرئيسي (المسار الحركي المحيط بالشموع)',
+      coreQuestion: 'هل السهم في حالة هدوء وتجميع (سوستة مضغوطة)، وهل بدأت مرحلة الانفجار والتمدد؟',
+      bullishSignal: 'ضيق ملحوظ في المسافة بين الخط العلوي والسفلي للبولنجر يتبعه فتح الخط العلوي للأعلى بشمعة شرائية قوية بفوليوم.',
+      bearishSignal: 'انفراج الخطوط للأسفل وكسر الخط الأوسط (SMA 20) بشموع هابطة.',
+      commonPitfall: 'الشراء عندما تكون الشمعة قد أغلقت بالكامل خارج الخط العلوي للبولنجر (تشبع شراء حاد Overbought) يعقبه تصحيح فوري.',
+      proTrick: 'خط المنتصف (SMA 20) هو مغناطيس السهم؛ في المسار الصاعد، إعادة اختبار خط الوسط تمثل أفضل فرصة شراء للدخول أو تزويد الكميات (Buy the Dip).'
+    },
+    {
+      stepNumber: 6,
+      stepName: 'تأمين الأرباح والوقف المتحرك (Trailing Stop & Profit Locking)',
+      indicatorUsed: 'ATR Fibonacci Trend - [Tamer Zaky]',
+      indicatorLocation: 'الشارت الرئيسي (خط الاتجاه الديناميكي ومسارات فيبوناتشي)',
+      coreQuestion: 'فين خط الأمان المتحرك اللي بيحمي أرباحي؟ وفين مستويات الخروج إذا بدأ السهم يريح؟',
+      bullishSignal: 'استمرار تداول الشموع بثبات أعلى خط التريند الأخضر الصاعد؛ رفع أمر الوقف في ثاندر باستمرار مع كل قمة جديدة.',
+      bearishSignal: 'كسر السعر لخط التريند المتحرك وإغلاق شمعة تحته بالكامل باللون الأحمر (إشارة خروج قطعية لتجميد الأرباح).',
+      commonPitfall: 'تحريك أمر وقف الخسارة للأسفل وتبريد السهم الخسران أملاً في الارتداد، أو الخروج المتعجل عند أول مكسب 2% وتفويت رالي صاعد 30%!',
+      proTrick: 'ارفع أمر الوقف في تطبيق ثاندر يدوياً إلى مستوى خط ATR Fib الجديد مع نهاية كل جلسة خضراء، وبكده مفيش صفقة رابحة ممكن تتحول لخاسرة أبداً.'
+    }
+  ],
+  profiles: [
+    {
+      type: 'long_term',
+      title: '1. المستثمر طويل الأجل (استثمار القيمة والموجات الكبرى)',
+      timeframeUsed: 'الفريم الأسبوعي (1W) والشهري (1M)',
+      holdingPeriod: 'من 6 أشهر إلى سنتين',
+      primaryIndicators: ['Trend Signals (1W)', 'Order Blocks (1W)', 'EGX Activity', 'ATR Fib Trend'],
+      entryCondition: 'السهم فوق متوسط 200 يوم، مرتد من كتلة طلب (Order Block) أسبوعية كبيرة، ومؤشر EGX Activity متصاعد.',
+      stopLossRule: 'كسر قاع مستطيل الطلب الأسبوعي أو كسر خط التريند الشهري (وقف متسع 6% إلى 9%).',
+      takeProfitRule: 'مستويات امتداد فيبوناتشي الكبرى (1.618 و 2.618) أو تحقيق مضاعفة سعرية، والخروج عند كسر خط ATR الأسبوعي.',
+      riskRewardMin: '1:3.5 فما فوق',
+      baladiSummary: 'المستثمر طويل الأجل مش بيشغل باله بحركة الجلسة اليومية ولا الشموع الصغيرة؛ هو راكب تريند أسبوعي كبير وداخل مع الصناديق في القيعان السنوية.'
+    },
+    {
+      type: 'swing',
+      title: '2. المتداول متوسط الأجل (صياد موجات السوينج - Swing Trader)',
+      timeframeUsed: 'الفريم اليومي (1D) لتحديد الخطة + فريم الساعة (1H) للتنفيذ',
+      holdingPeriod: 'من أسبوعين إلى 8 أسابيع',
+      primaryIndicators: ['Order Blocks', 'AI Support & Resistance', 'MACD', 'Bollinger Bands', 'ATR Fib Trend'],
+      entryCondition: 'توافق مسار الأسبوع مع ارتداد اليومي من مستطيل طلب أو دعم ذكي، وتقاطع صاعد للماكد مع اتساع بولنجر.',
+      stopLossRule: 'أسفل قاع مستطيل الأوردر بلوك اليومي بقرشين (وقف محسوب وصارم بين 2.5% إلى 3.5%).',
+      takeProfitRule: 'هدف أول (TP1): بيع 50% عند أول مقاومة من AI Support (مكسب 8% إلى 14%)، وترك الباقي لخط ATR Fib Trend.',
+      riskRewardMin: '1:2.5 على الأقل',
+      baladiSummary: 'دي التوليفة الذهبية لأغلب متداولي البورصة المصرية؛ بتشتري عند أرضية الدور وتبيع نص كميتك عند السقف وتأمن الباقي مع خط التريند.'
+    },
+    {
+      type: 'day_trader',
+      title: '3. المضارب السريع واللحظي (خطف الجلسات والارتدادات السريعة)',
+      timeframeUsed: 'فريم الساعة (1H) وفريم ربع ساعة (15M) أو 5 دقائق',
+      holdingPeriod: 'من نفس الجلسة إلى 3 جلسات كحد أقصى',
+      primaryIndicators: ['EGX Activity (قفزة نشاط)', 'MACD (1H)', 'Bollinger Bands (لحظي)', 'Liquidity Sweeps'],
+      entryCondition: 'قفزة مفاجئة في مؤشر EGX Activity مع شمعة ارتداد بعد سحب سيولة (Liquidity Sweep) واختراق الخط الأوسط للبولنجر.',
+      stopLossRule: 'أسفل شمعة الدخول اللحظية مباشرة (وقف ضيق جداً بين 1.0% إلى 1.8%).',
+      takeProfitRule: 'الخطف السريع عند أول ملامسة للحد العلوي للبولنجر اللحظي أو أول مقاومة ذكية (مكسب 3% إلى 6%).',
+      riskRewardMin: '1:2 على الأقل',
+      baladiSummary: 'المضارب زي القناص: بيدخل يضرب الطلقة ويخرج بسرعة، وممنوع نهائياً يبيت سهم مضاربة خسران على أمل إنه يعوض بكرة!'
+    }
+  ],
+  execution: {
+    entryPriceRule: 'السعر المثالي للدخول: ليس عند الشمعة الخضراء الطائرة! الشراء يكون إما عند ملامسة الحافة العلوية لمستطيل الطلب المؤسسي (Order Block) أو عند اختراق خط مقاومة ذكي وإغلاق شمعة خضراء كاملة فوقه.',
+    stopLossExactRule: 'وقف الخسارة بالقرش: يوضع أسفل قاع مستطيل الأوردر بلوك بـ 3 إلى 5 قروش (Buffer) لحمايتك من الذيول العشوائية، أو كسر خط ATR Fib الأخضر وإغلاق شمعة تحته.',
+    takeProfitStage1Rule: 'الهدف الأول (TP1 - تأمين رأس المال): بيع 50% من الكمية عند أول خط مقاومة أحمر من AI Support & Resistance، ونقل أمر وقف الخسارة فوراً إلى سعر الشراء (Breakeven) ليصبح التداول بلا مخاطرة نهائياً.',
+    takeProfitStage2Rule: 'الهدف الثاني (TP2 - حصد الرالي الأكبر): الاستمرار بالنصف المتبقي ورفع وقفه تدريجياً مع خط ATR Fibonacci Trend الأخضر، والبيع فقط عند كسر الخط أو تحقيق امتداد فيبوناتشي 1.618.',
+    goldenRiskRule: 'قاعدة إدارة رأس المال الذهبية: إجمالي مخاطرة وقف الخسارة في الصفقة الواحدة لا يتجاوز 1.5% إلى 2% من إجمالي رأس مال محفظتك بالكامل.'
+  },
+  top5Mistakes: [
+    {
+      id: 1,
+      title: 'فخ مطاردة الشمعة الخضراء المنفجرة (FOMO Trap)',
+      mistakeBaladi: 'تفتح الشارت تلاقي السهم طالع 6% بشمعة عملاقة فتجري تشتري عشان ميفوتكش، فالسهم يقف وينزل بيك فجأة!',
+      howToAvoid: 'المحترف لا يطارد السهم الصاعد أبداً؛ انتظر السهم لما يريح ويعمل إعادة اختبار لمستطيل الأوردر بلوك أو خط الوسط للبولنجر واشترِ برخيص.'
+    },
+    {
+      id: 2,
+      title: 'شراء سهم ميت بدون فحص مؤشر EGX Activity',
+      mistakeBaladi: 'تشتري سهم عشان شكله رخيص، وتفضل محبوس فيه 4 شهور مبيتحركش ولا قرش!',
+      howToAvoid: 'افحص مؤشر EGX Activity أولاً؛ لو مؤشر النشاط تحت متوسطه والسيولة ميتة، ابعد عن السهم حتى يدخل فيه الكاش والنشاط.'
+    },
+    {
+      id: 3,
+      title: 'تقديم مؤشر الماكد (MACD) على مستويات صناع السوق',
+      mistakeBaladi: 'تشوف تقاطع صاعد في الماكد فتشتري فوراً، وتتفاجأ إن السهم بيصطدم بمقاومة خرسانية أو أوردر بلوك تصريفي فيقع.',
+      howToAvoid: 'الماكد مؤشر لاحق يؤكد العزم ولا يصنع الاتجاه؛ انظر أولاً لأرضية الأوردر بلوك ومساحة الحركة ثم خذ الماكد كتأكيد أخير.'
+    },
+    {
+      id: 4,
+      title: 'تبريد السهم الهابط وتحريك وقف الخسارة للأسفل',
+      mistakeBaladi: 'السهم يكسر الوقف فتقول "هشتري تاني وأبرد عليه عشان أعوض"، فيفضل يغرق بيك ويتحول من خسارة 3% لكارثة 35%!',
+      howToAvoid: 'وقف الخسارة خط أحمر مقدس؛ إذا كسر السهم مستطيل الأوردر بلوك أو خط ATR Fib، اخرج فوراً بدون عواطف، فالفرص في البورصة لا تنتهي.'
+    },
+    {
+      id: 5,
+      title: 'التداول اللحظي بدون النظر لشارت الأسبوع (نظرة الهليكوبتر)',
+      mistakeBaladi: 'تشوف شمعة 5 دقائق صاعدة فتشتري، والسهم على الفريم الأسبوعي في مسار هابط عنيف والتريند العام بيعصره.',
+      howToAvoid: 'دائماً طابق الفريمات: ابدأ بالأسبوعي (1W)، ثم اليومي (1D)، ثم نفذ على فريم الساعة (1H) لتكون في اتجاه التيار الأكبر.'
+    }
+  ]
+};
