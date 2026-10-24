@@ -63,6 +63,9 @@ export interface MutualFund {
   nav?: number;        // Latest net asset value
   thndrAvailable: boolean;
   isSavingPot?: boolean;
+  benchmark?: string;   // e.g. EGX70 EWI, EGX100 EWI, EGX30, EGX33 Shariah, EGX35-LV
+  strategy?: string;    // Explicit accurate investment policy and mandate
+  sectorFocus?: string; // Sector, index, or asset focus
 }
 
 export interface SavingPotProduct {

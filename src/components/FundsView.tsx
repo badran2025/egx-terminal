@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Coins, Search, ShieldCheck, Plus, Check,
   Wallet, Calculator, Info, Sparkles, Building2,
-  TrendingUp, BarChart3, Landmark, ShieldAlert, Award
+  TrendingUp, BarChart3, Landmark, ShieldAlert, Award,
+  Layers, Compass, CheckCircle2
 } from 'lucide-react';
 import { MutualFund, PortfolioPosition } from '../types';
 import { 
@@ -33,19 +34,26 @@ export const FundsView: React.FC<Props> = ({
   const [simulatedDeposit, setSimulatedDeposit] = useState<number>(10000);
 
   const CATEGORY_TABS = [
-    { key: 'all', label: 'جميع الصناديق والأوعية (73)', count: 73, desc: 'الدليل الكامل لكافة صناديق وأوعية ثاندر الرسمية' },
-    { key: 'أسهم نشطة', label: 'صناديق الأسهم النشطة (28)', count: 28, desc: 'إدارة محترفة منتقاة لتحقيق عائد يفوق مؤشرات البورصة' },
-    { key: 'أسهم مؤشرات (سلبية)', label: 'صناديق الأسهم السلبية (12)', count: 12, desc: 'تتبع حرفي لمؤشرات البورصة المصرية (EGX30 / EGX70) بأقل تكاليف' },
-    { key: 'دخل ثابت ونقدي', label: 'صناديق الدخل الثابت (23)', count: 23, desc: 'استثمار آمن في أذون وسندات الخزانة والودائع البنكية بعائد مستقر' },
-    { key: 'كلاودز', label: 'الكلاودز (2)', count: 2, desc: 'أوعية كاش مباشرة من ثاندر بعائد مركب دوري وسحب فوري مجاني' },
-    { key: 'ذهب وفضة', label: 'صناديق الذهب والفضة (8)', count: 8, desc: 'وثائق مدعومة بسبائك الذهب والفضة الحقيقية للتحوط ضد التضخم' },
+    { key: 'all', label: 'جميع الصناديق والأوعية (73)', count: 73, desc: 'الدليل الكامل لكافة صناديق وأوعية ثاندر الرسمية بسياساتها الاستثمارية الحقيقية' },
+    { key: 'أسهم نشطة', label: 'صناديق الأسهم النشطة (28)', count: 28, desc: 'إدارة بشرية محترفة منتقاة للقطاعات الواعدة (عقارات، تصدير، بنوك، تكنولوجيا، High Dividend)' },
+    { key: 'أسهم مؤشرات (سلبية)', label: 'صناديق الأسهم السلبية (12)', count: 12, desc: 'تتبع حرفي دقيق لمؤشرات البورصة: السبعيني EGX70 (4 صناديق) • المئوي EGX100 (بلتون مية مية) • الثلاثيني EGX30 • مؤشرات الشريعة ومؤشرات التقلب المنخفض' },
+    { key: 'دخل ثابت ونقدي', label: 'صناديق الدخل الثابت (23)', count: 23, desc: 'استثمار آمن في أذون وسندات الخزانة والودائع البنكية بعوائد دورية ويومية معفاة من الضرائب' },
+    { key: 'كلاودز', label: 'الكلاودز (2)', count: 2, desc: 'أوعية كاش ادخار مباشر من ثاندر وأزيموت بعائد مركب دوري (يومي 19.25% وشهري 21.50%) وسحب فوري مجاني' },
+    { key: 'ذهب وفضة', label: 'صناديق الذهب والفضة (8)', count: 8, desc: 'وثائق مدعومة بسبائك الذهب الخالص عيار 24 والفضة 999 بالخزائن المؤمنة للتحوط ضد التضخم' },
   ];
 
   const filtered = EGYPTIAN_MUTUAL_FUNDS.filter(f => {
     const matchesFilter = filter === 'all' || f.category === filter;
+    const q = search.trim().toLowerCase();
+    if (!q) return matchesFilter;
+
     const matchesSearch = 
-      f.name.includes(search) || 
-      f.code.toLowerCase().includes(search.toLowerCase());
+      f.name.toLowerCase().includes(q) || 
+      f.code.toLowerCase().includes(q) ||
+      (f.benchmark && f.benchmark.toLowerCase().includes(q)) ||
+      (f.strategy && f.strategy.toLowerCase().includes(q)) ||
+      (f.sectorFocus && f.sectorFocus.toLowerCase().includes(q));
+
     return matchesFilter && matchesSearch;
   });
 
@@ -89,35 +97,12 @@ export const FundsView: React.FC<Props> = ({
         buyPrice: fund.nav || 10,
         currentPriceManual: fund.nav || 10,
         buyDate: new Date().toISOString().split('T')[0],
-        notes: `${fund.name} • تصنيف: ${fund.category}`
+        notes: `${fund.name} • ${fund.benchmark || fund.category}`
       });
     }
 
     setAddedFundId(fund.id);
     setTimeout(() => setAddedFundId(null), 2500);
-  };
-
-  const getFundPolicyDescription = (fund: MutualFund) => {
-    if (fund.isSavingPot) {
-      return 'وعاء ادخار كاش مباشر بعائد مركب دوري وسحب فوري بدون مصاريف أو قيود';
-    }
-    if (fund.category === 'ذهب وفضة') {
-      return fund.code.toUpperCase() === 'THNDRGOLD' 
-        ? 'جرام ذهب عيار 24 فعلي مودع بخزائن معتمدة • تسعير لحظي بسوق الصاغة'
-        : 'وثيقة رسمية مدعومة بسبائك المعادن النفيسة للتحوط ضد التضخم وانخفاض العملة';
-    }
-    if (fund.category === 'أسهم مؤشرات (سلبية)') {
-      return fund.code.includes('70') 
-        ? 'تتبع آلي غير نشط لمؤشر EGX70 EWI متساوي الأوزان بأقل تكلفة إدارة'
-        : 'تتبع آلي غير نشط لمؤشر EGX30 لأكبر شركات السوق المصري بدون مخاطرة اجتهاد بشري';
-    }
-    if (fund.category === 'أسهم نشطة') {
-      return 'محفظة أسهم مصرية منتقاة تدار بنشاط لتحقيق نمو رأسمالي وأرباح تفوق المؤشرات العامة';
-    }
-    if (fund.category === 'دخل ثابت ونقدي') {
-      return 'أدوات دين حكومية منخفضة المخاطر (أذون وسندات خزانة + ودائع بنكية) بعائد تراكمي مستقر';
-    }
-    return 'صندوق استثمار مصري معتمد من الهيئة العامة للرقابة المالية';
   };
 
   const getCategoryBadgeLabel = (category: string) => {
@@ -131,6 +116,37 @@ export const FundsView: React.FC<Props> = ({
     }
   };
 
+  const getBenchmarkBadgeClass = (benchmark?: string, code?: string) => {
+    const b = (benchmark || '').toUpperCase();
+    const c = (code || '').toUpperCase();
+
+    if (b.includes('EGX100') || c === 'BMM') {
+      return 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30';
+    }
+    if (b.includes('EGX70') || ['T70', 'B70', 'AK70', 'NCS'].includes(c)) {
+      return 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30';
+    }
+    if (b.includes('EGX30') || c === 'CI30') {
+      return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30';
+    }
+    if (b.includes('شريعة') || b.includes('EGX33')) {
+      return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+    }
+    if (b.includes('EGX35') || b.includes('VOLATILITY') || b.includes('تقلّب') || b.includes('تقلب')) {
+      return 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30';
+    }
+    if (b.includes('ذهب')) {
+      return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30';
+    }
+    if (b.includes('فضة')) {
+      return 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30';
+    }
+    if (b.includes('أذون') || b.includes('خزانة') || b.includes('دخل ثابت')) {
+      return 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30';
+    }
+    return 'bg-md-surface-container-high text-md-on-surface border-md-outline-variant/60';
+  };
+
   return (
     <div className="space-y-6 text-md-on-surface" dir="rtl">
       {/* Date of Last Update Banner */}
@@ -138,7 +154,7 @@ export const FundsView: React.FC<Props> = ({
         lastUpdated={lastUpdated}
         onRefresh={onRefresh}
         isLoading={isLoading}
-        tabTitle="دليل صناديق الاستثمار وأوعية كلاودز (مقسمة رسمياً بـ 5 فئات - 73 خياراً)"
+        tabTitle="دليل وثائق الاستثمار وأوعية كلاودز (السياسة الاستثمارية الدقيقة لـ 73 خياراً)"
       />
 
       {/* Top Header Card */}
@@ -150,20 +166,20 @@ export const FundsView: React.FC<Props> = ({
                 <Coins size={22} />
               </div>
               <h2 className="font-extrabold text-xl sm:text-2xl tracking-tight text-md-on-surface">
-                دليل صناديق الاستثمار وأوعية الكاش الرسمية
+                دليل صناديق الاستثمار ومؤشراتها وسياساتها الرسمية
               </h2>
             </div>
-            <p className="text-xs sm:text-sm text-md-on-surface-variant max-w-3xl leading-relaxed">
-              تصنيف رسمي شامل لجميع خيارات الاستثمار الجماعي على منصة ثاندر والبورصة المصرية (73 خياراً). كل فئة مصنفة حسب طبيعة الأصول الاستثمارية الحقيقية وسعر الوثيقة (NAV) بدون خلطها مع مضاربات الأسهم.
+            <p className="text-xs sm:text-sm text-md-on-surface-variant max-w-4xl leading-relaxed">
+              توثيق رسمي شامل لجميع خيارات الاستثمار المتاحة عبر ثاندر (73 خياراً). كل صندوق مربوط بمؤشره المستهدف الحقيقي وسياسة إدارته المعتمدة وفق نشرات الاكتتاب الرسمية وإفصاحات الهيئة العامة للرقابة المالية.
             </p>
           </div>
 
           {/* Search Box */}
-          <div className="w-full lg:w-84">
+          <div className="w-full lg:w-96">
             <MdTextField
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث بكود أو اسم الصندوق (AZG, T70, ABR, بلتون...)"
+              placeholder="ابحث بالمؤشر، الكود أو الاستراتيجية (EGX70, مية مية, عقارات, تصدير, شريعة...)"
               leadingIcon={<Search size={18} />}
             />
           </div>
@@ -181,7 +197,7 @@ export const FundsView: React.FC<Props> = ({
           >
             <div className="text-[11px] font-bold text-md-primary">صناديق أسهم نشطة</div>
             <div className="text-lg font-mono font-extrabold text-md-on-surface mt-0.5">28 صندوق</div>
-            <div className="text-[10px] text-md-on-surface-variant mt-0.5">إدارة بشرية منتقاة</div>
+            <div className="text-[10px] text-md-on-surface-variant mt-0.5">انتقاء قطاعي (عقارات، تصدير، مدفوعات)</div>
           </button>
 
           <button 
@@ -194,7 +210,7 @@ export const FundsView: React.FC<Props> = ({
           >
             <div className="text-[11px] font-bold text-sky-600 dark:text-sky-400">صناديق أسهم سلبية</div>
             <div className="text-lg font-mono font-extrabold text-md-on-surface mt-0.5">12 صندوق</div>
-            <div className="text-[10px] text-md-on-surface-variant mt-0.5">تتبع مؤشرات EGX</div>
+            <div className="text-[10px] text-md-on-surface-variant mt-0.5">EGX70 (4) • EGX100 (1) • EGX30 • شريعة</div>
           </button>
 
           <button 
@@ -207,7 +223,7 @@ export const FundsView: React.FC<Props> = ({
           >
             <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">صناديق الدخل الثابت</div>
             <div className="text-lg font-mono font-extrabold text-md-on-surface mt-0.5">23 صندوق</div>
-            <div className="text-[10px] text-md-on-surface-variant mt-0.5">أذون خزانة وودائع</div>
+            <div className="text-[10px] text-md-on-surface-variant mt-0.5">أذون وسندات خزانة وعوائد يومية</div>
           </button>
 
           <button 
@@ -220,7 +236,7 @@ export const FundsView: React.FC<Props> = ({
           >
             <div className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">الكلاودز (أوعية كاش)</div>
             <div className="text-lg font-mono font-extrabold text-md-on-surface mt-0.5">2 أوعية</div>
-            <div className="text-[10px] text-md-on-surface-variant mt-0.5">عائد مركب وسحب فوري</div>
+            <div className="text-[10px] text-md-on-surface-variant mt-0.5">عائد مركب دوري وسحب فوري مجاني</div>
           </button>
 
           <button 
@@ -233,12 +249,64 @@ export const FundsView: React.FC<Props> = ({
           >
             <div className="text-[11px] font-bold text-amber-600 dark:text-amber-400">صناديق الذهب والفضة</div>
             <div className="text-lg font-mono font-extrabold text-md-on-surface mt-0.5">8 صناديق</div>
-            <div className="text-[10px] text-md-on-surface-variant mt-0.5">سبائك عيار 24 وتحوط</div>
+            <div className="text-[10px] text-md-on-surface-variant mt-0.5">سبائك عيار 24 وفضة 999 وتحوط</div>
           </button>
         </div>
       </MdCard>
 
-      {/* ☁️ DEDICATED SECTION: أوعية كلاودز الادخارية في ثاندر (حسابات عوائد كاش وليست وثائق استثمار) */}
+      {/* Quick Benchmark Filters for Fast Navigation */}
+      <div className="bg-md-surface-container-low border border-md-outline-variant/50 rounded-[20px] p-3 flex items-center justify-between gap-3 overflow-x-auto text-xs">
+        <span className="font-bold text-md-primary whitespace-nowrap flex items-center gap-1.5 shrink-0">
+          <Compass size={15} />
+          <span>مؤشرات سريعة:</span>
+        </span>
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => setSearch('')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors ${!search ? 'bg-md-primary text-md-on-primary' : 'bg-md-surface hover:bg-md-surface-container-high text-md-on-surface'}`}
+          >
+            الكل ({filtered.length})
+          </button>
+          <button
+            onClick={() => setSearch('EGX70')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors border border-teal-500/30 ${search.includes('EGX70') ? 'bg-teal-600 text-white' : 'bg-teal-500/10 text-teal-700 dark:text-teal-300'}`}
+          >
+            مؤشر السبعيني EGX70 (4 صناديق: T70, B70, AK70, NCS)
+          </button>
+          <button
+            onClick={() => setSearch('EGX100')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors border border-purple-500/30 ${search.includes('EGX100') ? 'bg-purple-600 text-white' : 'bg-purple-500/10 text-purple-700 dark:text-purple-300'}`}
+          >
+            مؤشر المئوي EGX100 (بلتون مية مية BMM)
+          </button>
+          <button
+            onClick={() => setSearch('EGX30')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors border border-blue-500/30 ${search.includes('EGX30') ? 'bg-blue-600 text-white' : 'bg-blue-500/10 text-blue-700 dark:text-blue-300'}`}
+          >
+            مؤشر الثلاثيني EGX30 (CI30)
+          </button>
+          <button
+            onClick={() => setSearch('شريعة')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors border border-emerald-500/30 ${search.includes('شريعة') ? 'bg-emerald-600 text-white' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}`}
+          >
+            متوافقة مع الشريعة (CMS, AKS, ASO, NHS, NMF)
+          </button>
+          <button
+            onClick={() => setSearch('عقار')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors border border-amber-500/30 ${search.includes('عقار') ? 'bg-amber-600 text-white' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'}`}
+          >
+            قطاع العقارات (BRE, CRE)
+          </button>
+          <button
+            onClick={() => setSearch('تصدير')}
+            className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition-colors border border-sky-500/30 ${search.includes('تصدير') ? 'bg-sky-600 text-white' : 'bg-sky-500/10 text-sky-700 dark:text-sky-300'}`}
+          >
+            شركات التصدير والدولار (CEX)
+          </button>
+        </div>
+      </div>
+
+      {/* ☁️ DEDICATED SECTION: أوعية كلاودز الادخارية في ثاندر */}
       {(filter === 'all' || filter === 'كلاودز') && (
         <div className="bg-gradient-to-r from-sky-500/10 via-cyan-500/10 to-indigo-500/10 border border-sky-500/30 rounded-[24px] p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-sky-500/20 pb-3">
@@ -367,23 +435,24 @@ export const FundsView: React.FC<Props> = ({
       <div className="bg-amber-500/10 border border-amber-500/30 rounded-[18px] p-3 flex items-center gap-3 text-xs text-md-on-surface">
         <Info size={16} className="text-amber-500 shrink-0" />
         <div className="leading-relaxed">
-          <strong className="text-amber-700 dark:text-amber-300 font-bold">أسعار وثائق الاستثمار (NAV):</strong> يتم احتساب صافي قيمة أصول الوثيقة (NAV) بنهاية جلسات التداول يومياً أو أسبوعياً من قِبل مديري الاستثمار (أزيموت، بلتون، سي آي، الأهلي، إلخ) وإفصاحات البورصة. يمكنك تحديث السعر الحالي يدوياً في محفظتك في أي وقت.
+          <strong className="text-amber-700 dark:text-amber-300 font-bold">أسعار وثائق الاستثمار (NAV):</strong> يتم احتساب صافي قيمة أصول الوثيقة (NAV) بنهاية جلسات التداول دورياً من قِبل مديري الاستثمار (أزيموت، بلتون، سي آي، الأهلي، إلخ) وإفصاحات البورصة. يمكنك تحديث السعر الحالي يدوياً في محفظتك في أي وقت.
         </div>
       </div>
 
-      {/* Modern Material 3 Data Table for Mutual Funds (NO STOCK DAILY CHANGE COLUMN) */}
+      {/* Modern Material 3 Data Table for Mutual Funds */}
       <div className="bg-md-surface border border-md-outline-variant/60 rounded-[24px] overflow-hidden shadow-md-1">
         <div className="overflow-x-auto">
           <table className="w-full text-right text-xs">
             <thead className="bg-md-surface-container-high text-md-on-surface-variant font-bold border-b border-md-outline-variant/60">
               <tr>
-                <th className="p-4 text-center min-w-[90px] w-24">رمز الوثيقة</th>
-                <th className="p-4 text-right min-w-[260px]">اسم الصندوق والجهة المصدرة</th>
-                <th className="p-4 text-right min-w-[150px]">التصنيف الفعلي</th>
-                <th className="p-4 text-right min-w-[140px]">سعر الوثيقة (NAV)</th>
-                <th className="p-4 text-right min-w-[300px]">السياسة الاستثمارية والأصول</th>
-                <th className="p-4 text-center min-w-[120px]">حالة الاعتماد</th>
-                <th className="p-4 text-center min-w-[120px]">إضافة للمحفظة</th>
+                <th className="p-4 text-center min-w-[85px] w-24">رمز الوثيقة</th>
+                <th className="p-4 text-right min-w-[230px]">اسم الصندوق والجهة المصدرة</th>
+                <th className="p-4 text-right min-w-[130px]">التصنيف الفعلي</th>
+                <th className="p-4 text-right min-w-[190px]">المؤشر / الأصل المرجعي</th>
+                <th className="p-4 text-right min-w-[130px]">سعر الوثيقة (NAV)</th>
+                <th className="p-4 text-right min-w-[320px]">السياسة الاستثمارية والأصول المستهدفة</th>
+                <th className="p-4 text-center min-w-[110px]">حالة الاعتماد</th>
+                <th className="p-4 text-center min-w-[110px]">إضافة للمحفظة</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-md-outline-variant/40">
@@ -431,6 +500,20 @@ export const FundsView: React.FC<Props> = ({
                       </span>
                     </td>
 
+                    {/* Exact Benchmark / Target Index */}
+                    <td className="p-4 text-right">
+                      <div className="space-y-1">
+                        <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold border ${getBenchmarkBadgeClass(fund.benchmark, fund.code)}`}>
+                          {fund.benchmark || 'سوق المال المصري'}
+                        </span>
+                        {fund.sectorFocus && (
+                          <div className="text-[10px] text-md-on-surface-variant font-medium">
+                            {fund.sectorFocus}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
                     {/* NAV / Price */}
                     <td className="p-4 text-right">
                       {fund.isSavingPot ? (
@@ -467,9 +550,9 @@ export const FundsView: React.FC<Props> = ({
                       )}
                     </td>
 
-                    {/* Policy / Strategy */}
+                    {/* Exact Policy / Strategy from Dataset */}
                     <td className="p-4 text-right text-xs text-md-on-surface-variant leading-relaxed">
-                      {getFundPolicyDescription(fund)}
+                      {fund.strategy || 'صندوق استثمار مصري معتمد من الهيئة العامة للرقابة المالية'}
                     </td>
 
                     {/* Thndr Verified Badge */}
