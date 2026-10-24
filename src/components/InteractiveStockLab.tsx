@@ -12,6 +12,7 @@ import { EGX_ARABIC_NAMES, StockMeta } from '../services/egxArabicNames';
 import { getFallbackStocks, formatPrice } from '../services/egxService';
 import { THNDR_SEVEN_LAYERS_MAPPING } from '../services/thndrIndicatorsData';
 import { TradingViewWidget } from './TradingViewWidget';
+import { McdxHeatmapVisualizer } from './McdxHeatmapVisualizer';
 
 interface Props {
   stocks?: StockData[];
@@ -31,6 +32,7 @@ export const InteractiveStockLab: React.FC<Props> = ({
   const [selectedSymbol, setSelectedSymbol] = useState<string>(initialSymbol || 'COMI');
   const [activeStepIndex, setActiveStepIndex] = useState<number>(0); // 0 to 6 (layers), 7 (verdict)
   const [chartHeight, setChartHeight] = useState<'normal' | 'tall'>('normal'); // 760px vs 880px
+  const [showMcdxUnderChart, setShowMcdxUnderChart] = useState<boolean>(true); // Toggle MCDX Heatmap under TradingView chart
   
   // Stock Search state
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -607,47 +609,53 @@ export const InteractiveStockLab: React.FC<Props> = ({
 
               {/* Step 3 Special Visual Box: فك شفرة الفوليوم و MCDX Plus والفرق بينهم */}
               {currentLayer.layerNumber === 3 && (
-                <div className="p-4 bg-emerald-500/10 rounded-[20px] border border-emerald-500/30 space-y-3 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                      <BarChart2 size={16} />
-                      <span>محاكاة نسب تملك المؤسسات (مؤشر MCDX Plus)</span>
-                    </span>
-                    <a
-                      href="https://ar.tradingview.com/scripts/mcdx/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] text-md-primary font-bold hover:underline flex items-center gap-1"
-                    >
-                      <span>رابط المؤشر على TV</span>
-                      <ExternalLink size={10} />
-                    </a>
-                  </div>
+                <div className="space-y-4">
+                  {/* Keep Institutional Ratio Simulation Intact */}
+                  <div className="p-4 bg-emerald-500/10 rounded-[20px] border border-emerald-500/30 space-y-3 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                        <BarChart2 size={16} />
+                        <span>محاكاة نسب تملك المؤسسات (مؤشر MCDX Plus)</span>
+                      </span>
+                      <a
+                        href="https://ar.tradingview.com/scripts/mcdx/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] text-md-primary font-bold hover:underline flex items-center gap-1"
+                      >
+                        <span>رابط المؤشر على TV</span>
+                        <ExternalLink size={10} />
+                      </a>
+                    </div>
 
-                  {/* Multi-colored ratio bar */}
-                  <div className="space-y-1">
-                    <div className="h-4 w-full rounded-full overflow-hidden flex shadow-inner bg-gray-200 dark:bg-gray-800">
-                      <div style={{ width: '64%' }} className="bg-rose-500 h-full flex items-center justify-center text-[9px] font-bold text-white" title="سيولة الحيتان والمؤسسات 64%">
-                        بانكرز 64%
+                    {/* Multi-colored ratio bar */}
+                    <div className="space-y-1">
+                      <div className="h-4 w-full rounded-full overflow-hidden flex shadow-inner bg-gray-200 dark:bg-gray-800">
+                        <div style={{ width: '64%' }} className="bg-rose-500 h-full flex items-center justify-center text-[9px] font-bold text-white" title="سيولة الحيتان والمؤسسات 64%">
+                          بانكرز 64%
+                        </div>
+                        <div style={{ width: '18%' }} className="bg-amber-400 h-full flex items-center justify-center text-[9px] font-bold text-black" title="مضاربين لحظيين 18%">
+                          18%
+                        </div>
+                        <div style={{ width: '18%' }} className="bg-emerald-500 h-full flex items-center justify-center text-[9px] font-bold text-white" title="أفراد 18%">
+                          أفراد 18%
+                        </div>
                       </div>
-                      <div style={{ width: '18%' }} className="bg-amber-400 h-full flex items-center justify-center text-[9px] font-bold text-black" title="مضاربين لحظيين 18%">
-                        18%
-                      </div>
-                      <div style={{ width: '18%' }} className="bg-emerald-500 h-full flex items-center justify-center text-[9px] font-bold text-white" title="أفراد 18%">
-                        أفراد 18%
+
+                      <div className="flex items-center justify-between text-[10px] text-md-on-surface-variant pt-0.5">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> أحمر = مؤسسات وبنوك (Bankers)</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> أصفر = مضاربين ساخنين</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> أخضر = أفراد عاديين</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-md-on-surface-variant pt-0.5">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500" /> أحمر = مؤسسات وبنوك (Bankers)</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> أصفر = مضاربين ساخنين</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> أخضر = أفراد عاديين</span>
-                    </div>
+                    <p className="text-[11px] text-md-on-surface-variant leading-relaxed">
+                      💡 <strong>توضيح مهم:</strong> الأعمدة اللي تحت الشارت في تريدنج فيو هي فوليوم عادي (الأحمر = جلسة سعرها نزل، والأخضر = جلسة سعرها طلع). أما مؤشر MCDX Plus فهو سكربت إضافي بيقسم الفوليوم ده للنسب الثلاثة دي، والنسبة هنا محسوبة ومطمئنة جداً.
+                    </p>
                   </div>
 
-                  <p className="text-[11px] text-md-on-surface-variant leading-relaxed">
-                    💡 <strong>توضيح مهم:</strong> الأعمدة اللي تحت الشارت في تريدنج فيو هي فوليوم عادي (الأحمر = جلسة سعرها نزل، والأخضر = جلسة سعرها طلع). أما مؤشر MCDX Plus فهو سكربت إضافي بيقسم الفوليوم ده للنسب الثلاثة دي، والنسبة هنا محسوبة ومطمئنة جداً.
-                  </p>
+                  {/* Live Pine Script MCDX Heatmap Visualizer */}
+                  <McdxHeatmapVisualizer symbol={selectedSymbol} />
                 </div>
               )}
 
@@ -843,9 +851,38 @@ export const InteractiveStockLab: React.FC<Props> = ({
 
         </div>
 
-        {/* COLUMN 2 (LEFT SIDE in RTL): شارت TradingView المباشر الضخم */}
-        <div className={`lg:col-span-7 space-y-3 ${containerHeightClass} flex flex-col`}>
-          <div className="flex-1 w-full rounded-[28px] overflow-hidden border border-md-outline-variant/60 shadow-md-2 bg-md-surface relative min-h-[600px]">
+        {/* COLUMN 2 (LEFT SIDE in RTL): شارت TradingView المباشر ومؤشر MCDX Heatmap المتزامن */}
+        <div className={`lg:col-span-7 space-y-3 ${containerHeightClass} overflow-y-auto pr-1 pl-1 scrollbar-thin flex flex-col`}>
+          
+          {/* Chart Header Bar: Stock Name + MCDX Heatmap Toggle Button */}
+          <div className="flex items-center justify-between gap-2 px-1 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-md-on-surface flex items-center gap-1.5">
+                <span>شارت التداول الحي</span>
+                <span className="text-md-primary font-mono font-black">({selectedSymbol})</span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-md-surface-container-high border border-md-outline-variant/40 text-md-on-surface-variant font-mono">
+                TradingView Live
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowMcdxUnderChart(!showMcdxUnderChart)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md-full text-[11px] font-bold transition-all border ${
+                  showMcdxUnderChart
+                    ? 'bg-orange-500/15 border-orange-500/40 text-orange-400 shadow-sm'
+                    : 'bg-md-surface-container border-md-outline-variant/40 text-md-on-surface-variant hover:text-md-on-surface'
+                }`}
+                title="إظهار أو إخفاء مؤشر MCDX Heatmap أسفل الشارت مباشرة"
+              >
+                <Flame size={13} className={showMcdxUnderChart ? 'text-orange-500' : ''} />
+                <span>{showMcdxUnderChart ? 'إخفاء مؤشر MCDX' : '🔥 إظهار مؤشر MCDX Heatmap'}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="w-full rounded-[28px] overflow-hidden border border-md-outline-variant/60 shadow-md-2 bg-md-surface relative min-h-[520px] flex-1">
             <TradingViewWidget
               symbol={selectedSymbol}
               theme={theme}
@@ -854,9 +891,16 @@ export const InteractiveStockLab: React.FC<Props> = ({
             />
           </div>
 
+          {/* DOCKED MCDX HEATMAP INDICATOR BENEATH THE CHART */}
+          {showMcdxUnderChart && (
+            <div className="shrink-0 transition-all duration-300">
+              <McdxHeatmapVisualizer symbol={selectedSymbol} compact={true} />
+            </div>
+          )}
+
           <div className="p-3 bg-md-surface-container-low rounded-[18px] border border-md-outline-variant/40 text-[11px] text-md-on-surface-variant flex items-center justify-between gap-2 shrink-0">
             <span>
-              💡 الشارت تم تكبيره بالكامل وإزالة النوافذ الجانبية غير المفيدة لترى الشموع وأعمدة الفوليوم بوضوح تام جنباً إلى جنب مع الشرح.
+              💡 الشارت تم تكبيره بالكامل وتزويده بمؤشر MCDX Heatmap المفتوح المصدر لترى الشموع وسيولة الحيتان في نفس اللحظة جنباً إلى جنب مع الشرح.
             </span>
             <span className="font-bold text-md-primary shrink-0">
               TradingView Live Engine

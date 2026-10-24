@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { 
   GraduationCap, BookOpen, Layers, Search, 
   ExternalLink, ChevronDown, ChevronUp, ArrowRight,
-  Smartphone, HelpCircle, CheckCircle2, Zap, Sparkles, Filter
+  Smartphone, HelpCircle, CheckCircle2, Zap, Sparkles, Filter,
+  Code2, Copy, Check
 } from 'lucide-react';
 import { INDICATORS_KNOWLEDGE_BASE, GROWTHX_SEVEN_LAYERS } from '../services/indicatorsEducationData';
 import { 
@@ -33,6 +34,18 @@ export const EducationView: React.FC<Props> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [copiedPineId, setCopiedPineId] = useState<string | null>(null);
+
+  const copyPineScript = async (id: string, code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedPineId(id);
+      setTimeout(() => setCopiedPineId(null), 3000);
+    } catch {
+      setCopiedPineId(id);
+      setTimeout(() => setCopiedPineId(null), 3000);
+    }
+  };
 
   // Filter Thndr indicators
   const filteredThndrIndicators = useMemo(() => {
@@ -792,6 +805,28 @@ export const EducationView: React.FC<Props> = ({
                           </p>
                         </div>
                       </div>
+
+                      {/* Open-Source Pine Script Box */}
+                      {ind.pineScriptSnippet && (
+                        <div className="p-3.5 bg-black/90 text-white rounded-[18px] border border-orange-500/40 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-orange-400 text-xs flex items-center gap-1.5">
+                              <Code2 size={15} />
+                              <span>كود Pine Script المفتوح المصدر (جاهز للصق في TradingView):</span>
+                            </span>
+                            <button
+                              onClick={() => copyPineScript(ind.id, ind.pineScriptSnippet!)}
+                              className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-orange-500 text-black hover:bg-orange-400 transition-all shadow-sm"
+                            >
+                              {copiedPineId === ind.id ? <Check size={12} /> : <Copy size={12} />}
+                              <span>{copiedPineId === ind.id ? 'تم النسخ بنجاح! 📋' : 'نسخ الكود'}</span>
+                            </button>
+                          </div>
+                          <pre className="text-[10px] font-mono text-gray-300 overflow-x-auto max-h-48 p-3 bg-gray-950 rounded-xl border border-gray-800 scrollbar-thin leading-relaxed" dir="ltr">
+                            {ind.pineScriptSnippet}
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

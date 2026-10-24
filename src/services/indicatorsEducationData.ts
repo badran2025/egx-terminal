@@ -221,7 +221,87 @@ export const INDICATORS_KNOWLEDGE_BASE: IndicatorGuide[] = [
     confluenceWith: ['Volume Profile', 'L3 Gemini', 'Golden Cross', 'Order Blocks'],
     pitfallsAndFalseSignals: [
       'لو السهم صعد يوم أو اتنين والعواميد الحمراء صفر أو أقل من 20%، اعرف إن ده فخ تصريفي وصعود كاذب متشتريش فيه.'
-    ]
+    ],
+    pineScriptSnippet: `// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © zacklee95
+
+//@version=4
+
+study("Mcdx Heatmap | BAZ")
+
+res1="5"
+res2="15"
+res3="30"
+res4="60"
+res5="120"
+res6="240"
+res7="D"
+
+//Mango2Juice mcdx formula
+rsi_function(x) => 
+    rsi = 5 * 1.5 * (security(syminfo.tickerid, x , rsi(close, 50)-50))
+    if rsi > 100
+        rsi := 100
+    else if rsi < 0
+        rsi := 0
+    rsi
+    
+
+r7 = rsi_function(res7)
+r6 = rsi_function(res6)
+r5 = rsi_function(res5)
+r4 = rsi_function(res4)
+r3 = rsi_function(res3)
+r2 = rsi_function(res2)
+r1 = rsi_function(res1)
+
+
+fcol(v) => v >=0 and v < 10 ? #00ff00: v >= 10 and v<20 ? #28ff00 : 
+           v >= 20 and v<30 ? #6eff00 : v >= 30 and v<40 ? #b4ff00 :
+           v >= 40 and v<50 ? #dcfa00 : v >= 50 and v<60 ? #fadc00 :
+           v >= 60 and v<70 ? #ffb400 : v >= 70 and v<80 ? #ff6e00 :
+           v >= 80 and v<90 ? #ff2800 : #ff0000
+
+r1y1 = plot(0,  color=na)
+r1y2 = plot(10, color=na)
+
+r2y1 = plot(10, color=na)
+r2y2 = plot(20, color=na)
+
+r3y1 = plot(20, color=na)
+r3y2 = plot(30, color=na)
+
+r4y1 = plot(30, color=na)
+r4y2 = plot(43, color=na)
+
+r5y1 = plot(43, color=na)
+r5y2 = plot(50, color=na)
+
+r6y1 = plot(50, color=na)
+r6y2 = plot(59, color=na)
+
+r7y1 = plot(59, color=na)
+r7y2 = plot(70, color=na)
+
+r8y1 = plot(70, color=na)
+r8y2 = plot(78, color=na)
+
+r9y1 = plot(78, color=na)
+r9y2 = plot(90, color=na)
+
+r10y1 = plot(90, color=na)
+r10y2 = plot(100, color=na)
+
+fill( r1y1, r1y2, color=fcol( r1 ), transp=10 )
+fill( r2y1, r2y2, color=fcol( r2 ), transp=10 )
+fill( r3y1, r3y2, color=fcol( r3 ), transp=10 )
+fill( r4y1, r4y2, color=fcol( r4 ), transp=10 )
+fill( r5y1, r5y2, color=fcol( r5 ), transp=10 )
+fill( r6y1, r6y2, color=fcol( r5 ), transp=10 )
+fill( r7y1, r7y2, color=fcol( r6 ), transp=10 )
+fill( r8y1, r8y2, color=fcol( r6 ), transp=10 )
+fill( r9y1, r9y2, color=fcol( r7 ), transp=10 )
+fill( r10y1,r10y2, color=fcol( r7 ), transp=10 )`
   },
   {
     id: 'lux_algo',
