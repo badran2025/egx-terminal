@@ -32,6 +32,9 @@ export interface SevenLayerThndrMapping {
   layerName: string;
   mirrorName: string;
   analogyTitle: string;
+  installedInBadranTemplate: string; // The exact indicator installed on Thndr in template BADRAN
+  equivalentInOurSystem: string;     // What it mirrors in our Terminal & TradingView
+  coverageType: 'شارت ثاندر المباشر' | 'لوحة الزخم السفلية' | 'فريمات مدمجة';
   thndrPrimaryIndicator: string;
   thndrSecondaryIndicator: string;
   thndrIndicatorsList: ThndrIndicatorDetail[];
@@ -50,9 +53,18 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
     layerName: 'الاتجاه العام المزدوج للسوق والسهم (The Dual Trend)',
     mirrorName: 'مراية الطريق السريع (EGX30 + السهم)',
     analogyTitle: 'مينفعش تسوق عربيتك عكس اتجاه الطريق السريع!',
-    thndrPrimaryIndicator: 'Moving Average Exponential (EMA 50 & EMA 200)',
-    thndrSecondaryIndicator: 'Trend Signals - [Tamer Zaky] / RMI Trend - [Tamer Zaky]',
+    installedInBadranTemplate: 'Trend Signals - [Tamer Zaky]',
+    equivalentInOurSystem: 'المتوسطات المتحركة الأسية (EMA 50 & EMA 200) + اتجاه مسار الطريق السريع ومؤشر EGX30',
+    coverageType: 'شارت ثاندر المباشر',
+    thndrPrimaryIndicator: 'Trend Signals - [Tamer Zaky]',
+    thndrSecondaryIndicator: 'Moving Average Exponential (EMA 50 & EMA 200) / RMI Trend',
     thndrIndicatorsList: [
+      {
+        nameEn: 'Trend Signals - [Tamer Zaky]',
+        nameAr: 'سكربت إشارات الاتجاه لتامر زكي',
+        role: 'المؤشر المثبت في قالب BADRAN: يلون الشموع بالأخضر عند الصعود وبالأحمر عند الهبوط مع إشارات شراء واضحة.',
+        badge: 'مثبت في قالب BADRAN ✅'
+      },
       {
         nameEn: 'Moving Average Exponential (EMA 50)',
         nameAr: 'المتوسط المتحرك الأسي 50 يوم',
@@ -64,110 +76,116 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
         nameAr: 'المتوسط المتحرك الأسي 200 يوم',
         role: 'خط الأمان المؤسسي الأكبر للمحافظ والصناديق؛ طول ما السهم والمؤشر فوقه فالسوق في أمان استثماري.',
         badge: 'خط الأمان الأكبر'
-      },
-      {
-        nameEn: 'Trend Signals - [Tamer Zaky]',
-        nameAr: 'سكربت إشارات الاتجاه لتامر زكي',
-        role: 'بديل سريع في ثاندر يلون الشموع بالأخضر عند الصعود وبالأحمر عند الهبوط.',
-        badge: 'بديل في ثاندر'
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'افتح شارت ثاندر، دوس على علامة المؤشرات (Indicators)، واكتب "Moving Average Exponential" وضيفه مرتين؛ الأولى ادخل إعداداتها واكتب الطول (Length) = 50 وخلي لونه أزرق، والتانية اكتب الطول = 200 وخلي لونه برتقالي أو أحمر. أو اختار مؤشر "Trend Signals - [Tamer Zaky]".',
-    explanationBaladi: 'الاتجاه العام يا صاحبي هو البوصلة. السهم لو بيتداول فوق خط الـ 200 يوم وخط الـ 50 يوم، معناه إن البورصة والمؤسسات في صفك والسكة سالكة. لو السهم تحت خط 200، كأنك ماشي عكس السير على الدائري، وممنوع تشتري فيه حتى لو شفت شمعة خضراء مغرية!',
-    whatToLookFor: 'شموع السهم تتداول بثبات أعلى خط EMA 50 و EMA 200 بزاوية ميل صاعدة للأعلى بالتزامن مع ثبات مؤشر EGX30 فوق دعمه الفني.'
+    howToApplyInThndr: 'مثبت مسبقاً وجاهز في قالب BADRAN باسم "Trend Signals - [Tamer Zaky]". يلون الشموع تلقائياً ويضع أسهم الإشارات على الشارت مباشرة.',
+    explanationBaladi: 'الاتجاه العام يا صاحبي هو البوصلة. في قالب BADRAN مثبتين مؤشر "Trend Signals - [Tamer Zaky]"، وهو بيلون الشموع تلقائياً ويحدد لك المسار، وده بيوازي مباشرة متوسطات EMA 50 و EMA 200 في موقعنا وتريدنج فيو. طول ما الشموع خضراء والمؤشر العام مستقر، السكة سالكة وتقدر تشتري في أمان.',
+    whatToLookFor: 'شموع خضراء وإشارة صعود مؤكدة من Trend Signals مع ثبات مؤشر EGX30 العام.'
   },
   {
     layerNumber: 2,
     layerName: 'الزخم وقوة الدوسة (Momentum)',
-    mirrorName: 'مراية دواسة البنزين (RSI + MACD)',
+    mirrorName: 'مراية دواسة البنزين (MACD + L3 Gemini)',
     analogyTitle: 'بنقيس قوة الدوسة على دواسة البنزين.. المشترين بيدوسوا ولا مفرملين؟',
-    thndrPrimaryIndicator: 'Relative Strength Index (RSI) + مؤشر MACD',
-    thndrSecondaryIndicator: 'Stochastic RSI / Momentum',
+    installedInBadranTemplate: 'MACD (12, 26, close, 9, EMA, EMA)',
+    equivalentInOurSystem: 'مؤشر الماكد (MACD) + مؤشر L3 Gemini + RSI (دواسة البنزين وقوة العزم)',
+    coverageType: 'لوحة الزخم السفلية',
+    thndrPrimaryIndicator: 'MACD (12, 26, close, 9, EMA, EMA)',
+    thndrSecondaryIndicator: 'Relative Strength Index (RSI) / Stochastic RSI',
     thndrIndicatorsList: [
+      {
+        nameEn: 'MACD (Moving Average Convergence Divergence)',
+        nameAr: 'مؤشر الماكد (MACD)',
+        role: 'المؤشر المثبت في قالب BADRAN: تأكيد انطلاق الزخم بتقاطع الخط السريع للأعلى فوق خط الإشارة وتحول أعمدة الهستوجرام للون الأخضر فوق خط الصفر.',
+        badge: 'مثبت في قالب BADRAN ✅'
+      },
       {
         nameEn: 'Relative Strength Index (RSI)',
         nameAr: 'مؤشر القوة النسبية (RSI)',
         role: 'دواسة البنزين: قياس عزم وسرعة حركة الشموع (منطقة 40 - 60 نقطة هي منطقة الانطلاق الذهبية والتجميع الصحي).',
-        badge: 'المؤشر الأول بالشارت'
-      },
-      {
-        nameEn: 'MACD (Moving Average Convergence Divergence)',
-        nameAr: 'مؤشر الماكد (MACD)',
-        role: 'تأكيد انطلاق الزخم: تقاطع الخط السريع للأعلى فوق خط الإشارة وتحول أعمدة الهيستوجرام للون الأخضر فوق خط الصفر.',
-        badge: 'المؤشر الثاني بالشارت'
+        badge: 'مؤشر مكمل'
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'في شارت ثاندر دوس على علامة المؤشرات (Indicators)، واكتب "Relative Strength Index" واختاره، وارجع دوس على المؤشرات تاني واكتب "MACD" واختاره؛ هيظهروا الاتنين تحت بعض أسفل الشموع في ثاندر زي ما هما معروضين في شارت المعمل تماماً!',
-    explanationBaladi: 'الزخم وقوة الدوسة بيتقاسوا بمؤشرين متكاملين مع بعض على الشارت: مؤشر RSI بيقيس عزم وحماسة المشترين؛ لما يكون بين 45 و 60 نقطة، دي "منطقة الانطلاق الذهبية" يعني السهم خفيف ومش متضخم. ومؤشر MACD بيأكد لك إن الموجة بدأت فعلاً لما خط الماكد يقطع خط الإشارة لفوق وأعمدة الهيستوجرام تقلب أخضر فوق خط الصفر. الاتنين مع بعض بيدوك إشارة دخول حديدية!',
-    whatToLookFor: 'مؤشر RSI يرتد من فوق خط 40-50 ويتجه للأعلى، وأعمدة MACD تقلب من اللون الأحمر إلى الأخضر فوق خط الصفر.'
+    howToApplyInThndr: 'مثبت مسبقاً في اللوحة السفلية المستقلة (Pane 2) أسفل الشموع في قالب BADRAN باسم "MACD" بإعداداته القياسية الدقيقة (12, 26, 9).',
+    explanationBaladi: 'الزخم بيتقاس في ثاندر بمؤشر الماكد (MACD) اللي ضفناه في اللوحة السفلية؛ لما خط الماكد السريع يقطع خط الإشارة لفوق وتتحول أعمدة الهستوجرام للون الأخضر فوق خط الصفر، ده تأكيد إن المشتري دايس بنزين بجد ومش مجرد ارتداد ميت. ده بيوازي بالمليم مؤشر الماكد ومؤشر L3 Gemini في المعمل عندنا.',
+    whatToLookFor: 'تقاطع صاعد لخطوط الماكد وتحول أعمدة الهيستوجرام للون الأخضر الصاعد فوق خط الصفر.'
   },
   {
     layerNumber: 3,
     layerName: 'حجم التداول والسيولة (Volume Fuel)',
-    mirrorName: 'مراية تانك بنزين العربية',
+    mirrorName: 'مراية تانك بنزين العربية والسيولة الذكية',
     analogyTitle: 'العربية مهما كانت فخمة وشيك، لو التانك فاضي مش هتتحرك شبر!',
-    thndrPrimaryIndicator: 'Volume (مؤشر حجم التداول الكلاسيكي)',
-    thndrSecondaryIndicator: 'Liquidity - [Tamer Zaky] / Money Flow Index',
+    installedInBadranTemplate: 'Liquidity - [Tamer Zaky] + أعمدة فوليوم ثاندر التلقائية (Volume)',
+    equivalentInOurSystem: 'خريطة السيولة وتدفقات البانكرز (MCDX Plus / Bankers Flow) + Volume Profile',
+    coverageType: 'شارت ثاندر المباشر',
+    thndrPrimaryIndicator: 'Liquidity - [Tamer Zaky] + Volume',
+    thndrSecondaryIndicator: 'Money Flow Index (MFI) / Chaikin Money Flow',
     thndrIndicatorsList: [
-      {
-        nameEn: 'Volume',
-        nameAr: 'مؤشر حجم التداول الكلاسيكي',
-        role: 'تانك بنزين السهم: الأعمدة الخضراء الطويلة تدل على تجميع ومحافظ كبيرة تشتري، والأعمدة الحمراء القصيرة تؤكد هدوء البيع.',
-        badge: 'تلقائي في ثاندر'
-      },
       {
         nameEn: 'Liquidity - [Tamer Zaky]',
         nameAr: 'سكربت السيولة لتامر زكي',
-        role: 'كشف مستويات تدفق السيولة المؤسسية ونقاط الانفجار الشرائي.',
-        badge: 'سكربت ثاندر'
+        role: 'المؤشر المثبت في قالب BADRAN: كشف مستويات تدفق السيولة المؤسسية ونقاط سحب السيولة (Liquidity Sweeps).',
+        badge: 'مثبت في قالب BADRAN ✅'
+      },
+      {
+        nameEn: 'Volume',
+        nameAr: 'مؤشر حجم التداول الكلاسيكي التلقائي',
+        role: 'تانك بنزين السهم: الأعمدة الخضراء الطويلة تدل على تجميع ومحافظ كبيرة تشتري، والأعمدة الحمراء القصيرة تؤكد هدوء البيع.',
+        badge: 'تلقائي في ثاندر'
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'مؤشر "Volume" نازل تلقائياً في ثاندر تحت الشارت (الأعمدة الخضراء والحمراء). وتقدر تضيف "Liquidity - [Tamer Zaky]" لمعرفة كتل السيولة أو "Money Flow Index".',
-    explanationBaladi: 'الفوليوم هو دم السهم! بنبص على الأعمدة: لما السهم يطلع بأعمدة خضراء طويلة، دي فلوس حيتان ومحافظ كبيرة بتشتري (تجميع). ولما السهم يريح لتحت بأعمدة حمراء صغيرة وقصيرة، اعرف إن مفيش حد من الحيتان بيبيع، وإن ده مجرد هدوء طبيعي وفرصة لشراء الديب.',
-    whatToLookFor: 'أعمدة فوليوم شرائي خضراء تتجاوز متوسط 20 يوم، وتضاؤل تام لأعمدة البيع الحمراء عند تراجع السعر.'
+    howToApplyInThndr: 'مثبت مسبقاً على شارت قالب BADRAN باسم "Liquidity - [Tamer Zaky]"، بالإضافة إلى أعمدة الفوليوم (Volume) الافتراضية في قاعدة الشارت.',
+    explanationBaladi: 'الفوليوم هو دم السهم وتانك البنزين! مؤشر "Liquidity - [Tamer Zaky]" بيكشف على الشارت مستويات سحب السيولة (Liquidity Sweeps) وتدفقات المشترين المؤسسيين، وده بيعادل بالضبط مؤشر خريطة السيولة والبانكرز (MCDX Plus) في موقعنا. لو السهم صعد بأعمدة خضراء عالية، اعرف إن البنزين اتملى!',
+    whatToLookFor: 'ظهور إشارات سحب سيولة مع أعمدة فوليوم خضراء تفوق متوسط 20 يوم وتضاؤل تام لأعمدة البيع.'
   },
   {
     layerNumber: 4,
     layerName: 'التقلب وعمارة الأدوار ومساحة الحركة (Volatility & RTM)',
     mirrorName: 'مراية مساحة الحركة وعمارة الأدوار',
     analogyTitle: 'عمارة الأدوار: أنت في الدور الكام؟ والسقف اللي فوقك على بعد قد إيه؟',
-    thndrPrimaryIndicator: 'Average True Range (ATR)',
-    thndrSecondaryIndicator: 'ATR Fibonacci Trend / AI Support & Resistance - [Tamer Zaky]',
+    installedInBadranTemplate: 'Bollinger Bands (20, 2, SMA) - النطاقات ومساحة الحركة',
+    equivalentInOurSystem: 'عمارة الأدوار ومساحة الحركة الحرة (Room to Move) + مؤشر ATR',
+    coverageType: 'شارت ثاندر المباشر',
+    thndrPrimaryIndicator: 'Bollinger Bands (20, 2, SMA)',
+    thndrSecondaryIndicator: 'Average True Range (ATR) / AI Support & Resistance - [Tamer Zaky]',
     thndrIndicatorsList: [
+      {
+        nameEn: 'Bollinger Bands (20, 2, SMA)',
+        nameAr: 'نطاقات بولنجر باند',
+        role: 'المؤشر المثبت في قالب BADRAN: تحديد أرضية الدور (الخط السفلي) وسقف المقاومة (الخط العلوي) ونقطة الارتكاز (الخط الأوسط SMA 20).',
+        badge: 'مثبت في قالب BADRAN ✅'
+      },
       {
         nameEn: 'Average True Range (ATR)',
         nameAr: 'متوسط المدى الحقيقي (ATR)',
         role: 'حساب متوسط التذبذب اليومي بالجنيهات لتحديد مسافة وقف الخسارة المناسبة دون ضربها عشوائياً.',
         badge: 'مؤشر قياسي'
-      },
-      {
-        nameEn: 'AI Support & Resistance - [Tamer Zaky]',
-        nameAr: 'سكربت الدعوم والمقاومات الذكية',
-        role: 'رسم أرضيات الأدوار (الدعوم) وأسقف الأدوار (المقاومات) آلياً على شارت ثاندر.',
-        badge: 'سكربت ثاندر'
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'في ثاندر ابحث عن "Average True Range" عشان تعرف متوسط التذبذب اليومي للجنيهات، وافتح "AI Support & Resistance - [Tamer Zaky]" عشان يرسم لك أسقف الأدوار (المقاومات) وأرضيات الأدوار (الدعوم) أوتوماتيك.',
-    explanationBaladi: 'السوق زي عمارة سكنية: "أرضية الدور" هي الدعم اللي السهم واقف عليه، و"سقف الدور" هو المقاومة اللي فوقك. إحنا بنشتري لما نكون واقفين على أرضية صلبة ويكون بيننا وبين السقف مساحة مكسب واسعة ومفتوحة (Room to Move) مش أقل من 8% إلى 15%، ومخاطرة وقف الخسارة صغيرة (2% إلى 3%).',
-    whatToLookFor: 'نسبة عائد إلى مخاطرة تفوق 1:2.5 مع بعد كافٍ عن أقرب مقاومة خرسانية.'
+    howToApplyInThndr: 'مثبت مسبقاً على شارت قالب BADRAN باسم "Bollinger Bands"؛ يحيط بالشموع بخطين علوي وسفلي مع خط متوسط 20 يوم في المنتصف.',
+    explanationBaladi: 'السوق زي عمارة سكنية: "أرضية الدور" هي الدعم اللي السهم واقف عليه، و"سقف الدور" هو المقاومة اللي فوقك. خطوط البولنجر (Bollinger Bands) بتحدد لك مساحة الحركة الحرة بالمليم؛ لما تشتري من عند الخط الأوسط أو السفلي ويكون قدامك مساحة مفتوحة حتى الخط العلوي، يبقى عندك Room to Move ممتاز بأقل مخاطرة.',
+    whatToLookFor: 'ارتكاز السهم أعلى الخط الأوسط للبولنجر مع وجود مسافة صعود كافية (على الأقل 8% إلى 12%) للخط العلوي.'
   },
   {
     layerNumber: 5,
     layerName: 'طبقة الانضغاط (The Squeeze Layer)',
-    mirrorName: 'طبقة السوستة المضغوطة',
+    mirrorName: 'طبقة السوستة المضغوطة قبل الانفجار',
     analogyTitle: 'السوستة لما تنضغط جامد في نطاق ضيق.. أول ما تفلت بتطير في الهوا!',
-    thndrPrimaryIndicator: 'Bollinger Bands (أشرطة بولنجر باند)',
+    installedInBadranTemplate: 'Bollinger Bands (20, 2, SMA) - خاصية انضغاط السوستة',
+    equivalentInOurSystem: 'طبقة السوستة المضغوطة (Bollinger Squeeze & BandWidth) ومؤشر TTM Squeeze',
+    coverageType: 'شارت ثاندر المباشر',
+    thndrPrimaryIndicator: 'Bollinger Bands (20, 2, SMA)',
     thndrSecondaryIndicator: 'Bollinger Bands Width / Keltner Channels',
     thndrIndicatorsList: [
       {
-        nameEn: 'Bollinger Bands',
-        nameAr: 'أشرطة بولنجر باند',
-        role: 'كشف مرحلة انضغاط السعر بين خطين ضيقين استعداداً لانفجار سعري قوي.',
-        badge: 'مؤشر قياسي'
+        nameEn: 'Bollinger Bands (Squeeze Feature)',
+        nameAr: 'انضغاط نطاقات بولنجر باند',
+        role: 'المؤشر المثبت في قالب BADRAN: رصد تضيق الخطين العلوي والسفلي حول الشموع كدليل قطعي على تجميع صامت وانفجار وشيك.',
+        badge: 'مثبت في قالب BADRAN ✅'
       },
       {
         nameEn: 'Bollinger Bands Width',
@@ -177,17 +195,20 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'في ثاندر ابحث عن "Bollinger Bands" وضيفه؛ هيرسم خطين محاوطين الشموع (الخط العلوي والخط السفلي ومتوسط الحركة في النص).',
-    explanationBaladi: 'لما تلاقي خطوط البولنجر بتقرب من بعضها والشموع ماشية في ممر ضيق وهادي، اعرف إن السهم في حالة "سوستة مضغوطة". الحيتان بتلم بهدوء في الصندوق ده، وبمجرد ما شمعة تكسر الخط العلوي بفوليوم، السهم بينطلق برالي صاعد سريع.',
-    whatToLookFor: 'ضيق ملحوظ في المسافة بين خطوط البولنجر يليه شمعة اختراق خضراء تفتح الخط للأعلى.'
+    howToApplyInThndr: 'مغطى تلقائياً عبر مؤشر "Bollinger Bands" المثبت في قالب BADRAN؛ مراقبة ضيق النطاق بين الخطين تكفي تماماً لكشف السوستة المضغوطة.',
+    explanationBaladi: 'نفس مؤشر البولنجر اللي ضفناه بيخدم الطبقة دي بامتياز! لما تلاقي خطوط البولنجر قربت جداً من بعضها والشموع ماشية في ممر ضيق وهادي، اعرف إن السهم في حالة "سوستة مضغوطة". الحيتان بتجمع بهدوء، وأول ما شمعة خضراء تلمس الخط العلوي بفوليوم، السهم بينفجر برالي صاعد سريع!',
+    whatToLookFor: 'ضيق ملحوظ في المسافة بين خطوط البولنجر يليه شمعة اختراق خضراء تفتح الخط للأعلى بفوليوم ملحوظ.'
   },
   {
     layerNumber: 6,
     layerName: 'تعدد الأطر الزمنية (Multi-Timeframe)',
-    mirrorName: 'نظرة الطيارة الهليكوبتر',
+    mirrorName: 'نظرة الطيارة الهليكوبتر ومطابقة الفريمات',
     analogyTitle: 'إياك تبص في شبر مية على فريم الدقيقة وتنسى الفريم الكبير!',
+    installedInBadranTemplate: 'أزرار الفريمات الزمنية المدمجة في شريط ثاندر العلوي (1W • 1D • 1H)',
+    equivalentInOurSystem: 'محرك تعدد الأطر الزمنية التلقائي في المعمل (Multi-Timeframe Engine)',
+    coverageType: 'فريمات مدمجة',
     thndrPrimaryIndicator: 'أزرار الفريمات الزمنية في ثاندر (1D / 1W / 1H)',
-    thndrSecondaryIndicator: 'Moving Average Multiple',
+    thndrSecondaryIndicator: 'فريم 4 ساعات (4H) / فريم 15 دقيقة (15M)',
     thndrIndicatorsList: [
       {
         nameEn: 'الفريم الأسبوعي (1W)',
@@ -209,23 +230,26 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'أعلى شارت ثاندر هتلاقي أزرار الفريمات (1D لليومي، 1W للأسبوعي، 1H للساعة). دوس على 1W الأول عشان تشوف السهم من الطيارة الهليكوبتر، وبعدين ارجع لـ 1D لتحديد الخطة، و 1H لاقتناص نقطة الدخول اللحظية.',
-    explanationBaladi: 'مينفعش تشتري عشان شفت شمعة خضراء على فريم 5 دقائق والسهم على الفريم الأسبوعي في مسار هابط وبيغرق! بنطابق الفريمات: الأسبوعي صاعد ومستقر، واليومي مريح عند أرضية دعم، وفريم الساعة بدأ يلف ويرتد لفوق.. كده إنت داخل في اتجاه التيار مش عايم عكسه.',
-    whatToLookFor: 'توافق اتجاه الفريم الأسبوعي مع الفريم اليومي وتأكيد ارتداد فريم الساعة.'
+    howToApplyInThndr: 'ليست مؤشراً إضافياً يزحم الشارت، بل ميزة مدمجة بأعلى شارت ثاندر. الضغط على (1W) يظهر مؤشرات قالب BADRAN على الأسبوعي، ثم (1D) لليومي، ثم (1H) للساعة.',
+    explanationBaladi: 'تعدد الأطر الزمنية دي منهجية وليست مؤشراً معزولاً! في ثاندر متوفرة كأزرار جاهزة بأعلى الشارت. بنفتح الفريم الأسبوعي (1W) عشان نشوف السهم من الطيارة الهليكوبتر ونعرف الاتجاه الأكبر، وبعدين الفريم اليومي (1D) عشان نحدد مستويات الدعم والمقاومة، وفريم الساعة (1H) عشان نقتنص لحظة الدخول السريعة بدون ما نتعلق.',
+    whatToLookFor: 'توافق الاتجاه بين شارت الأسبوع واليوم، وظهور إشارة دخول على فريم الساعة بالقرب من دعم يومي صلب.'
   },
   {
     layerNumber: 7,
     layerName: 'الأموال الذكية وصناع السوق (Smart Money Concepts)',
     mirrorName: 'مراية أسرار صناع السوق والحيتان',
     analogyTitle: 'مصيدة سحب السيولة: الحوت نزل ضرب وقف الأفراد الصبح وطلع بطلقة!',
+    installedInBadranTemplate: 'Order Blocks - [Tamer Zaky]',
+    equivalentInOurSystem: 'كتل أوامر الحيتان والأموال الذكية (Order Blocks OB & Loken SMC)',
+    coverageType: 'شارت ثاندر المباشر',
     thndrPrimaryIndicator: 'Order Blocks - [Tamer Zaky]',
     thndrSecondaryIndicator: 'AI Support & Resistance - [Tamer Zaky] / Pivot Points Standard',
     thndrIndicatorsList: [
       {
         nameEn: 'Order Blocks - [Tamer Zaky]',
         nameAr: 'سكربت كتل الأوامر المؤسسية',
-        role: 'رسم مستطيلات طلب الحيتان (المستطيل الأخضر بالأسفل) ومناطق تصريف العرض (المستطيل الأحمر بالأعلى).',
-        badge: 'سكربت ثاندر الرئيسي'
+        role: 'المؤشر المثبت في قالب BADRAN: رسم مستطيلات طلب الحيتان (المستطيل الأخضر بالأسفل) ومناطق تصريف العرض (المستطيل الأحمر بالأعلى).',
+        badge: 'مثبت في قالب BADRAN ✅'
       },
       {
         nameEn: 'Pivot Points Standard',
@@ -235,9 +259,9 @@ export const THNDR_SEVEN_LAYERS_MAPPING: SevenLayerThndrMapping[] = [
       }
     ],
     isAvailableOnThndr: true,
-    howToApplyInThndr: 'في ثاندر اكتب في البحث "Order Blocks - [Tamer Zaky]" هيرسم لك مستطيلات ملونة على الشارت بتمثل كتل أوامر الحيتان، وضيف "Pivot Points Standard" لمعرفة النقاط المحورية الدقيقة.',
-    explanationBaladi: 'الطبقة الفيصلية يا غالي: الحيتان مش بتشتري عند خطوط الدعم العادية اللي مرسومة في الكتب؛ الحيتان بتنزل تكسر الدعم العادي عشان تضرب وقف خسارة الأفراد وتلم الأسهم منهم برخيص، وبعدين ترتد من كتلة طلب مؤسسية (Demand Order Block). لما تلاقي السهم كسر قاع وهمي وارتد بشمعة دوجي أو مطرقة، ده تأكيد إن الحوت دخل ورافع السهم.',
-    whatToLookFor: 'شموع بذيول سفلية طويلة عند كتلة الطلب (Order Block) وتأكيد كسر هيكل صاعد (BOS).'
+    howToApplyInThndr: 'مثبت مسبقاً على شارت قالب BADRAN باسم "Order Blocks - [Tamer Zaky]". يرسم مستطيلات ملونة على الشارت تلقائياً تكشف كتل أوامر الحيتان.',
+    explanationBaladi: 'الطبقة الذهبية الأقوى! الحيتان والبنوك مش بتشتري عند الدعوم العادية؛ بتشتري عند مستطيلات الـ Order Blocks بعد ما تنزل تسحب سيولة الأفراد. مؤشر "Order Blocks - [Tamer Zaky]" بيرسم لك المستطيلات دي أوتوماتيك على شارت ثاندر، وده بيطابق بالمليم مؤشرات Order Blocks و Loken SMC في نظامنا!',
+    whatToLookFor: 'شموع بذيول سفلية طويلة عند كتلة الطلب (Order Block) وتأكيد ارتداد صاعد حقيقي.'
   }
 ];
 

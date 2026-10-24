@@ -247,36 +247,116 @@ export const EducationView: React.FC<Props> = ({
 
           {/* SECTION A: خريطة مطابقة الـ 7 طبقات في شارت ثاندر (When mapping or all selected) */}
           {(thndrSectionFilter === 'mapping' || thndrSectionFilter === 'all') && !thndrSearchQuery && (
-            <div className="space-y-4">
-              <div className="bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border border-emerald-500/30 rounded-[20px] p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-10 h-10 rounded-[14px] bg-emerald-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                    🏛️
-                  </span>
-                  <div>
-                    <h3 className="text-base font-extrabold text-md-on-surface">
-                      خريطة مطابقة الـ 7 طبقات على شارت ثاندر (Thndr 7-Layers Setup)
-                    </h3>
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                      كل طبقة من الـ 7 إيه اسم المؤشر بتاعها على ثاندر وإزاي تفتحه خطوة بخطوة!
+            <div className="space-y-5">
+              {/* Main Badge & Verification Banner */}
+              <div className="bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/40 rounded-[22px] p-5 shadow-sm space-y-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-12 h-12 rounded-[16px] bg-emerald-500 text-white flex items-center justify-center font-bold text-2xl shadow-md">
+                      🏛️
                     </span>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-lg font-extrabold text-md-on-surface">
+                          خريطة مطابقة الـ 7 طبقات مع قالب BADRAN المعتمد على ثاندر
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500 text-white shadow-sm flex items-center gap-1">
+                          <CheckCircle2 size={13} />
+                          <span>قالب BADRAN محفوظ ومفعّل 100%</span>
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                        الـ 5 مؤشرات المثبتة حالياً على شارتك في ثاندر تغطي كل مراحل اتخاذ القرار السبع في موقعنا بدون أي نقص أو تكرار!
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Summary Metric Chips */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="bg-md-surface/90 border border-emerald-500/30 rounded-[14px] px-3 py-1.5 text-center">
+                      <div className="text-[10px] text-md-on-surface-variant font-bold">المؤشرات على الشارت</div>
+                      <div className="text-sm font-mono font-extrabold text-emerald-600 dark:text-emerald-400">5 مؤشرات نظيفة</div>
+                    </div>
+                    <div className="bg-md-surface/90 border border-emerald-500/30 rounded-[14px] px-3 py-1.5 text-center">
+                      <div className="text-[10px] text-md-on-surface-variant font-bold">تغطية المراحل</div>
+                      <div className="text-sm font-mono font-extrabold text-md-primary">7 من 7 طبقات</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Interactive Matrix / Comparison Table */}
+                <div className="overflow-x-auto rounded-[16px] border border-emerald-500/25 bg-md-surface/95 shadow-inner">
+                  <table className="w-full text-right text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-emerald-500/10 border-b border-emerald-500/20 text-md-on-surface font-extrabold">
+                        <th className="p-3 w-12 text-center">#</th>
+                        <th className="p-3">الطبقة في منظومة الموقع</th>
+                        <th className="p-3">المؤشر المثبت في ثاندر (قالب BADRAN)</th>
+                        <th className="p-3">المؤشر الموازي في تريدنج فيو والموقع</th>
+                        <th className="p-3 text-center">موضع العرض</th>
+                        <th className="p-3">طريقة قراءة الإشارة بالبلدي</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-md-outline-variant/30 font-medium">
+                      {THNDR_SEVEN_LAYERS_MAPPING.map((row) => (
+                        <tr key={row.layerNumber} className="hover:bg-emerald-500/5 transition-colors">
+                          <td className="p-3 text-center font-mono font-bold">
+                            <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 inline-flex items-center justify-center text-xs">
+                              {row.layerNumber}
+                            </span>
+                          </td>
+                          <td className="p-3 font-bold text-md-on-surface">
+                            <div>{row.layerName}</div>
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">{row.mirrorName}</span>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md text-[11px] inline-block">
+                              {row.installedInBadranTemplate}
+                            </span>
+                          </td>
+                          <td className="p-3 text-md-on-surface-variant font-mono text-[11px]">
+                            {row.equivalentInOurSystem}
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              row.coverageType === 'شارت ثاندر المباشر'
+                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                : row.coverageType === 'لوحة الزخم السفلية'
+                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                            }`}>
+                              {row.coverageType}
+                            </span>
+                          </td>
+                          <td className="p-3 text-xs text-md-on-surface leading-relaxed max-w-xs">
+                            {row.whatToLookFor}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Detailed 7 Layers Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
                 {THNDR_SEVEN_LAYERS_MAPPING.map((m) => (
                   <div 
                     key={m.layerNumber}
-                    className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[20px] p-4.5 space-y-3 flex flex-col justify-between hover:border-md-outline transition-all duration-200 shadow-sm"
+                    className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[20px] p-4.5 space-y-3.5 flex flex-col justify-between hover:border-emerald-500/50 transition-all duration-200 shadow-sm"
                   >
-                    <div className="space-y-2.5">
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="w-7 h-7 rounded-full bg-md-primary text-md-on-primary font-mono font-bold flex items-center justify-center text-xs shadow-sm">
-                          {m.layerNumber}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          {m.mirrorName}
+                        <div className="flex items-center gap-2">
+                          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-mono font-bold flex items-center justify-center text-xs shadow-sm">
+                            {m.layerNumber}
+                          </span>
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                            {m.mirrorName}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-md-surface text-md-on-surface-variant border border-md-outline-variant/40">
+                          {m.coverageType}
                         </span>
                       </div>
 
@@ -289,39 +369,45 @@ export const EducationView: React.FC<Props> = ({
                         </span>
                       </div>
 
-                      {/* Thndr Indicator Badge */}
+                      {/* BADRAN Template Indicator Highlight */}
                       <div className="p-3 bg-emerald-500/10 rounded-[14px] border border-emerald-500/30 space-y-1">
-                        <span className="font-bold text-emerald-700 dark:text-emerald-300 block text-[11px] flex items-center gap-1.5">
-                          <Smartphone size={13} />
-                          <span>المؤشر في تطبيق ثاندر:</span>
+                        <span className="font-extrabold text-emerald-700 dark:text-emerald-300 block text-[11px] flex items-center gap-1.5">
+                          <CheckCircle2 size={13} className="text-emerald-600" />
+                          <span>المؤشر المثبت في قالب BADRAN:</span>
                         </span>
-                        <p className="font-mono font-bold text-xs text-md-on-surface">
-                          {m.thndrPrimaryIndicator}
+                        <p className="font-mono font-extrabold text-xs text-md-on-surface">
+                          {m.installedInBadranTemplate}
                         </p>
-                        {m.thndrSecondaryIndicator && (
-                          <span className="text-[10px] text-md-on-surface-variant block">
-                            بدائل أخرى: {m.thndrSecondaryIndicator}
-                          </span>
-                        )}
+                      </div>
+
+                      {/* Mirror in Our System */}
+                      <div className="p-2.5 bg-md-surface rounded-[12px] border border-md-outline-variant/40 space-y-0.5">
+                        <span className="font-bold text-md-primary block text-[10px] flex items-center gap-1">
+                          <Sparkles size={11} />
+                          <span>المؤشر الموازي في المعمل وتريدنج فيو:</span>
+                        </span>
+                        <p className="font-mono text-[11px] text-md-on-surface font-semibold leading-relaxed">
+                          {m.equivalentInOurSystem}
+                        </p>
                       </div>
 
                       {/* Baladi Explanation */}
-                      <p className="text-xs text-md-on-surface-variant leading-relaxed">
+                      <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
                         {m.explanationBaladi}
                       </p>
 
-                      {/* Setup Steps */}
-                      <div className="p-2.5 bg-md-surface rounded-[12px] border border-md-outline-variant/30 text-[11px] space-y-1">
-                        <span className="font-bold text-md-primary block text-[10px]">⚙️ إزاي تفتحه في ثاندر:</span>
-                        <p className="text-md-on-surface-variant leading-relaxed">
+                      {/* How it is applied */}
+                      <div className="p-2.5 bg-md-surface-container rounded-[12px] border border-md-outline-variant/30 text-[11px] space-y-0.5">
+                        <span className="font-bold text-md-on-surface block text-[10px]">⚙️ وضعه الحالي في ثاندر:</span>
+                        <p className="text-md-on-surface-variant leading-relaxed text-[10px]">
                           {m.howToApplyInThndr}
                         </p>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-md-outline-variant/30 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                      <CheckCircle2 size={12} />
-                      <span>{m.whatToLookFor}</span>
+                    <div className="pt-2.5 border-t border-md-outline-variant/30 text-[11px] text-emerald-700 dark:text-emerald-300 font-extrabold flex items-start gap-1.5">
+                      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-600" />
+                      <span>علامة الشراء المؤكدة: {m.whatToLookFor}</span>
                     </div>
                   </div>
                 ))}
@@ -572,13 +658,18 @@ export const EducationView: React.FC<Props> = ({
 
                     {/* Thndr Indicator Callout */}
                     {thndrMap && (
-                      <div className="p-3 bg-emerald-500/10 rounded-[14px] border border-emerald-500/30 text-xs space-y-1">
-                        <span className="font-bold text-emerald-700 dark:text-emerald-300 block text-[11px] flex items-center gap-1">
-                          <Smartphone size={13} />
-                          <span>المؤشر المناظر في تطبيق ثاندر:</span>
-                        </span>
-                        <p className="text-md-on-surface font-mono font-bold text-xs">
-                          {thndrMap.thndrPrimaryIndicator}
+                      <div className="p-3 bg-emerald-500/10 rounded-[14px] border border-emerald-500/30 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-emerald-700 dark:text-emerald-300 text-[11px] flex items-center gap-1">
+                            <CheckCircle2 size={13} className="text-emerald-600" />
+                            <span>المؤشر في قالب BADRAN (ثاندر):</span>
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-200">
+                            {thndrMap.coverageType}
+                          </span>
+                        </div>
+                        <p className="text-md-on-surface font-mono font-extrabold text-xs">
+                          {thndrMap.installedInBadranTemplate}
                         </p>
                         <p className="text-md-on-surface-variant text-[10px] leading-relaxed pt-0.5">
                           {thndrMap.howToApplyInThndr}
