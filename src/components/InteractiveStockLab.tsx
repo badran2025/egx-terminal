@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { StockData } from '../types';
 import { GROWTHX_SIMULATOR_CASES, StockSimulationCase, SimulatorLayerStep, resolve7LayerAnalysis } from '../services/growthxSimulatorData';
+import { getStockFundamentalProfile, StockFundamentalProfile } from '../services/egxFundamentalData';
 import { EGX_ARABIC_NAMES, StockMeta } from '../services/egxArabicNames';
 import { getFallbackStocks, formatPrice } from '../services/egxService';
 import { THNDR_SEVEN_LAYERS_MAPPING } from '../services/thndrIndicatorsData';
@@ -182,8 +183,12 @@ export const InteractiveStockLab: React.FC<Props> = ({
     return resolve7LayerAnalysis(selectedSymbol, liveStock);
   }, [selectedSymbol, stocks]);
 
-  const currentLayer: SimulatorLayerStep | undefined = currentCase.layers[activeStepIndex];
-  const isVerdictStep = activeStepIndex === 7;
+  const isFundamentalStep = activeStepIndex === 0;
+  const currentLayerIndex = activeStepIndex >= 1 && activeStepIndex <= 7 ? activeStepIndex - 1 : null;
+  const currentLayer: SimulatorLayerStep | undefined = currentLayerIndex !== null ? currentCase.layers[currentLayerIndex] : undefined;
+  const isVerdictStep = activeStepIndex === 8;
+
+  const fundamental = currentCase.fundamentalProfile || getStockFundamentalProfile(selectedSymbol, currentCase.sector);
 
   // Handle stock selection
   const handleSelectStock = (sym: string) => {
@@ -390,16 +395,141 @@ export const InteractiveStockLab: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* 3. Seven Layers Stepper Navigation (الشريط التفاعلي للخطوات 1 إلى 7 + التوصية) */}
+      {/* 2.5 EGX Confluence Cockpit (المؤشر الشامل لدمج الفحص المالي والفني والسوق العام) */}
+      <div className="bg-gradient-to-r from-md-surface-container-high via-md-surface-container to-md-surface-container-high border border-md-outline-variant/60 rounded-[24px] p-3.5 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 text-xs">
+          
+          {/* Pillar 1: Fundamental Safety */}
+          <div 
+            onClick={() => setActiveStepIndex(0)}
+            className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1 cursor-pointer hover:border-amber-500/50 transition-all select-none"
+            title="انقر لفحص ماليات الشركة بالتفصيل"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-md-on-surface-variant font-sans">1. السلامة المالية:</span>
+              <span className={`px-1.5 py-0.2 rounded font-bold text-[9px] ${
+                fundamental.financialHealthGrade === 'EXCELLENT' || fundamental.financialHealthGrade === 'GOOD'
+                  ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                  : fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED'
+                  ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300'
+                  : 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+              }`}>
+                {fundamental.financialHealthGrade === 'EXCELLENT' ? 'ممتاز' : fundamental.financialHealthGrade === 'GOOD' ? 'جيد' : fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED' ? 'مخاطر عالية' : 'متوسط'}
+              </span>
+            </div>
+            <div className="font-mono font-bold text-xs text-md-on-surface">
+              {fundamental.peRatio > 0 ? `P/E: ${fundamental.peRatio}x` : 'خسائر مرحلة (سالب)'}
+            </div>
+            <div className="text-[9px] text-md-on-surface-variant/80 truncate">
+              {fundamental.profitabilityStatus === 'LOSS_MAKING' ? 'شركة خاسرة ومأزومة' : 'أرباح مستقرة ومتنامية'}
+            </div>
+          </div>
+
+          {/* Pillar 2: Market Highway Confluence */}
+          <div 
+            onClick={() => setActiveStepIndex(1)}
+            className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1 cursor-pointer hover:border-blue-500/50 transition-all select-none"
+            title="انقر لفحص اتجاه مؤشر البورصة العام"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-md-on-surface-variant font-sans">2. مؤشر البورصة EGX30:</span>
+              <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold text-[9px]">
+                صاعد 🟢
+              </span>
+            </div>
+            <div className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
+              51,052.26 نقطة
+            </div>
+            <div className="text-[9px] text-md-on-surface-variant/80 truncate">
+              مستقر فوق دعم 50,450 نقطة (الطريق سالك)
+            </div>
+          </div>
+
+          {/* Pillar 3: Technical 7-Layers Confluence */}
+          <div 
+            onClick={() => setActiveStepIndex(1)}
+            className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1 cursor-pointer hover:border-md-primary/50 transition-all select-none"
+            title="انقر لفحص الطبقات الفنية السبع"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-md-on-surface-variant font-sans">3. الطبقات الفنية السبع:</span>
+              <span className="px-1.5 py-0.2 rounded bg-md-primary/15 text-md-primary font-bold text-[9px]">
+                {currentCase.layers.filter(l => l.layerStatus === 'pass').length} / 7 مؤكدة
+              </span>
+            </div>
+            <div className="font-mono font-bold text-xs text-md-primary">
+              {currentCase.layers.filter(l => l.layerStatus === 'pass').length >= 5 ? 'توافق فني قوي ✅' : 'توافق فني جزئي ⚠️'}
+            </div>
+            <div className="text-[9px] text-md-on-surface-variant/80 truncate">
+              ارتكاز عند الدعم ومساحة حركة كافية
+            </div>
+          </div>
+
+          {/* Pillar 4: Action Verdict */}
+          <div 
+            onClick={() => setActiveStepIndex(8)}
+            className={`p-2.5 rounded-xl border space-y-1 cursor-pointer hover:brightness-105 transition-all select-none ${
+              currentCase.finalVerdict.rating === 'strong_buy' || currentCase.finalVerdict.rating === 'buy'
+                ? 'bg-emerald-500/10 border-emerald-500/30'
+                : currentCase.finalVerdict.rating === 'take_profit'
+                ? 'bg-amber-500/10 border-amber-500/30'
+                : currentCase.finalVerdict.rating === 'avoid_risk' || currentCase.finalVerdict.rating === 'sell'
+                ? 'bg-rose-500/10 border-rose-500/30'
+                : 'bg-blue-500/10 border-blue-500/30'
+            }`}
+            title="انقر للذهاب إلى خطة القرار والتنفيذ الميداني"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-md-on-surface-variant font-sans">4. القرار الميداني الموحد:</span>
+              <span className="text-[9px] font-bold">🎯</span>
+            </div>
+            <div className={`font-bold text-xs truncate ${
+              currentCase.finalVerdict.rating === 'strong_buy' || currentCase.finalVerdict.rating === 'buy'
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : currentCase.finalVerdict.rating === 'avoid_risk' || currentCase.finalVerdict.rating === 'sell'
+                ? 'text-rose-700 dark:text-rose-300'
+                : 'text-amber-700 dark:text-amber-300'
+            }`}>
+              {currentCase.finalVerdict.ratingLabel.replace('قرار التداول: ', '').replace('قرار الشراء: ', '')}
+            </div>
+            <div className="text-[9px] text-md-on-surface-variant/80 truncate">
+              العائد للمخاطرة {currentCase.finalVerdict.riskRewardRatio}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 3. Seven Layers Stepper Navigation (الشريط التفاعلي للخطوات: بوابة السلامة + الخطوات 1 إلى 7 + التوصية) */}
       <div className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[24px] p-3 shadow-sm">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 text-xs">
+          
+          {/* Step 0: بوابة السلامة المالية والتقييم */}
+          <button
+            onClick={() => setActiveStepIndex(0)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-md-full font-bold transition-all duration-150 whitespace-nowrap ${
+              isFundamentalStep
+                ? 'bg-amber-500 text-black shadow-sm ring-2 ring-amber-400'
+                : activeStepIndex > 0
+                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                : 'bg-md-surface-container text-md-on-surface-variant hover:bg-md-surface-container-high'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono bg-black/10">
+              {activeStepIndex > 0 ? '✓' : '0'}
+            </span>
+            <span>🏛️ بوابة السلامة والتقييم المالي</span>
+          </button>
+
+          {/* Steps 1 to 7: The 7 Layers */}
           {currentCase.layers.map((layer, idx) => {
-            const isCurrent = activeStepIndex === idx;
-            const isCompleted = activeStepIndex > idx;
+            const stepNum = idx + 1;
+            const isCurrent = activeStepIndex === stepNum;
+            const isCompleted = activeStepIndex > stepNum;
             return (
               <button
                 key={layer.layerNumber}
-                onClick={() => setActiveStepIndex(idx)}
+                onClick={() => setActiveStepIndex(stepNum)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-md-full font-bold transition-all duration-150 whitespace-nowrap ${
                   isCurrent
                     ? 'bg-md-primary text-md-on-primary shadow-sm'
@@ -409,23 +539,23 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 }`}
               >
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono bg-black/10">
-                  {isCompleted ? '✓' : idx + 1}
+                  {isCompleted ? '✓' : stepNum}
                 </span>
                 <span>{layer.title}</span>
               </button>
             );
           })}
 
-          {/* Final Verdict Button */}
+          {/* Step 8: Final Verdict Button */}
           <button
-            onClick={() => setActiveStepIndex(7)}
+            onClick={() => setActiveStepIndex(8)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-md-full font-extrabold transition-all duration-150 whitespace-nowrap ${
               isVerdictStep
-                ? 'bg-amber-500 text-black shadow-sm ring-2 ring-amber-400'
-                : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
+                ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400'
+                : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25'
             }`}
           >
-            <span>🏆 النتيجة والتوصية الصريحة</span>
+            <span>🏆 القرار الموحد وخطة التنفيذ في ثاندر</span>
           </button>
         </div>
       </div>
@@ -438,7 +568,11 @@ export const InteractiveStockLab: React.FC<Props> = ({
             <span>شارت مباشر لـ {currentCase.nameAr} ({selectedSymbol})</span>
           </span>
           <span className="text-[11px] text-md-primary font-bold bg-md-primary/10 px-2.5 py-0.5 rounded-full border border-md-primary/30">
-            {isVerdictStep ? 'الشارت الشامل للتنفيذ الميداني' : currentLayer?.actualChartIndicatorName}
+            {isVerdictStep 
+              ? 'الشارت الشامل للتنفيذ الميداني' 
+              : isFundamentalStep 
+              ? 'فحص جودة وملاءة المركز المالي' 
+              : currentLayer?.actualChartIndicatorName}
           </span>
         </div>
 
@@ -474,8 +608,194 @@ export const InteractiveStockLab: React.FC<Props> = ({
         {/* COLUMN 1 (RIGHT SIDE in RTL): التحليل الفني والخطوات التفاعلية الـ 7 */}
         <div className={`lg:col-span-5 space-y-4 ${containerHeightClass} overflow-y-auto pr-1 pl-1 scrollbar-thin`}>
           
+          {/* STEP 0: GATE 0 FUNDAMENTAL HEALTH & VALUATION CARD */}
+          {isFundamentalStep && (
+            <div className="bg-md-surface-container-low border border-amber-500/40 rounded-[28px] p-5 sm:p-6 shadow-md-1 space-y-4 animate-fadeIn">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-md-outline-variant/40">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-full bg-amber-500 text-black font-bold flex items-center justify-center text-base shadow-sm">
+                    🏛️
+                  </span>
+                  <div>
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block">
+                      المرحلة التمهيدية (Gate 0)
+                    </span>
+                    <h3 className="text-lg font-bold text-md-on-surface">
+                      بوابة السلامة المالية وتقييم الشركة (قبل فحص الشارت)
+                    </h3>
+                  </div>
+                </div>
+
+                <span className={`px-2.5 py-1 rounded-full text-xs font-bold font-mono border ${
+                  fundamental.financialHealthGrade === 'EXCELLENT' || fundamental.financialHealthGrade === 'GOOD'
+                    ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border-emerald-500/40'
+                    : fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED'
+                    ? 'bg-rose-500/20 text-rose-800 dark:text-rose-200 border-rose-500/40'
+                    : 'bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/40'
+                }`}>
+                  {fundamental.financialHealthGrade === 'EXCELLENT' ? 'ملاءة مالية ممتازة ✅' : fundamental.financialHealthGrade === 'GOOD' ? 'مركز مالي جيد ✅' : fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED' ? '⚠️ مخاطر مالية عالية' : 'مركز مالي متوسط'}
+                </span>
+              </div>
+
+              {/* Headline Summary Card */}
+              <div className={`p-4 rounded-[20px] border space-y-1.5 ${
+                fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED'
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-200'
+              }`}>
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  <Sparkles size={16} />
+                  <span>ملخص المركز المالي ونشاط الشركة:</span>
+                </div>
+                <p className="text-xs font-semibold leading-relaxed">
+                  {fundamental.headlineSummary}
+                </p>
+              </div>
+
+              {/* 4 Core Financial Metrics Grid */}
+              <div className="grid grid-cols-2 gap-2.5 text-xs font-mono">
+                
+                <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-0.5">
+                  <span className="text-[11px] text-md-on-surface-variant font-sans block">مضاعف الربحية (P/E Ratio)</span>
+                  <span className="text-sm font-bold block text-md-primary">
+                    {fundamental.peRatio > 0 ? `${fundamental.peRatio}x ضعف الأرباح` : 'سالب (خسائر مرحلة)'}
+                  </span>
+                  <span className="text-[10px] text-md-on-surface-variant font-sans block">
+                    {fundamental.peRatio > 0 && fundamental.peRatio < 10 
+                      ? 'مكرر رخيص وجاذب للمؤسسات' 
+                      : fundamental.peRatio >= 10 && fundamental.peRatio < 20 
+                      ? 'تقييم عادل ومتوازن' 
+                      : fundamental.peRatio >= 20 
+                      ? 'تقييم مالي متضخم' 
+                      : 'الشركة لا تحقق أرباحاً'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-0.5">
+                  <span className="text-[11px] text-md-on-surface-variant font-sans block">حالة الأرباح التشغيلية</span>
+                  <span className={`text-sm font-bold font-sans block ${
+                    fundamental.profitabilityStatus === 'PROFITABLE_GROWTH' || fundamental.profitabilityStatus === 'PROFITABLE_STABLE'
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-rose-600 dark:text-rose-400'
+                  }`}>
+                    {fundamental.profitabilityStatus === 'PROFITABLE_GROWTH' 
+                      ? 'أرباح متنامية بقوة 🚀' 
+                      : fundamental.profitabilityStatus === 'PROFITABLE_STABLE' 
+                      ? 'أرباح مستقرة وآمنة 🟢' 
+                      : fundamental.profitabilityStatus === 'CYCLICAL' 
+                      ? 'أرباح دورية مرتبطة بالسلع 🔄' 
+                      : 'خسائر متتالية وتآكل رأس المال 🛑'}
+                  </span>
+                  <span className="text-[10px] text-md-on-surface-variant font-sans block">
+                    {fundamental.profitabilityStatus === 'LOSS_MAKING' ? 'تحذير تداول عالي المخاطر' : 'أمان استثماري للمحافظ'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-0.5">
+                  <span className="text-[11px] text-md-on-surface-variant font-sans block">مخاطر المديونية وتكلفة الفائدة</span>
+                  <span className={`text-sm font-bold font-sans block ${
+                    fundamental.debtRisk === 'LOW' 
+                      ? 'text-emerald-600 dark:text-emerald-400' 
+                      : fundamental.debtRisk === 'MODERATE' 
+                      ? 'text-blue-600 dark:text-blue-400' 
+                      : 'text-rose-600 dark:text-rose-400'
+                  }`}>
+                    {fundamental.debtRisk === 'LOW' 
+                      ? 'ديون منخفضة وآمنة 🛡️' 
+                      : fundamental.debtRisk === 'MODERATE' 
+                      ? 'ديون متوسطة ومتحكم بها' 
+                      : 'ديون ثقيلة وحرجة ⚠️'}
+                  </span>
+                  <span className="text-[10px] text-md-on-surface-variant font-sans block">
+                    ملاءة تدفقات نقدية كافية
+                  </span>
+                </div>
+
+                <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-0.5">
+                  <span className="text-[11px] text-md-on-surface-variant font-sans block">عائد التوزيعات النقدية السنوية</span>
+                  <span className="text-sm font-bold block text-emerald-600 dark:text-emerald-400">
+                    {fundamental.dividendYieldPct > 0 ? `${fundamental.dividendYieldPct}% كاش سنوي` : 'لا توزع أرباحاً كاش'}
+                  </span>
+                  <span className="text-[10px] text-md-on-surface-variant font-sans block">
+                    {fundamental.dividendYieldPct >= 6 ? 'سهم توزيعات مميز وعالي العائد' : fundamental.dividendYieldPct > 0 ? 'توزيعات دورية معتدلة' : 'نمو رأسمالي فقط بدون كاش'}
+                  </span>
+                </div>
+
+              </div>
+
+              {/* Red Flags Alert (If present) */}
+              {fundamental.financialRedFlags && fundamental.financialRedFlags.length > 0 && (
+                <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-[18px] text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 font-bold text-rose-700 dark:text-rose-300">
+                    <ShieldAlert size={16} />
+                    <span>تحذيرات مالية حمراء يجب الانتباه لها (Red Flags):</span>
+                  </div>
+                  <ul className="list-disc list-inside space-y-1 text-md-on-surface-variant pr-1 text-[11px] font-sans">
+                    {fundamental.financialRedFlags.map((flag, idx) => (
+                      <li key={idx} className="font-medium text-rose-900 dark:text-rose-200">{flag}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Books Standard: CAN SLIM & SEPA Logic Box */}
+              <div className="p-3.5 bg-blue-500/10 border border-blue-500/25 rounded-[18px] text-xs space-y-1.5 font-sans">
+                <div className="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-200">
+                  <BookOpen size={15} className="text-blue-500" />
+                  <span>معيار كتب التداول الكلاسيكية (William O'Neil & Mark Minervini):</span>
+                </div>
+                <p className="text-[11px] text-md-on-surface leading-relaxed">
+                  في كتاب <em>How to Make Money in Stocks</em>، يضع ويليام أونيل شرطاً صارماً: <strong>"إياك تشتري سهم شركة بتخسر أو ديونها بتلتهم أرباحها، مهما كان الشارت مغرياً!"</strong>؛ الصناديق والمؤسسات بتضخ المليارات في الشركات الرابحة ذات مكررات الربحية المعقولة (C & A في نظام CAN SLIM)، والشارت الفني وظيفته الوحيدة تحديد <strong>توقيت الدخول الدقيق</strong> بعد التأكد من سلامة الشركة مالياً!
+                </p>
+              </div>
+
+              {/* Friend's Chat (كلام صديقك بالعامية المصرية الصريحة في ماليات الشركة) */}
+              <div className="bg-md-surface rounded-[20px] p-4 border border-md-outline-variant/50 space-y-2 relative">
+                <div className="flex items-center gap-2 text-xs font-bold text-md-primary">
+                  <span className="text-base">☕</span>
+                  <span>كلام صديقك وهو بيشرحلك ماليات الشركة على بلاطة:</span>
+                </div>
+                <p className="text-xs text-md-on-surface leading-relaxed font-medium">
+                  "{fundamental.baladiAdvice}"
+                </p>
+              </div>
+
+              {/* Suitability Badge */}
+              <div className="p-3 bg-md-surface-container rounded-[16px] border border-md-outline-variant/40 flex items-center justify-between gap-2 text-xs">
+                <span className="text-md-on-surface-variant font-sans">تصنيف الملاءمة الاستثمارية:</span>
+                <span className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] font-sans ${
+                  fundamental.investmentSuitability === 'INVESTMENT_GRADE'
+                    ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
+                    : fundamental.investmentSuitability === 'SWING_ONLY'
+                    ? 'bg-blue-500/20 text-blue-800 dark:text-blue-300 border border-blue-500/30'
+                    : 'bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-500/30'
+                }`}>
+                  {fundamental.investmentSuitability === 'INVESTMENT_GRADE' 
+                    ? 'استثماري قيادي ممتاز للمحافظ' 
+                    : fundamental.investmentSuitability === 'SWING_ONLY' 
+                    ? 'سوينج للمؤسسات عند الارتكاز' 
+                    : 'مضاربة سريعة للأفراد فقط بوقف خسارة فوري'}
+                </span>
+              </div>
+
+              {/* Forward Navigation Button */}
+              <div className="flex items-center justify-end pt-2">
+                <button
+                  onClick={() => setActiveStepIndex(1)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-md-full bg-md-primary text-md-on-primary text-xs font-bold shadow-sm hover:opacity-95 transition-all"
+                >
+                  <span>اجتياز الفحص المالي والانتقال للشارت والطبقة الأولى ⬅️</span>
+                  <ArrowLeft size={14} />
+                </button>
+              </div>
+
+            </div>
+          )}
+
           {/* STEP 1 to 7 DETAILS CARD */}
-          {!isVerdictStep && currentLayer && (
+          {!isVerdictStep && !isFundamentalStep && currentLayer && (
             <div className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[28px] p-5 sm:p-6 shadow-md-1 space-y-4">
               
               {/* Step Header */}
@@ -832,23 +1152,18 @@ export const InteractiveStockLab: React.FC<Props> = ({
               {/* Navigation Buttons (السابق والتالي) */}
               <div className="flex items-center justify-between gap-3 pt-2">
                 <button
-                  disabled={activeStepIndex === 0}
                   onClick={() => setActiveStepIndex(prev => prev - 1)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-md-full text-xs font-bold transition-all ${
-                    activeStepIndex === 0
-                      ? 'opacity-40 cursor-not-allowed text-md-on-surface-variant'
-                      : 'bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high'
-                  }`}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-md-full text-xs font-bold transition-all bg-md-surface-container text-md-on-surface hover:bg-md-surface-container-high"
                 >
                   <ArrowRight size={14} />
-                  <span>الطبقة السابقة</span>
+                  <span>{activeStepIndex === 1 ? 'بوابة السلامة المالية (Gate 0)' : 'الطبقة السابقة'}</span>
                 </button>
 
                 <button
                   onClick={() => setActiveStepIndex(prev => prev + 1)}
                   className="flex items-center gap-1.5 px-5 py-2.5 rounded-md-full bg-md-primary text-md-on-primary text-xs font-bold shadow-sm hover:opacity-95 transition-all"
                 >
-                  <span>{activeStepIndex === 6 ? 'عرض التوصية والقرار النهائي 🏆' : 'الطبقة التالية'}</span>
+                  <span>{activeStepIndex === 7 ? 'عرض التوصية والقرار النهائي 🏆' : 'الطبقة التالية'}</span>
                   <ArrowLeft size={14} />
                 </button>
               </div>
@@ -1027,13 +1342,23 @@ export const InteractiveStockLab: React.FC<Props> = ({
                 </p>
               </div>
 
-              {/* Reset / Go back to Step 1 */}
-              <button
-                onClick={() => setActiveStepIndex(0)}
-                className="w-full py-2.5 rounded-md-full bg-md-surface-container text-md-on-surface font-bold text-xs hover:bg-md-surface-container-high transition-all"
-              >
-                🔄 إعادة مراجعة الخطوات من الطبقة الأولى
-              </button>
+              {/* Verdict Bottom Action Buttons */}
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <button
+                  onClick={() => setActiveStepIndex(7)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-md-full bg-md-surface-container text-md-on-surface font-bold text-xs hover:bg-md-surface-container-high transition-all"
+                >
+                  <ArrowRight size={14} />
+                  <span>العودة للطبقة 7 (الأموال الذكية SMC)</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveStepIndex(0)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-md-full bg-md-primary/15 text-md-primary font-bold text-xs hover:bg-md-primary/25 transition-all"
+                >
+                  <span>🔄 إعادة الفحص من بوابة السلامة المالية</span>
+                </button>
+              </div>
 
             </div>
           )}

@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { 
   X, TrendingUp, TrendingDown, Target, ShieldAlert, 
   BarChart2, CheckCircle2, Plus, Briefcase, Maximize2, Minimize2,
-  Activity, ArrowUpRight
+  Activity, ArrowUpRight, FlaskConical
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
 import { formatPrice } from '../services/egxService';
+import { getStockFundamentalProfile } from '../services/egxFundamentalData';
 import { TradingViewWidget } from './TradingViewWidget';
 import { MdButton, MdBadge } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
@@ -16,14 +17,26 @@ interface Props {
   theme?: 'dark' | 'light';
   onClose: () => void;
   onAddToPortfolio: (position: Omit<PortfolioPosition, 'id'>) => void;
+  onOpenLabWithStock?: (symbol: string) => void;
   lastUpdated?: Date;
 }
 
-export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'dark', onClose, onAddToPortfolio, lastUpdated }) => {
+export const StockDetailModal: React.FC<Props> = ({ 
+  stock, 
+  portfolio, 
+  theme = 'dark', 
+  onClose, 
+  onAddToPortfolio, 
+  onOpenLabWithStock,
+  lastUpdated 
+}) => {
   const [sharesToAdd, setSharesToAdd] = useState<number>(100);
   const [showAddSuccess, setShowAddSuccess] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [modalMode, setModalMode] = useState<'fullscreen_chart' | 'chart_and_indicators'>('fullscreen_chart');
+
+  // Fundamental Profile
+  const fundamental = getStockFundamentalProfile(stock.symbol);
 
   // Check if stock is owned in portfolio
   const ownedPosition = portfolio.find(p => p.symbol.toUpperCase() === stock.symbol.toUpperCase());
@@ -108,6 +121,20 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
                   حجم التداول: <strong className="text-md-on-surface">{stock.volume.toLocaleString('en-US')}</strong> سهم
                 </span>
               </div>
+
+              {/* Fundamental Health Quick Badge */}
+              <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
+                <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] border flex items-center gap-1 ${
+                  fundamental.financialHealthGrade === 'EXCELLENT' || fundamental.financialHealthGrade === 'GOOD'
+                    ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
+                    : fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED'
+                    ? 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/30'
+                    : 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30'
+                }`}>
+                  <span>🏛️ {fundamental.headlineSummary}</span>
+                  <span className="font-mono">({fundamental.peRatio > 0 ? `P/E: ${fundamental.peRatio}x` : 'خسائر مرحلة'})</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -149,6 +176,21 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
               <span>TradingView الرسمي</span>
               <ArrowUpRight size={14} className="text-md-tertiary" />
             </a>
+
+            {/* Direct Link to the 7-Layers Lab */}
+            {onOpenLabWithStock && !stock.isFund && !stock.isGold && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenLabWithStock(stock.symbol);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold rounded-md-full text-xs shadow-md transition-all select-none"
+                title="فتح السهم في المعمل العملي بالـ 7 طبقات والتحليل المالي"
+              >
+                <FlaskConical size={14} />
+                <span>فحص بالمعمل (7 طبقات + ماليات) 🔬</span>
+              </button>
+            )}
 
             <div className={`px-3 py-1.5 rounded-md-full text-xs font-bold border ${
               isBullish 
@@ -207,6 +249,18 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
               </div>
 
               <div className="flex items-center gap-2">
+                {onOpenLabWithStock && !stock.isFund && !stock.isGold && (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenLabWithStock(stock.symbol);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/40 rounded-md-full text-xs font-bold transition-all shadow-sm"
+                  >
+                    <FlaskConical size={14} className="text-amber-500" />
+                    <span>فحص بالمعمل 🔬</span>
+                  </button>
+                )}
                 <MdButton
                   variant="filled"
                   size="sm"

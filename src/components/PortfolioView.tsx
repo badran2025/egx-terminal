@@ -3,7 +3,8 @@ import {
   Briefcase, Plus, Trash2, TrendingUp, TrendingDown, 
   CheckCircle, ShieldAlert, Sparkles, BarChart2,
   ExternalLink, DollarSign, Image as ImageIcon, 
-  CheckCircle2, ArrowUpRight, Search, Upload, Pencil
+  CheckCircle2, ArrowUpRight, Search, Upload, Pencil,
+  FlaskConical
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
 import { 
@@ -26,6 +27,7 @@ interface Props {
   onUpdatePosition?: (position: PortfolioPosition) => void;
   onDeletePosition: (id: string) => void;
   onSelectStock: (symbol: string) => void;
+  onOpenLabWithStock?: (symbol: string) => void;
   lastUpdated?: Date;
   onRefresh?: () => void;
   isLoading?: boolean;
@@ -38,6 +40,7 @@ export const PortfolioView: React.FC<Props> = ({
   onUpdatePosition,
   onDeletePosition,
   onSelectStock,
+  onOpenLabWithStock,
   lastUpdated,
   onRefresh,
   isLoading = false
@@ -631,14 +634,26 @@ export const PortfolioView: React.FC<Props> = ({
                 </div>
               </div>
               {!alert.isFund && (
-                <MdButton
-                  variant="tonal"
-                  size="sm"
-                  icon={<ExternalLink size={14} />}
-                  onClick={() => onSelectStock(alert.symbol)}
-                >
-                  فحص الشارت
-                </MdButton>
+                <div className="flex items-center gap-1.5">
+                  {onOpenLabWithStock && (
+                    <button
+                      onClick={() => onOpenLabWithStock(alert.symbol)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 dark:text-amber-200 border border-amber-500/40 rounded-md-full text-xs font-bold transition-all shadow-sm"
+                      title="فحص أمان السهم بالـ 7 طبقات والتحليل المالي"
+                    >
+                      <FlaskConical size={13} className="text-amber-500" />
+                      <span>فحص بالمعمل 🔬</span>
+                    </button>
+                  )}
+                  <MdButton
+                    variant="tonal"
+                    size="sm"
+                    icon={<ExternalLink size={14} />}
+                    onClick={() => onSelectStock(alert.symbol)}
+                  >
+                    الشارت
+                  </MdButton>
+                </div>
               )}
             </div>
           ))}
@@ -866,13 +881,25 @@ export const PortfolioView: React.FC<Props> = ({
                           </button>
 
                           {!pos.isFund && (
-                            <button
-                              onClick={() => onSelectStock(pos.symbol)}
-                              title="عرض الشارت الفني"
-                              className="p-1.5 hover:bg-md-surface-container-highest text-md-on-surface-variant hover:text-md-on-surface rounded-md-sm transition-colors"
-                            >
-                              <BarChart2 size={15} />
-                            </button>
+                            <>
+                              {onOpenLabWithStock && (
+                                <button
+                                  onClick={() => onOpenLabWithStock(pos.symbol)}
+                                  title="فحص أمان المركز بالـ 7 طبقات والتحليل المالي"
+                                  className="flex items-center gap-1 px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 rounded-md-full text-[11px] font-bold transition-all shadow-sm"
+                                >
+                                  <FlaskConical size={12} className="text-amber-500" />
+                                  <span>معمل 🔬</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => onSelectStock(pos.symbol)}
+                                title="عرض الشارت الفني"
+                                className="p-1.5 hover:bg-md-surface-container-highest text-md-on-surface-variant hover:text-md-on-surface rounded-md-sm transition-colors"
+                              >
+                                <BarChart2 size={15} />
+                              </button>
+                            </>
                           )}
                           <button
                             onClick={() => onDeletePosition(pos.id)}

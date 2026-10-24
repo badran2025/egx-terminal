@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { 
   ArrowUpDown, Search, TrendingUp, TrendingDown, 
-  BarChart2, Filter, Briefcase
+  BarChart2, Filter, Briefcase, FlaskConical
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
 import { formatPrice } from '../services/egxService';
+import { getStockFundamentalProfile } from '../services/egxFundamentalData';
 import { MdCard, MdChip, MdTextField, MdBadge, MdButton } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -12,6 +13,7 @@ interface Props {
   stocks: StockData[];
   portfolio?: PortfolioPosition[];
   onSelectStock: (symbol: string) => void;
+  onOpenLabWithStock?: (symbol: string) => void;
   isLoading?: boolean;
   lastUpdated?: Date;
   onRefresh?: () => void;
@@ -21,6 +23,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
   stocks, 
   portfolio = [],
   onSelectStock,
+  onOpenLabWithStock,
   isLoading = false,
   lastUpdated,
   onRefresh
@@ -227,6 +230,19 @@ export const TechnicalRadarView: React.FC<Props> = ({
                       <span className="inline-block px-2.5 py-1.5 rounded-md-md bg-md-surface-container-high font-mono font-extrabold text-sm tracking-wider text-md-on-surface border border-md-outline-variant/60 shadow-sm group-hover:border-md-primary transition-colors">
                         {stock.symbol}
                       </span>
+                      {onOpenLabWithStock && !stock.isFund && !stock.isGold && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenLabWithStock(stock.symbol);
+                          }}
+                          title="فتح المعمل العملي المباشر بالـ 7 طبقات والتحليل المالي"
+                          className="mt-1.5 px-2 py-0.5 rounded-full bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1 mx-auto transition-all"
+                        >
+                          <FlaskConical size={10} className="text-amber-500" />
+                          <span>معمل 🔬</span>
+                        </button>
+                      )}
                     </td>
 
                     {/* 2. STOCK NAME & METADATA COLUMN */}
@@ -262,6 +278,21 @@ export const TechnicalRadarView: React.FC<Props> = ({
                           <span className="text-[11px] text-md-on-surface-variant font-mono">
                             {stock.nameEn}
                           </span>
+                          {/* Fundamental Health Badge */}
+                          {(() => {
+                            const fund = getStockFundamentalProfile(stock.symbol);
+                            return (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${
+                                fund.financialHealthGrade === 'EXCELLENT' || fund.financialHealthGrade === 'GOOD'
+                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                                  : fund.financialHealthGrade === 'HIGH_RISK_DISTRESSED'
+                                  ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
+                                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+                              }`}>
+                                🏛️ {fund.peRatio > 0 ? `P/E: ${fund.peRatio}x` : 'خسائر'}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     </td>

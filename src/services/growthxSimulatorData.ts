@@ -37,6 +37,7 @@ export interface StockSimulationCase {
   currentPrice: number;
   currency: string;
   storyIntro: string;
+  fundamentalProfile?: StockFundamentalProfile;
   layers: SimulatorLayerStep[];
   finalVerdict: {
     scoreText: string;
@@ -1607,6 +1608,7 @@ export function resolve7LayerAnalysis(selectedSymbol: string, liveStock?: StockD
     currentPrice: price,
     currency: 'ج.م',
     storyIntro: `شارت سهم ${meta.nameAr} (${upper}) مفتوح قدامك بكل مؤشراته الحية. مش هنسيبك تخمن؛ فحصنا السهم ده بنظام الطبقات السبع المتكامل طبقة طبقة، وحللنا الشارت خطوة بخطوة لتحديد الاتجاه ونقاط الدخول والمستهدفات بدقة كاملة!`,
+    fundamentalProfile: fundamental,
     layers: [
       {
         layerNumber: 1,

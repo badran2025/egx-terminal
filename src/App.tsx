@@ -19,6 +19,14 @@ export function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [labRequestedSymbol, setLabRequestedSymbol] = useState<string | null>(null);
+
+  const handleOpenLabWithStock = (symbol: string) => {
+    setLabRequestedSymbol(symbol.toUpperCase());
+    setActiveTab('radar');
+    setSelectedSymbol(null);
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
 
   // Theme Management (Light / Dark Mode in Material 3)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -255,6 +263,7 @@ export function App() {
             isLoading={isLoading}
             lastUpdated={lastUpdated}
             onRefresh={loadData}
+            initialLabSymbol={labRequestedSymbol || undefined}
           />
         )}
 
@@ -266,6 +275,7 @@ export function App() {
             onUpdatePosition={handleUpdatePosition}
             onDeletePosition={handleDeletePosition}
             onSelectStock={(sym) => setSelectedSymbol(sym)}
+            onOpenLabWithStock={handleOpenLabWithStock}
             lastUpdated={lastUpdated}
             onRefresh={loadData}
             isLoading={isLoading}
@@ -308,6 +318,7 @@ export function App() {
           theme={theme}
           onClose={() => setSelectedSymbol(null)}
           onAddToPortfolio={handleAddPosition}
+          onOpenLabWithStock={handleOpenLabWithStock}
           lastUpdated={lastUpdated}
         />
       )}

@@ -18,6 +18,7 @@ interface Props {
   lastUpdated?: Date;
   onRefresh?: () => void;
   initialSubTab?: 'recommendations' | 'radar_table' | 'lab';
+  initialLabSymbol?: string;
 }
 
 export const RadarAndRecommendationsView: React.FC<Props> = ({
@@ -29,10 +30,19 @@ export const RadarAndRecommendationsView: React.FC<Props> = ({
   isLoading = false,
   lastUpdated,
   onRefresh,
-  initialSubTab = 'recommendations'
+  initialSubTab = 'recommendations',
+  initialLabSymbol
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'recommendations' | 'radar_table' | 'lab'>(initialSubTab);
-  const [labSymbol, setLabSymbol] = useState<string>('COMI');
+  const [labSymbol, setLabSymbol] = useState<string>(initialLabSymbol || 'COMI');
+
+  // Sync if initialLabSymbol changes from parent
+  React.useEffect(() => {
+    if (initialLabSymbol) {
+      setLabSymbol(initialLabSymbol);
+      setActiveSubTab('lab');
+    }
+  }, [initialLabSymbol]);
 
   const handleOpenLab = (symbol: string) => {
     setLabSymbol(symbol);
@@ -153,6 +163,7 @@ export const RadarAndRecommendationsView: React.FC<Props> = ({
           stocks={stocks}
           portfolio={portfolio}
           onSelectStock={onSelectStock}
+          onOpenLabWithStock={handleOpenLab}
           isLoading={isLoading}
           lastUpdated={lastUpdated}
           onRefresh={onRefresh}

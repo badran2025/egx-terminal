@@ -13,6 +13,7 @@ import {
   RecommendationType 
 } from '../services/recommendationEngine';
 import { EGYPTIAN_FUNDS_MAP, formatPrice, getEGXSessionDates } from '../services/egxService';
+import { getStockFundamentalProfile } from '../services/egxFundamentalData';
 import { MdCard, MdButton, MdChip, MdBadge, MdTextField } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -495,6 +496,28 @@ export const RecommendationsView: React.FC<Props> = ({
                             EGX 100
                           </span>
                         )}
+
+                        {(() => {
+                          const fund = getStockFundamentalProfile(rec.stock.symbol);
+                          const isDistressed = fund.financialHealthGrade === 'HIGH_RISK_DISTRESSED';
+                          const isGood = fund.financialHealthGrade === 'EXCELLENT' || fund.financialHealthGrade === 'GOOD';
+                          return (
+                            <span 
+                              className={`text-[10px] px-2.5 py-0.5 rounded-md-full font-bold border flex items-center gap-1 shadow-xs ${
+                                isDistressed 
+                                  ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                                  : isGood 
+                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                              }`} 
+                              title={`التقييم المالي: ${fund.headlineSummary} - مضاعف الربحية: ${fund.peRatio}x - نصيحة بالبلدي: ${fund.baladiAdvice}`}
+                            >
+                              <span>{isDistressed ? '⚠️' : '🏛️'}</span>
+                              <span>{isDistressed ? 'مخاطر مالية عالية' : isGood ? (fund.financialHealthGrade === 'EXCELLENT' ? 'مركز مالي ممتاز' : 'مركز مالي جيد') : 'مركز مالي متوسط'}</span>
+                              <span className="opacity-75 font-mono">({fund.peRatio > 0 ? `P/E: ${fund.peRatio}x` : 'خسائر/مضاربي'})</span>
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-3 text-xs mt-1">
