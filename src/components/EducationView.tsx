@@ -10,7 +10,6 @@ import {
   THNDR_ALL_INDICATORS, 
   THNDR_SEVEN_LAYERS_MAPPING, 
   EGX_FRIEND_GLOSSARY,
-  BADRAN_STRATEGY_PLAYBOOK,
   ThndrIndicatorItem 
 } from '../services/thndrIndicatorsData';
 import { MdCard, MdButton, MdChip, MdTextField } from './material';
@@ -21,18 +20,18 @@ interface Props {
   onRefresh?: () => void;
   isLoading?: boolean;
   onNavigateToLab?: () => void;
+  onNavigateToBadranStrategy?: () => void;
 }
 
 export const EducationView: React.FC<Props> = ({ 
   lastUpdated,
   onRefresh,
   isLoading = false,
-  onNavigateToLab
+  onNavigateToLab,
+  onNavigateToBadranStrategy
 }) => {
   const [activeMainTab, setActiveMainTab] = useState<'thndr' | 'framework' | 'indicators'>('thndr');
-  const [thndrSectionFilter, setThndrSectionFilter] = useState<'all' | 'mapping' | 'playbook' | 'glossary' | 'tamer_zaky' | 'trend' | 'momentum' | 'volume' | 'volatility'>('all');
-  const [selectedProfile, setSelectedProfile] = useState<'long_term' | 'swing' | 'day_trader'>('swing');
-  const [activeStepTab, setActiveStepTab] = useState<number>(1);
+  const [thndrSectionFilter, setThndrSectionFilter] = useState<'all' | 'tamer_zaky' | 'trend' | 'momentum' | 'volume' | 'volatility' | 'glossary'>('all');
   const [thndrSearchQuery, setThndrSearchQuery] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -190,6 +189,37 @@ export const EducationView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeMainTab === 'thndr' && (
         <div className="space-y-6">
+          {/* Spotlight Banner linking to BADRAN Strategy Tab */}
+          {onNavigateToBadranStrategy && (
+            <div className="bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-purple-600/10 border-2 border-blue-500/40 rounded-[22px] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="w-11 h-11 rounded-[16px] bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shrink-0">
+                  🧭
+                </span>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-extrabold text-md-on-surface">
+                      دليل استراتيجية التحليل وخارطة القرار (قالب BADRAN المعتمد)
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white">
+                      تبويب مستقل جديد
+                    </span>
+                  </div>
+                  <p className="text-xs text-md-on-surface-variant font-medium mt-0.5 leading-relaxed">
+                    تم تخصيص تبويب كامل ومستقل في الشريط الرئيسي يضم الخطوات الست الصارمة، واختيار نمط التداول، ومعادلة الدخول والوقف وجني الأرباح بالمليم!
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onNavigateToBadranStrategy}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm whitespace-nowrap transition-all self-end sm:self-auto"
+              >
+                <span>فتح الاستراتيجية 🧭</span>
+                <ArrowRight size={14} className="rotate-180" />
+              </button>
+            </div>
+          )}
+
           {/* Quick Sub-Filter Chips */}
           <MdCard variant="outlined" className="space-y-4">
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
@@ -198,21 +228,6 @@ export const EducationView: React.FC<Props> = ({
                   label="جميع مؤشرات ثاندر"
                   selected={thndrSectionFilter === 'all'}
                   onClick={() => setThndrSectionFilter('all')}
-                />
-                <MdChip
-                  label="🌟 مطابقة الـ 7 طبقات في ثاندر"
-                  selected={thndrSectionFilter === 'mapping'}
-                  onClick={() => setThndrSectionFilter('mapping')}
-                />
-                <MdChip
-                  label="🧭 استراتيجية التحليل وخارطة القرار (BADRAN)"
-                  selected={thndrSectionFilter === 'playbook'}
-                  onClick={() => setThndrSectionFilter('playbook')}
-                />
-                <MdChip
-                  label="💡 قاموس مصطلحات البورصة بالبلدي"
-                  selected={thndrSectionFilter === 'glossary'}
-                  onClick={() => setThndrSectionFilter('glossary')}
                 />
                 <MdChip
                   label="⚡ سكربتات تامر زكي ومجتمع ثاندر"
@@ -239,6 +254,11 @@ export const EducationView: React.FC<Props> = ({
                   selected={thndrSectionFilter === 'volatility'}
                   onClick={() => setThndrSectionFilter('volatility')}
                 />
+                <MdChip
+                  label="💡 قاموس مصطلحات البورصة بالبلدي"
+                  selected={thndrSectionFilter === 'glossary'}
+                  onClick={() => setThndrSectionFilter('glossary')}
+                />
               </div>
             </div>
 
@@ -253,613 +273,8 @@ export const EducationView: React.FC<Props> = ({
             </div>
           </MdCard>
 
-          {/* SECTION A: خريطة مطابقة الـ 7 طبقات في شارت ثاندر (When mapping or all selected) */}
-          {(thndrSectionFilter === 'mapping' || thndrSectionFilter === 'all') && !thndrSearchQuery && (
-            <div className="space-y-5">
-              {/* Main Badge & Verification Banner */}
-              <div className="bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/40 rounded-[22px] p-5 shadow-sm space-y-4">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="w-12 h-12 rounded-[16px] bg-emerald-500 text-white flex items-center justify-center font-bold text-2xl shadow-md">
-                      🏛️
-                    </span>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg font-extrabold text-md-on-surface">
-                          خريطة مطابقة الـ 7 طبقات مع قالب BADRAN المعتمد على ثاندر
-                        </h3>
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500 text-white shadow-sm flex items-center gap-1">
-                          <CheckCircle2 size={13} />
-                          <span>قالب BADRAN محفوظ ومفعّل 100%</span>
-                        </span>
-                      </div>
-                      <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
-                        الـ 5 مؤشرات المثبتة حالياً على شارتك في ثاندر تغطي كل مراحل اتخاذ القرار السبع في موقعنا بدون أي نقص أو تكرار!
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Summary Metric Chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="bg-md-surface/90 border border-emerald-500/30 rounded-[14px] px-3 py-1.5 text-center">
-                      <div className="text-[10px] text-md-on-surface-variant font-bold">المؤشرات على الشارت</div>
-                      <div className="text-sm font-mono font-extrabold text-emerald-600 dark:text-emerald-400">5 مؤشرات نظيفة</div>
-                    </div>
-                    <div className="bg-md-surface/90 border border-emerald-500/30 rounded-[14px] px-3 py-1.5 text-center">
-                      <div className="text-[10px] text-md-on-surface-variant font-bold">تغطية المراحل</div>
-                      <div className="text-sm font-mono font-extrabold text-md-primary">7 من 7 طبقات</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Interactive Matrix / Comparison Table */}
-                <div className="overflow-x-auto rounded-[16px] border border-emerald-500/25 bg-md-surface/95 shadow-inner">
-                  <table className="w-full text-right text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-emerald-500/10 border-b border-emerald-500/20 text-md-on-surface font-extrabold">
-                        <th className="p-3 w-12 text-center">#</th>
-                        <th className="p-3">الطبقة في منظومة الموقع</th>
-                        <th className="p-3">المؤشر المثبت في ثاندر (قالب BADRAN)</th>
-                        <th className="p-3">المؤشر الموازي في تريدنج فيو والموقع</th>
-                        <th className="p-3 text-center">موضع العرض</th>
-                        <th className="p-3">طريقة قراءة الإشارة بالبلدي</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-md-outline-variant/30 font-medium">
-                      {THNDR_SEVEN_LAYERS_MAPPING.map((row) => (
-                        <tr key={row.layerNumber} className="hover:bg-emerald-500/5 transition-colors">
-                          <td className="p-3 text-center font-mono font-bold">
-                            <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 inline-flex items-center justify-center text-xs">
-                              {row.layerNumber}
-                            </span>
-                          </td>
-                          <td className="p-3 font-bold text-md-on-surface">
-                            <div>{row.layerName}</div>
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">{row.mirrorName}</span>
-                          </td>
-                          <td className="p-3">
-                            <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md text-[11px] inline-block">
-                              {row.installedInBadranTemplate}
-                            </span>
-                          </td>
-                          <td className="p-3 text-md-on-surface-variant font-mono text-[11px]">
-                            {row.equivalentInOurSystem}
-                          </td>
-                          <td className="p-3 text-center">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              row.coverageType === 'شارت ثاندر المباشر'
-                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                : row.coverageType === 'لوحة الزخم السفلية'
-                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                            }`}>
-                              {row.coverageType}
-                            </span>
-                          </td>
-                          <td className="p-3 text-xs text-md-on-surface leading-relaxed max-w-xs">
-                            {row.whatToLookFor}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Detailed 7 Layers Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
-                {THNDR_SEVEN_LAYERS_MAPPING.map((m) => (
-                  <div 
-                    key={m.layerNumber}
-                    className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[20px] p-4.5 space-y-3.5 flex flex-col justify-between hover:border-emerald-500/50 transition-all duration-200 shadow-sm"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-mono font-bold flex items-center justify-center text-xs shadow-sm">
-                            {m.layerNumber}
-                          </span>
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                            {m.mirrorName}
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-md-surface text-md-on-surface-variant border border-md-outline-variant/40">
-                          {m.coverageType}
-                        </span>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-extrabold text-md-on-surface">
-                          {m.layerName}
-                        </h4>
-                        <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block mt-0.5">
-                          💡 {m.analogyTitle}
-                        </span>
-                      </div>
-
-                      {/* BADRAN Template Indicator Highlight */}
-                      <div className="p-3 bg-emerald-500/10 rounded-[14px] border border-emerald-500/30 space-y-1">
-                        <span className="font-extrabold text-emerald-700 dark:text-emerald-300 block text-[11px] flex items-center gap-1.5">
-                          <CheckCircle2 size={13} className="text-emerald-600" />
-                          <span>المؤشر المثبت في قالب BADRAN:</span>
-                        </span>
-                        <p className="font-mono font-extrabold text-xs text-md-on-surface">
-                          {m.installedInBadranTemplate}
-                        </p>
-                      </div>
-
-                      {/* Mirror in Our System */}
-                      <div className="p-2.5 bg-md-surface rounded-[12px] border border-md-outline-variant/40 space-y-0.5">
-                        <span className="font-bold text-md-primary block text-[10px] flex items-center gap-1">
-                          <Sparkles size={11} />
-                          <span>المؤشر الموازي في المعمل وتريدنج فيو:</span>
-                        </span>
-                        <p className="font-mono text-[11px] text-md-on-surface font-semibold leading-relaxed">
-                          {m.equivalentInOurSystem}
-                        </p>
-                      </div>
-
-                      {/* Baladi Explanation */}
-                      <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                        {m.explanationBaladi}
-                      </p>
-
-                      {/* How it is applied */}
-                      <div className="p-2.5 bg-md-surface-container rounded-[12px] border border-md-outline-variant/30 text-[11px] space-y-0.5">
-                        <span className="font-bold text-md-on-surface block text-[10px]">⚙️ وضعه الحالي في ثاندر:</span>
-                        <p className="text-md-on-surface-variant leading-relaxed text-[10px]">
-                          {m.howToApplyInThndr}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="pt-2.5 border-t border-md-outline-variant/30 text-[11px] text-emerald-700 dark:text-emerald-300 font-extrabold flex items-start gap-1.5">
-                      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-600" />
-                      <span>علامة الشراء المؤكدة: {m.whatToLookFor}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION A2: استراتيجية وخريطة طريق التحليل واتخاذ القرار بقالب BADRAN */}
-          {/* ========================================================================= */}
-          {(thndrSectionFilter === 'playbook' || thndrSectionFilter === 'all') && !thndrSearchQuery && (
-            <div className="space-y-6 pt-2">
-              {/* Playbook Hero Header */}
-              <div className="bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-purple-600/10 border-2 border-blue-500/35 rounded-[22px] p-5 shadow-sm space-y-4">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="w-12 h-12 rounded-[16px] bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-2xl shadow-md">
-                      🧭
-                    </span>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg font-extrabold text-md-on-surface">
-                          {BADRAN_STRATEGY_PLAYBOOK.suiteTitle}
-                        </h3>
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-600 text-white shadow-sm flex items-center gap-1">
-                          <CheckCircle2 size={13} />
-                          <span>8 مؤشرات متكاملة بقالب BADRAN</span>
-                        </span>
-                      </div>
-                      <p className="text-xs text-blue-700 dark:text-blue-300 font-medium max-w-2xl leading-relaxed">
-                        {BADRAN_STRATEGY_PLAYBOOK.suiteSubtitle}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Summary Metric Chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="bg-md-surface/90 border border-blue-500/30 rounded-[14px] px-3.5 py-1.5 text-center">
-                      <div className="text-[10px] text-md-on-surface-variant font-bold">تسلسل الخطوات</div>
-                      <div className="text-sm font-mono font-extrabold text-blue-600 dark:text-blue-400">6 خطوات صارمة</div>
-                    </div>
-                    <div className="bg-md-surface/90 border border-blue-500/30 rounded-[14px] px-3.5 py-1.5 text-center">
-                      <div className="text-[10px] text-md-on-surface-variant font-bold">فئات المستثمرين</div>
-                      <div className="text-sm font-mono font-extrabold text-purple-600 dark:text-purple-400">3 فئات واضحة</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 1. الترتيب التسلسلي الصارم لعملية التحليل (6 خطوات بالترتيب) */}
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-full bg-blue-600 text-white font-mono font-bold flex items-center justify-center text-xs">
-                      1
-                    </span>
-                    <h4 className="text-base font-extrabold text-md-on-surface">
-                      الترتيب التسلسلي الصارم: تبدأ بمؤشر إيه الأول وتقيس إشاراته إزاي؟
-                    </h4>
-                  </div>
-                  <span className="text-xs text-md-on-surface-variant font-medium hidden sm:inline-block">
-                    اضغط على أي خطوة للاطلاع على تفاصيلها والتريكات
-                  </span>
-                </div>
-
-                {/* Step Selector Horizontal Pills */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
-                  {BADRAN_STRATEGY_PLAYBOOK.steps.map((st) => (
-                    <button
-                      key={st.stepNumber}
-                      onClick={() => setActiveStepTab(st.stepNumber)}
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-full font-bold transition-all duration-200 select-none whitespace-nowrap border ${
-                        activeStepTab === st.stepNumber
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                          : 'bg-md-surface-container-low text-md-on-surface-variant border-md-outline-variant/50 hover:bg-md-surface-container'
-                      }`}
-                    >
-                      <span className="w-5 h-5 rounded-full bg-white/20 text-current flex items-center justify-center font-mono text-[10px]">
-                        {st.stepNumber}
-                      </span>
-                      <span>{st.stepName.split('(')[0].trim()}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Active Step Detailed Card */}
-                {(() => {
-                  const currStep = BADRAN_STRATEGY_PLAYBOOK.steps.find(s => s.stepNumber === activeStepTab) || BADRAN_STRATEGY_PLAYBOOK.steps[0];
-                  return (
-                    <div className="bg-md-surface-container-low border-2 border-blue-500/30 rounded-[22px] p-5 shadow-sm space-y-4">
-                      {/* Step Header */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-md-outline-variant/30">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-8 h-8 rounded-[12px] bg-blue-600 text-white font-mono font-extrabold flex items-center justify-center text-sm shadow-sm">
-                            #{currStep.stepNumber}
-                          </span>
-                          <div>
-                            <h5 className="text-base font-extrabold text-md-on-surface">
-                              {currStep.stepName}
-                            </h5>
-                            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                              المؤشر المستخدم: <span className="font-mono">{currStep.indicatorUsed}</span> • ({currStep.indicatorLocation})
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setActiveStepTab(prev => Math.max(1, prev - 1))}
-                            disabled={currStep.stepNumber === 1}
-                            className="px-2.5 py-1 rounded-md text-xs font-bold border border-md-outline-variant/50 disabled:opacity-30"
-                          >
-                            السابق
-                          </button>
-                          <button
-                            onClick={() => setActiveStepTab(prev => Math.min(6, prev + 1))}
-                            disabled={currStep.stepNumber === 6}
-                            className="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-600 text-white disabled:opacity-30"
-                          >
-                            التالي
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Core Question */}
-                      <div className="p-3 bg-blue-500/10 rounded-[14px] border border-blue-500/25 space-y-0.5">
-                        <span className="text-[11px] font-extrabold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-                          <HelpCircle size={13} />
-                          <span>السؤال الجوهري الذي تسأله لنفسك في هذه الخطوة:</span>
-                        </span>
-                        <p className="text-xs font-bold text-md-on-surface leading-relaxed">
-                          "{currStep.coreQuestion}"
-                        </p>
-                      </div>
-
-                      {/* Signals Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        {/* Bullish */}
-                        <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-[16px] space-y-1">
-                          <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
-                            <CheckCircle2 size={14} className="text-emerald-600" />
-                            <span>إشارة الشراء الخضراء المؤكدة (Bullish Signal):</span>
-                          </span>
-                          <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                            {currStep.bullishSignal}
-                          </p>
-                        </div>
-
-                        {/* Bearish */}
-                        <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-[16px] space-y-1">
-                          <span className="text-xs font-extrabold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
-                            <ShieldAlert size={14} className="text-rose-600" />
-                            <span>إشارة الحذر أو المنع (Bearish / Warning):</span>
-                          </span>
-                          <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                            {currStep.bearishSignal}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Pitfall vs Pro Trick */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
-                        {/* Pitfall */}
-                        <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-[16px] space-y-1">
-                          <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                            <AlertTriangle size={14} className="text-amber-600" />
-                            <span>⚠️ الخطأ الشائع الذي يقع فيه أغلب الناس:</span>
-                          </span>
-                          <p className="text-xs text-md-on-surface-variant leading-relaxed">
-                            {currStep.commonPitfall}
-                          </p>
-                        </div>
-
-                        {/* Pro Trick */}
-                        <div className="p-3.5 bg-purple-500/10 border border-purple-500/30 rounded-[16px] space-y-1">
-                          <span className="text-xs font-extrabold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                            <Sparkles size={14} className="text-purple-600" />
-                            <span>💡 تريكة المحترفين وصناع السوق:</span>
-                          </span>
-                          <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                            {currStep.proTrick}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* 2. شجرة القرار: تحديد هوية المتداول (مستثمر طويل vs سوينج vs مضارب) */}
-              <div className="space-y-3.5 pt-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-purple-600 text-white font-mono font-bold flex items-center justify-center text-xs">
-                    2
-                  </span>
-                  <div>
-                    <h4 className="text-base font-extrabold text-md-on-surface">
-                      شجرة القرار: أنت داخل كمستثمر طويل ولا سوينج متوسط ولا مضارب لحظي؟
-                    </h4>
-                    <span className="text-xs text-md-on-surface-variant">
-                      لكل أسلوب فريم محدد، وشروط دخول مختلفة، ونسبة وقف ومستهدف متباينة
-                    </span>
-                  </div>
-                </div>
-
-                {/* Profile Tabs */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {BADRAN_STRATEGY_PLAYBOOK.profiles.map((prof) => (
-                    <button
-                      key={prof.type}
-                      onClick={() => setSelectedProfile(prof.type)}
-                      className={`p-4 rounded-[20px] border text-right transition-all duration-200 flex flex-col justify-between space-y-2 ${
-                        selectedProfile === prof.type
-                          ? 'bg-purple-500/15 border-purple-500 shadow-sm'
-                          : 'bg-md-surface-container-low border-md-outline-variant/60 hover:bg-md-surface-container'
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <span className="text-xs font-extrabold text-purple-600 dark:text-purple-400 block">
-                          {prof.title}
-                        </span>
-                        <div className="text-[11px] text-md-on-surface-variant font-medium">
-                          الفريم: <span className="font-bold text-md-on-surface">{prof.timeframeUsed}</span>
-                        </div>
-                      </div>
-                      <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-md-surface w-fit text-md-on-surface-variant border border-md-outline-variant/30">
-                        المدة: {prof.holdingPeriod}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Selected Profile Detailed Specs Card */}
-                {(() => {
-                  const prof = BADRAN_STRATEGY_PLAYBOOK.profiles.find(p => p.type === selectedProfile) || BADRAN_STRATEGY_PLAYBOOK.profiles[1];
-                  return (
-                    <div className="bg-md-surface-container-low border border-purple-500/30 rounded-[22px] p-5 shadow-sm space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-md-outline-variant/30">
-                        <div>
-                          <h5 className="text-base font-extrabold text-purple-700 dark:text-purple-300">
-                            {prof.title}
-                          </h5>
-                          <p className="text-xs text-md-on-surface-variant font-medium mt-0.5">
-                            {prof.baladiSummary}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 font-mono text-xs font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full border border-purple-500/25">
-                          <span>نسبة العائد إلى المخاطرة:</span>
-                          <span>{prof.riskRewardMin}</span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
-                        {/* Entry Condition */}
-                        <div className="p-3.5 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-1">
-                          <span className="font-extrabold text-md-primary block text-[11px] flex items-center gap-1">
-                            <Target size={13} />
-                            <span>شروط الدخول المعتمدة:</span>
-                          </span>
-                          <p className="text-md-on-surface-variant leading-relaxed">
-                            {prof.entryCondition}
-                          </p>
-                        </div>
-
-                        {/* Stop Loss Rule */}
-                        <div className="p-3.5 bg-rose-500/10 rounded-[16px] border border-rose-500/25 space-y-1">
-                          <span className="font-extrabold text-rose-700 dark:text-rose-300 block text-[11px] flex items-center gap-1">
-                            <ShieldAlert size={13} />
-                            <span>قاعدة وقف الخسارة الصارمة:</span>
-                          </span>
-                          <p className="text-md-on-surface-variant leading-relaxed">
-                            {prof.stopLossRule}
-                          </p>
-                        </div>
-
-                        {/* Take Profit Rule */}
-                        <div className="p-3.5 bg-emerald-500/10 rounded-[16px] border border-emerald-500/25 space-y-1">
-                          <span className="font-extrabold text-emerald-700 dark:text-emerald-300 block text-[11px] flex items-center gap-1">
-                            <Award size={13} />
-                            <span>قاعدة جني الأرباح (TP1 & TP2):</span>
-                          </span>
-                          <p className="text-md-on-surface-variant leading-relaxed">
-                            {prof.takeProfitRule}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* 3. معادلة التنفيذ بالمليم (Entry, Stop Loss, TP1, TP2) */}
-              <div className="space-y-3.5 pt-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-emerald-600 text-white font-mono font-bold flex items-center justify-center text-xs">
-                    3
-                  </span>
-                  <div>
-                    <h4 className="text-base font-extrabold text-md-on-surface">
-                      معادلة التنفيذ بالمليم: هتدخل فين بالظبط والستوب لوس وجني الأرباح فين؟
-                    </h4>
-                    <span className="text-xs text-md-on-surface-variant">
-                      قواعد رياضية دقيقة مبنية على كتل الأوردر بلوك ومستويات فيبوناتشي
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                  {/* Entry Card */}
-                  <div className="p-4 bg-blue-500/10 border-2 border-blue-500/30 rounded-[18px] space-y-2 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-                          <Target size={14} className="text-blue-600" />
-                          <span>1. نقطة الدخول الدقيقة</span>
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300">
-                          سعر الشراء
-                        </span>
-                      </div>
-                      <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                        {BADRAN_STRATEGY_PLAYBOOK.execution.entryPriceRule}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Stop Loss Card */}
-                  <div className="p-4 bg-rose-500/10 border-2 border-rose-500/30 rounded-[18px] space-y-2 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
-                          <ShieldAlert size={14} className="text-rose-600" />
-                          <span>2. وقف الخسارة بالقرش</span>
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-300">
-                          خط أحمر
-                        </span>
-                      </div>
-                      <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                        {BADRAN_STRATEGY_PLAYBOOK.execution.stopLossExactRule}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* TP1 Card */}
-                  <div className="p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-[18px] space-y-2 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                          <Award size={14} className="text-amber-600" />
-                          <span>3. الهدف الأول (TP1)</span>
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                          تأمين كاش 50%
-                        </span>
-                      </div>
-                      <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                        {BADRAN_STRATEGY_PLAYBOOK.execution.takeProfitStage1Rule}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* TP2 Card */}
-                  <div className="p-4 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-[18px] space-y-2 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
-                          <Zap size={14} className="text-emerald-600" />
-                          <span>4. الهدف الثاني (TP2)</span>
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                          حصد الرالي 50%
-                        </span>
-                      </div>
-                      <p className="text-xs text-md-on-surface-variant leading-relaxed font-medium">
-                        {BADRAN_STRATEGY_PLAYBOOK.execution.takeProfitStage2Rule}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Golden Risk Rule Banner */}
-                <div className="p-3 bg-gradient-to-r from-amber-500/15 to-transparent border border-amber-500/35 rounded-[16px] flex items-center gap-2.5">
-                  <span className="text-base">⚖️</span>
-                  <p className="text-xs font-extrabold text-amber-800 dark:text-amber-200">
-                    {BADRAN_STRATEGY_PLAYBOOK.execution.goldenRiskRule}
-                  </p>
-                </div>
-              </div>
-
-              {/* 4. أشهر 5 أخطاء وتريكات بيقع فيها أغلب المتداولين */}
-              <div className="space-y-3.5 pt-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-rose-600 text-white font-mono font-bold flex items-center justify-center text-xs">
-                    4
-                  </span>
-                  <div>
-                    <h4 className="text-base font-extrabold text-md-on-surface">
-                      أشهر 5 أخطاء وتريكات يقع فيها 90% من المتداولين ولازم تتفاداها
-                    </h4>
-                    <span className="text-xs text-md-on-surface-variant">
-                      الفارق الحقيقي بين المتداول المحترف والهاوي الذي يخسر أرباحه
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {BADRAN_STRATEGY_PLAYBOOK.top5Mistakes.map((mis) => (
-                    <div
-                      key={mis.id}
-                      className="bg-md-surface-container-low border border-md-outline-variant/60 rounded-[18px] p-4 space-y-2.5 flex flex-col justify-between hover:border-rose-500/40 transition-all duration-200 shadow-sm"
-                    >
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 font-mono font-bold text-xs flex items-center justify-center">
-                            {mis.id}
-                          </span>
-                          <h5 className="text-xs font-extrabold text-md-on-surface">
-                            {mis.title}
-                          </h5>
-                        </div>
-                        <div className="p-2.5 bg-rose-500/10 rounded-[12px] border border-rose-500/20 text-[11px] space-y-0.5">
-                          <span className="font-bold text-rose-700 dark:text-rose-300 block text-[10px]">الخطأ بالبلدي:</span>
-                          <p className="text-md-on-surface-variant leading-relaxed">
-                            "{mis.mistakeBaladi}"
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-emerald-500/10 rounded-[12px] border border-emerald-500/20 text-[11px] space-y-0.5">
-                        <span className="font-bold text-emerald-700 dark:text-emerald-300 block text-[10px] flex items-center gap-1">
-                          <CheckCircle2 size={11} className="text-emerald-600" />
-                          <span>إزاي تتفاداه باحترافية:</span>
-                        </span>
-                        <p className="text-md-on-surface leading-relaxed font-medium">
-                          {mis.howToAvoid}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          {(thndrSectionFilter === 'glossary' || thndrSectionFilter === 'all') && !thndrSearchQuery && (
+          {/* SECTION B: قاموس مصطلحات البورصة بالبلدي (When glossary filter is selected) */}
+          {thndrSectionFilter === 'glossary' && (
             <div className="space-y-4 pt-2">
               <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/30 rounded-[20px] p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -917,7 +332,8 @@ export const EducationView: React.FC<Props> = ({
           )}
 
           {/* SECTION C: مكتبة وفهرس مؤشرات ثاندر الـ 95+ (All Indicators List) */}
-          <div className="space-y-4 pt-2">
+          {thndrSectionFilter !== 'glossary' && (
+            <div className="space-y-4 pt-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-8 h-8 rounded-[12px] bg-md-primary/10 text-md-primary flex items-center justify-center font-bold text-sm">
@@ -1037,6 +453,7 @@ export const EducationView: React.FC<Props> = ({
               })}
             </div>
           </div>
+            )}
         </div>
       )}
 

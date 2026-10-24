@@ -74,8 +74,8 @@ export default {
         'md-5': '0px 4px 4px 0px rgba(0, 0, 0, 0.30), 0px 8px 12px 6px rgba(0, 0, 0, 0.15)',
       },
       fontFamily: {
-        sans: ['Roboto', 'Alexandria', 'Cairo', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+        sans: ['"IBM Plex Sans Arabic"', 'Cairo', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'Fira Code', 'monospace']
       }
     },
   },

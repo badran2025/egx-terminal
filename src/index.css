@@ -109,7 +109,8 @@
     --hover-bg: var(--md-sys-color-surface-container-highest);
   }
 
-  body {
+  html, body {
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', system-ui, -apple-system, sans-serif;
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, Briefcase, Coins, Newspaper, RefreshCw, 
-  Search, Sun, Moon, Sparkles, Zap, GraduationCap
+  Search, Sun, Moon, Sparkles, Zap, GraduationCap, Compass
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from './types';
 import { fetchEGXStocks, getFallbackStocks } from './services/egxService';
 import { HeaderTicker } from './components/HeaderTicker';
 import { RadarAndRecommendationsView } from './components/RadarAndRecommendationsView';
+import { BadranStrategyView } from './components/BadranStrategyView';
 import { PortfolioView } from './components/PortfolioView';
 import { FundsView } from './components/FundsView';
 import { NewsView } from './components/NewsView';
@@ -14,7 +15,7 @@ import { EducationView } from './components/EducationView';
 import { StockDetailModal } from './components/StockDetailModal';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'radar' | 'portfolio' | 'education' | 'funds' | 'news'>('radar');
+  const [activeTab, setActiveTab] = useState<'radar' | 'badran_strategy' | 'portfolio' | 'education' | 'funds' | 'news'>('radar');
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -146,24 +147,40 @@ export function App() {
 
           {/* Material 3 Navigation Bar (Pill Active Indicator) */}
           <nav className="flex items-center gap-1 bg-md-surface-container p-1 rounded-md-full border border-md-outline-variant/50 text-xs shadow-sm overflow-x-auto scrollbar-none">
-            {/* 1. الرادار الفني والتوصيات (يشمل التوصيات + جدول المؤشرات + المعمل العملي) */}
+            {/* 1. الرادار الفني والمعمل (يشمل شارت المعمل + 7 طبقات + مسح السوق) */}
             <button
               onClick={() => setActiveTab('radar')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
                 activeTab === 'radar' 
                   ? 'bg-md-secondary-container text-md-on-secondary-container shadow-sm ring-1 ring-md-primary/20' 
                   : 'text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high'
               }`}
             >
               <BarChart3 size={16} className={activeTab === 'radar' ? 'text-md-primary' : ''} />
-              <span>الرادار الفني والتوصيات 🎯</span>
+              <span>المعمل ورادار الأسهم 🎯</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
-            {/* 2. محفظة ثاندر الذكية */}
+            {/* 2. استراتيجية BADRAN (دليل وخريطة طريق التحليل والتنفيذ المعتمدة) */}
+            <button
+              onClick={() => setActiveTab('badran_strategy')}
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
+                activeTab === 'badran_strategy' 
+                  ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-500/40 font-bold' 
+                  : 'text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high'
+              }`}
+            >
+              <Compass size={16} className={activeTab === 'badran_strategy' ? 'text-white' : 'text-blue-500'} />
+              <span>استراتيجية BADRAN 🧭</span>
+              <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-1.5 py-0.2 rounded-full font-bold hidden sm:inline-block">
+                قالب معتمد
+              </span>
+            </button>
+
+            {/* 3. محفظة ثاندر الذكية */}
             <button
               onClick={() => setActiveTab('portfolio')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap relative ${
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap relative ${
                 activeTab === 'portfolio' 
                   ? 'bg-md-secondary-container text-md-on-secondary-container shadow-sm' 
                   : 'text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high'
@@ -178,10 +195,10 @@ export function App() {
               )}
             </button>
 
-            {/* 3. أكاديمية المؤشرات (الموسوعة بالبلدي + نظام الـ 7 طبقات) */}
+            {/* 4. أكاديمية المؤشرات (الموسوعة بالبلدي + نظام الـ 7 طبقات) */}
             <button
               onClick={() => setActiveTab('education')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
                 activeTab === 'education'
                   ? 'bg-md-secondary-container text-md-on-secondary-container shadow-sm' 
                   : 'text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high'
@@ -191,10 +208,10 @@ export function App() {
               <span>أكاديمية المؤشرات 🎓</span>
             </button>
 
-            {/* 4. صناديق الاستثمار (73) */}
+            {/* 5. صناديق الاستثمار (73) */}
             <button
               onClick={() => setActiveTab('funds')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
                 activeTab === 'funds' 
                   ? 'bg-md-secondary-container text-md-on-secondary-container shadow-sm' 
                   : 'text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high'
@@ -204,10 +221,10 @@ export function App() {
               <span>صناديق الاستثمار (73) 🪙</span>
             </button>
 
-            {/* 5. الإفصاحات والأخبار */}
+            {/* 6. الإفصاحات والأخبار */}
             <button
               onClick={() => setActiveTab('news')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-md-full font-semibold transition-all duration-200 select-none whitespace-nowrap ${
                 activeTab === 'news' 
                   ? 'bg-md-secondary-container text-md-on-secondary-container shadow-sm' 
                   : 'text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-surface-container-high'
@@ -267,6 +284,15 @@ export function App() {
           />
         )}
 
+        {activeTab === 'badran_strategy' && (
+          <BadranStrategyView 
+            onNavigateToLab={(sym) => handleOpenLabWithStock(sym || 'COMI')}
+            lastUpdated={lastUpdated}
+            onRefresh={loadData}
+            isLoading={isLoading}
+          />
+        )}
+
         {activeTab === 'portfolio' && (
           <PortfolioView 
             stocks={stocks}
@@ -288,6 +314,7 @@ export function App() {
             onRefresh={loadData}
             isLoading={isLoading}
             onNavigateToLab={() => setActiveTab('radar')}
+            onNavigateToBadranStrategy={() => setActiveTab('badran_strategy')}
           />
         )}
 
