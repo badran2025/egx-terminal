@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Coins, TrendingUp, TrendingDown, Search, ShieldCheck, Plus, Check } from 'lucide-react';
 import { MutualFund, PortfolioPosition } from '../types';
-import { EGYPTIAN_MUTUAL_FUNDS, LIVE_GOLD_24K_PRICE } from '../services/egxService';
+import { EGYPTIAN_MUTUAL_FUNDS, LIVE_GOLD_24K_PRICE, formatPrice } from '../services/egxService';
 import { MdCard, MdChip, MdTextField, MdBadge, MdButton } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -65,8 +65,8 @@ export const FundsView: React.FC<Props> = ({
         shares: 100,
         buyPrice: fund.nav || 10,
         buyDate: new Date().toISOString().split('T')[0],
-        stopLoss: Number(((fund.nav || 10) * 0.95).toFixed(2)),
-        targetPrice: Number(((fund.nav || 10) * 1.10).toFixed(2)),
+        stopLoss: Number(((fund.nav || 10) * 0.95).toFixed(5)),
+        targetPrice: Number(((fund.nav || 10) * 1.10).toFixed(5)),
         notes: `${fund.name} • تصنيف ${fund.category}`
       });
     }
@@ -182,7 +182,7 @@ export const FundsView: React.FC<Props> = ({
                       <div className="font-mono font-extrabold text-md-on-surface text-sm">
                         {fund.nav !== undefined ? (
                           <>
-                            <span>{fund.nav.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 })}</span>
+                            <span>{formatPrice(fund.nav, true)}</span>
                             <span className="text-[11px] text-md-on-surface-variant mr-1 font-sans font-normal">ج.م</span>
                           </>
                         ) : (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Clock, Activity, ShieldCheck, DollarSign } from 'lucide-react';
 import { StockData } from '../types';
-import { LIVE_GOLD_24K_PRICE } from '../services/egxService';
+import { LIVE_GOLD_24K_PRICE, formatPrice } from '../services/egxService';
 
 interface Props {
   stocks: StockData[];
@@ -83,7 +83,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
           className="flex items-center gap-2 cursor-pointer hover:bg-md-surface-container px-2.5 py-1 rounded-md-sm transition-colors flex-shrink-0"
         >
           <span className="font-bold text-md-on-surface">البنك التجاري الدولي (CIB)</span>
-          <span className="num-font text-md-on-surface font-semibold">{cib ? cib.close.toFixed(2) : '124.00'} ج.م</span>
+          <span className="num-font text-md-on-surface font-semibold">{cib ? formatPrice(cib.close) : '125.15'} ج.م</span>
           <span className={`num-font flex items-center gap-0.5 font-bold ${
             (cib?.changePercent ?? -1.45) >= 0 ? 'text-md-primary' : 'text-md-error'
           }`}>
@@ -98,7 +98,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
           className="flex items-center gap-2 cursor-pointer hover:bg-md-surface-container px-2.5 py-1 rounded-md-sm transition-colors flex-shrink-0"
         >
           <span className="font-bold text-md-on-surface">مجموعة طلعت مصطفى (TMG)</span>
-          <span className="num-font text-md-on-surface font-semibold">{tmgh ? tmgh.close.toFixed(2) : '88.50'} ج.م</span>
+          <span className="num-font text-md-on-surface font-semibold">{tmgh ? formatPrice(tmgh.close) : '87.00'} ج.م</span>
           <span className={`num-font flex items-center gap-0.5 font-bold ${
             (tmgh?.changePercent ?? 0.57) >= 0 ? 'text-md-primary' : 'text-md-error'
           }`}>
@@ -115,7 +115,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
             title="سعر جرام الذهب عيار 24 الرسمي في مصر ودهب ثاندر (اضغط للشارت)"
           >
             <span>🥇 ذهب 24 (ثاندر):</span>
-            <strong className="text-md-on-surface font-extrabold">{gold24Price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م</strong>
+            <strong className="text-md-on-surface font-extrabold">{formatPrice(gold24Price)} ج.م</strong>
           </div>
 
           <div 
@@ -123,7 +123,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks, onSelectStock }) => {
             title="سعر جرام الذهب عيار 21 الأكثر تداولاً في الصاغة المصرية"
           >
             <span>✨ عيار 21:</span>
-            <strong className="text-md-on-surface font-extrabold">{gold21Price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م</strong>
+            <strong className="text-md-on-surface font-extrabold">{formatPrice(gold21Price)} ج.م</strong>
           </div>
 
           <div 

@@ -9,7 +9,7 @@ import {
 import { StockData } from '../types';
 import { GROWTHX_SIMULATOR_CASES, StockSimulationCase, SimulatorLayerStep } from '../services/growthxSimulatorData';
 import { EGX_ARABIC_NAMES, StockMeta } from '../services/egxArabicNames';
-import { getFallbackStocks } from '../services/egxService';
+import { getFallbackStocks, formatPrice } from '../services/egxService';
 import { TradingViewWidget } from './TradingViewWidget';
 
 interface Props {
@@ -564,7 +564,7 @@ export const InteractiveStockLab: React.FC<Props> = ({
                       <div className="text-left font-mono">
                         {item.price && item.price > 0 && (
                           <span className="font-bold text-md-on-surface text-xs block">
-                            {item.price.toFixed(2)} ج.م
+                            {formatPrice(item.price)} ج.م
                           </span>
                         )}
                         {item.changePercent !== undefined && (

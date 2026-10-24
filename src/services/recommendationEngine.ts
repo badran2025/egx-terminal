@@ -1,5 +1,5 @@
 import { StockData, PortfolioPosition, MutualFund } from '../types';
-import { LIVE_GOLD_24K_PRICE } from './egxService';
+import { LIVE_GOLD_24K_PRICE, formatPrice } from './egxService';
 
 export type RecommendationType = 
   | 'STRONG_BUY'     // شراء قوي واختراق
@@ -281,8 +281,8 @@ export function diagnosePortfolioPosition(
     const cost = pos.buyPrice * pos.shares;
     const currentValue = Number((currentPrice * pos.shares).toFixed(2));
     const pnlPct = cost > 0 ? Number((((currentValue - cost) / cost) * 100).toFixed(2)) : 0;
-    const effectiveStop = pos.stopLoss || Number((pos.buyPrice * 0.95).toFixed(2));
-    const effectiveTarget = pos.targetPrice || Number((pos.buyPrice * 1.10).toFixed(2));
+    const effectiveStop = pos.stopLoss || Number((pos.buyPrice * 0.95).toFixed(5));
+    const effectiveTarget = pos.targetPrice || Number((pos.buyPrice * 1.10).toFixed(5));
 
     if (pnlPct >= 5) {
       return {
@@ -295,7 +295,7 @@ export function diagnosePortfolioPosition(
         currentValue,
         currentPrice,
         actionTitle: 'استثمار رابح • احتفاظ أو إعادة استثمار العوائد',
-        actionDetails: `صافي قيمة الوثيقة (NAV) ارتفعت إلى ${currentPrice.toFixed(2)} ج.م محققة عائداً ممتازاً (+${pnlPct.toFixed(1)}%). الصندوق يحقق أداءً قوياً ويُنصح بالاستمرار في التجميع مع استثمار التوزيعات الدورية.`,
+        actionDetails: `صافي قيمة الوثيقة (NAV) ارتفعت إلى ${formatPrice(currentPrice, true)} ج.م محققة عائداً ممتازاً (+${pnlPct.toFixed(1)}%). الصندوق يحقق أداءً قوياً ويُنصح بالاستمرار في التجميع مع استثمار التوزيعات الدورية.`,
         suggestedStopLoss: effectiveStop,
         suggestedTarget: effectiveTarget,
         priority: 'high'
@@ -311,7 +311,7 @@ export function diagnosePortfolioPosition(
         currentValue,
         currentPrice,
         actionTitle: 'الاحتفاظ والتجميع مع العائد التراكمي',
-        actionDetails: `سعر الوثيقة الحالي ${currentPrice.toFixed(2)} ج.م (تغير ${pnlPct >= 0 ? '+' : ''}${pnlPct}%). الصندوق مناسب تماماً للاستثمار وتنمية المدخرات على المدى المتوسط، مستهدف الصندوق عند ${effectiveTarget.toFixed(2)} ج.م.`,
+        actionDetails: `سعر الوثيقة الحالي ${formatPrice(currentPrice, true)} ج.م (تغير ${pnlPct >= 0 ? '+' : ''}${pnlPct}%). الصندوق مناسب تماماً للاستثمار وتنمية المدخرات على المدى المتوسط، مستهدف الصندوق عند ${formatPrice(effectiveTarget, true)} ج.م.`,
         suggestedStopLoss: effectiveStop,
         suggestedTarget: effectiveTarget,
         priority: 'normal'
@@ -343,7 +343,7 @@ export function diagnosePortfolioPosition(
         currentValue,
         currentPrice,
         actionTitle: 'جني الأرباح والتخارج الفوري لحماية المكاسب',
-        actionDetails: `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم والمتوسطات المتحركة. على الرغم من أن مركزك محقق ربحاً (+${pnlPct.toFixed(1)}%)، إلا أن استمرار الاحتفاظ يعرض أرباحك للتآكل. يُنصح بالخروج عند ${techStop.toFixed(2)} ج.م وتأمين السيولة.`,
+        actionDetails: `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم والمتوسطات المتحركة. على الرغم من أن مركزك محقق ربحاً (+${pnlPct.toFixed(1)}%)، إلا أن استمرار الاحتفاظ يعرض أرباحك للتآكل. يُنصح بالخروج عند ${formatPrice(techStop, liveStock?.isFund)} ج.م وتأمين السيولة.`,
         suggestedStopLoss: techStop,
         suggestedTarget: currentPrice,
         priority: 'high'
@@ -359,7 +359,7 @@ export function diagnosePortfolioPosition(
         currentValue,
         currentPrice,
         actionTitle: 'تفعيل وقف الخسارة فوراً لحماية رأس المال',
-        actionDetails: `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم الفني (${techStop.toFixed(2)} ج.م). الإجراء الاحترافي هو الخروج لحماية رأس المال وإعادة التمركز بعد تأكيد الاستقرار.`,
+        actionDetails: `تحذير فني: السهم في وضع سلبي وكسر لمستويات الدعم الفني (${formatPrice(techStop, liveStock?.isFund)} ج.م). الإجراء الاحترافي هو الخروج لحماية رأس المال وإعادة التمركز بعد تأكيد الاستقرار.`,
         suggestedStopLoss: techStop,
         suggestedTarget: techTarget1,
         priority: 'high'
@@ -379,7 +379,7 @@ export function diagnosePortfolioPosition(
       currentValue,
       currentPrice,
       actionTitle: 'جني 50% من الأرباح ورفع الوقف لسعر الدخول',
-      actionDetails: `حقق السهم مستهدفه الفني الأول عند (${techTarget1.toFixed(2)} ج.م) بربح (+${pnlPct.toFixed(1)}%). يُوصى ببيع نصف الكمية لتأمين المكاسب ورفع وقف الخسارة للنصف المتبقي إلى سعر الشراء (${pos.buyPrice.toFixed(2)} ج.م).`,
+      actionDetails: `حقق السهم مستهدفه الفني الأول عند (${formatPrice(techTarget1, liveStock?.isFund)} ج.م) بربح (+${pnlPct.toFixed(1)}%). يُوصى ببيع نصف الكمية لتأمين المكاسب ورفع وقف الخسارة للنصف المتبقي إلى سعر الشراء (${formatPrice(pos.buyPrice, pos.isFund)} ج.م).`,
       suggestedStopLoss: pos.buyPrice,
       suggestedTarget: stockRec.target2,
       priority: 'high'
@@ -398,7 +398,7 @@ export function diagnosePortfolioPosition(
       currentValue,
       currentPrice,
       actionTitle: 'استمرار الاحتفاظ مع رفع الوقف لاستهداف المقاومة',
-      actionDetails: `السهم يتمتع بزخم شرائي مؤسسي عالي وتداول فوق المتوسطات. استمر في الاحتفاظ لاستهداف ${techTarget1.toFixed(2)} ج.م (+${stockRec.target1Pct}%) مع وضع وقف الخسارة عند ${techStop.toFixed(2)} ج.م.`,
+      actionDetails: `السهم يتمتع بزخم شرائي مؤسسي عالي وتداول فوق المتوسطات. استمر في الاحتفاظ لاستهداف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م (+${stockRec.target1Pct}%) مع وضع وقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
       suggestedStopLoss: techStop,
       suggestedTarget: techTarget1,
       priority: 'normal'
@@ -417,7 +417,7 @@ export function diagnosePortfolioPosition(
       currentValue,
       currentPrice,
       actionTitle: 'الاحتفاظ لتحقيق المستهدف السريع',
-      actionDetails: `إشارة ارتداد إيجابية من مستويات الدعم. استمر في المركز لاستهداف ${techTarget1.toFixed(2)} ج.م مع الالتزام بوقف الخسارة عند ${techStop.toFixed(2)} ج.م.`,
+      actionDetails: `إشارة ارتداد إيجابية من مستويات الدعم. استمر في المركز لاستهداف ${formatPrice(techTarget1, liveStock?.isFund)} ج.م مع الالتزام بوقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
       suggestedStopLoss: techStop,
       suggestedTarget: techTarget1,
       priority: 'normal'
@@ -436,7 +436,7 @@ export function diagnosePortfolioPosition(
       currentValue,
       currentPrice,
       actionTitle: 'تبريد مدروس بالقرب من مستويات الدعم',
-      actionDetails: `السهم في منطقة قاع وتشبع بيعي (RSI ${liveStock.rsi.toFixed(1)}). إذا كنت مستثمراً متوسط الأجل، يمكنك إضافة كمية لتعديل متوسط الشراء بشرط عدم كسر الدعم S2 (${liveStock.support2.toFixed(2)} ج.م).`,
+      actionDetails: `السهم في منطقة قاع وتشبع بيعي (RSI ${liveStock.rsi.toFixed(1)}). إذا كنت مستثمراً متوسط الأجل، يمكنك إضافة كمية لتعديل متوسط الشراء بشرط عدم كسر الدعم S2 (${formatPrice(liveStock.support2, liveStock?.isFund)} ج.م).`,
       suggestedStopLoss: liveStock.support2,
       suggestedTarget: liveStock.pivot,
       priority: 'medium'
@@ -455,7 +455,7 @@ export function diagnosePortfolioPosition(
       currentValue,
       currentPrice,
       actionTitle: 'احتفاظ مع مراقبة مستويات المقاومة',
-      actionDetails: `المركز محقق ربحاً (+${pnlPct.toFixed(1)}%) ويتداول في مسار مستقر. استمر في الاحتفاظ حتى تحقيق المستهدف (${techTarget1.toFixed(2)} ج.م) مع الحفاظ على وقف الخسارة عند ${techStop.toFixed(2)} ج.م.`,
+      actionDetails: `المركز محقق ربحاً (+${pnlPct.toFixed(1)}%) ويتداول في مسار مستقر. استمر في الاحتفاظ حتى تحقيق المستهدف (${formatPrice(techTarget1, liveStock?.isFund)} ج.م) مع الحفاظ على وقف الخسارة عند ${formatPrice(techStop, liveStock?.isFund)} ج.م.`,
       suggestedStopLoss: techStop,
       suggestedTarget: techTarget1,
       priority: 'normal'
@@ -472,7 +472,7 @@ export function diagnosePortfolioPosition(
     currentValue,
     currentPrice,
     actionTitle: 'احتفاظ حذر ومتابعة مستويات الدعم',
-    actionDetails: `التراجع الحالي (-${Math.abs(pnlPct).toFixed(1)}%) لا يزال أعلى من نقطة وقف الخسارة (${techStop.toFixed(2)} ج.م). راقب الجلسة القادمة والتزم بالخروج في حال كسر الدعم.`,
+    actionDetails: `التراجع الحالي (-${Math.abs(pnlPct).toFixed(1)}%) لا يزال أعلى من نقطة وقف الخسارة (${formatPrice(techStop, liveStock?.isFund)} ج.م). راقب الجلسة القادمة والتزم بالخروج في حال كسر الدعم.`,
     suggestedStopLoss: techStop,
     suggestedTarget: techTarget1,
     priority: 'normal'

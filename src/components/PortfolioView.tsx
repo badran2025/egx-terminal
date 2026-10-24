@@ -6,20 +6,13 @@ import {
   CheckCircle2, ArrowUpRight, Search, Upload, Pencil
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
-import { EGYPTIAN_MUTUAL_FUNDS, LIVE_GOLD_24K_PRICE } from '../services/egxService';
+import { EGYPTIAN_MUTUAL_FUNDS, LIVE_GOLD_24K_PRICE, formatPrice } from '../services/egxService';
 import { EGX_ARABIC_NAMES } from '../services/egxArabicNames';
 import { MdCard, MdButton, MdBadge, MdTextField } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
-// Helper function to format prices without forced rounding on mutual funds
-export const formatAssetPrice = (price: number, isFund?: boolean): string => {
-  if (price === undefined || price === null || isNaN(price)) return '0.00';
-  if (isFund) {
-    // Keep exact decimals up to 5 places for mutual fund NAVs (e.g. 1.39832, 2.14964, 218.27304)
-    return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 });
-  }
-  return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+// Unified helper function to format prices without forced rounding on mutual funds or exact decimals
+export const formatAssetPrice = formatPrice;
 
 interface Props {
   stocks: StockData[];
@@ -261,6 +254,9 @@ export const PortfolioView: React.FC<Props> = ({
 
   const numBuyPrice = parsedBuyPrice || (currentSelectedStock ? currentSelectedStock.close : 0);
   
+  const isFundActive = assetType === 'fund' || fundMap.has(symbol.trim().toUpperCase());
+  const precision = isFundActive ? 5 : 2;
+
   // S1: Stop Loss
   let computedStopLoss = numBuyPrice * 0.95;
   if (currentSelectedStock && currentSelectedStock.support1 > 0) {
@@ -270,7 +266,7 @@ export const PortfolioView: React.FC<Props> = ({
       computedStopLoss = numBuyPrice * 0.95;
     }
   }
-  computedStopLoss = Number(computedStopLoss.toFixed(2));
+  computedStopLoss = Number(computedStopLoss.toFixed(precision));
 
   // R1: Target 1
   let computedTarget1 = numBuyPrice * 1.08;
@@ -281,7 +277,7 @@ export const PortfolioView: React.FC<Props> = ({
       computedTarget1 = numBuyPrice * 1.08;
     }
   }
-  computedTarget1 = Number(computedTarget1.toFixed(2));
+  computedTarget1 = Number(computedTarget1.toFixed(precision));
 
   // R2: Target 2
   let computedTarget2 = computedTarget1 * 1.10;
@@ -289,10 +285,10 @@ export const PortfolioView: React.FC<Props> = ({
     if (currentSelectedStock.resistance2 > computedTarget1 && currentSelectedStock.resistance2 <= numBuyPrice * 1.60) {
       computedTarget2 = currentSelectedStock.resistance2;
     } else {
-      computedTarget2 = Number((computedTarget1 * 1.10).toFixed(2));
+      computedTarget2 = Number((computedTarget1 * 1.10).toFixed(precision));
     }
   }
-  computedTarget2 = Number(computedTarget2.toFixed(2));
+  computedTarget2 = Number(computedTarget2.toFixed(precision));
 
   // Filtered asset suggestions when typing symbol
   const assetSuggestions = React.useMemo(() => {
@@ -909,17 +905,17 @@ export const PortfolioView: React.FC<Props> = ({
                   onChange={(e) => {
                     const sym = e.target.value.toUpperCase();
                     setSymbol(sym);
-                    const s = stockMap.get(sym);
                     const f = fundMap.get(sym);
+                    const s = stockMap.get(sym);
                     if (sym.includes('GOLD') || sym.includes('ذهب') || sym.includes('دهب') || sym === 'AZG') {
                       setAssetType('gold');
                       if (!buyPrice) setBuyPrice(String(liveGoldSellPrice));
-                    } else if (s) {
-                      if (!buyPrice) setBuyPrice(String(s.close));
-                      setAssetType('stock');
                     } else if (f) {
                       if (!buyPrice) setBuyPrice(String(f.nav || 0));
                       setAssetType('fund');
+                    } else if (s) {
+                      if (!buyPrice) setBuyPrice(String(s.close));
+                      setAssetType(s.isFund ? 'fund' : 'stock');
                     }
                   }}
                   placeholder={isGoldActive ? "صندوق دهب ثاندر (THNDRGOLD)" : "ابحث بالاسم أو الرمز: حديد عز، سوديك، فوري، دهب ثاندر، ESRS..."}

@@ -5,6 +5,7 @@ import {
   Activity, ArrowUpRight
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
+import { formatPrice } from '../services/egxService';
 import { TradingViewWidget } from './TradingViewWidget';
 import { MdButton, MdBadge } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
@@ -31,14 +32,15 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
   const isBearish = stock.recommendationScore < -0.08;
 
   // System automatically calculates stop-loss and targets based on technical analysis
-  const autoStopLoss = Number(stock.support1.toFixed(2));
-  const autoTarget1 = Number(stock.resistance1.toFixed(2));
-  const autoTarget2 = Number(stock.resistance2.toFixed(2));
+  const precision = stock.isFund ? 5 : 2;
+  const autoStopLoss = Number(stock.support1.toFixed(precision));
+  const autoTarget1 = Number(stock.resistance1.toFixed(precision));
+  const autoTarget2 = Number(stock.resistance2.toFixed(precision));
 
   const handleAdd = () => {
     onAddToPortfolio({
       symbol: stock.symbol,
-      assetType: 'stock',
+      assetType: stock.isFund ? 'fund' : 'stock',
       buyPrice: stock.close,
       shares: sharesToAdd,
       buyDate: new Date().toISOString().split('T')[0],
@@ -95,7 +97,7 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
                 )}
               </div>
               <div className="flex items-center gap-4 mt-1">
-                <span className="font-mono text-2xl font-extrabold text-md-on-surface">{stock.close.toFixed(2)} ج.م</span>
+                <span className="font-mono text-2xl font-extrabold text-md-on-surface">{formatPrice(stock.close, stock.isFund)} ج.م</span>
                 <span className={`font-mono font-bold text-sm flex items-center gap-1 ${
                   stock.changePercent >= 0 ? 'text-md-primary' : 'text-md-error'
                 }`}>
@@ -239,23 +241,23 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
                 <div className="space-y-2.5 text-xs font-mono">
                   <div className="flex justify-between items-center py-1.5 border-b border-md-outline-variant/40">
                     <span className="text-md-on-surface-variant font-sans">مقاومة ثانية (مستهدف 2 - R2):</span>
-                    <span className="font-bold text-md-tertiary text-sm">{autoTarget2.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-md-tertiary text-sm">{formatPrice(autoTarget2, stock.isFund)} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center py-1.5 border-b border-md-outline-variant/40">
                     <span className="text-md-on-surface-variant font-sans">مقاومة أولى (مستهدف 1 - R1):</span>
-                    <span className="font-bold text-md-primary text-sm">{autoTarget1.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-md-primary text-sm">{formatPrice(autoTarget1, stock.isFund)} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center py-2 px-3 bg-md-surface-container rounded-[12px] border border-md-outline-variant/50">
                     <span className="text-md-on-surface font-sans font-bold">نقطة الارتكاز (Pivot Point):</span>
-                    <span className="font-bold text-md-on-surface text-sm">{stock.pivot.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-md-on-surface text-sm">{formatPrice(stock.pivot, stock.isFund)} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center py-1.5 border-b border-md-outline-variant/40">
                     <span className="text-md-on-surface-variant font-sans">دعم أول (وقف خسارة مقترح - S1):</span>
-                    <span className="font-bold text-amber-500 text-sm">{autoStopLoss.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-amber-500 text-sm">{formatPrice(autoStopLoss, stock.isFund)} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center py-1.5">
                     <span className="text-md-on-surface-variant font-sans">دعم ثانٍ (وقف خسارة صارم - S2):</span>
-                    <span className="font-bold text-md-error text-sm">{stock.support2.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-md-error text-sm">{formatPrice(stock.support2, stock.isFund)} ج.م</span>
                   </div>
                 </div>
               </div>
@@ -282,16 +284,16 @@ export const StockDetailModal: React.FC<Props> = ({ stock, portfolio, theme = 'd
                   </div>
                   <div className="flex justify-between items-center py-1.5 border-b border-md-outline-variant/40">
                     <span className="text-md-on-surface-variant font-sans">متوسط 20 يوم (EMA 20):</span>
-                    <span className="font-bold text-md-on-surface text-sm">{stock.ema20.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-md-on-surface text-sm">{formatPrice(stock.ema20, stock.isFund)} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center py-1.5 border-b border-md-outline-variant/40">
                     <span className="text-md-on-surface-variant font-sans">متوسط 50 يوم (EMA 50):</span>
-                    <span className="font-bold text-md-on-surface text-sm">{stock.ema50.toFixed(2)} ج.م</span>
+                    <span className="font-bold text-md-on-surface text-sm">{formatPrice(stock.ema50, stock.isFund)} ج.م</span>
                   </div>
                   <div className="flex justify-between items-center py-1.5">
                     <span className="text-md-on-surface-variant font-sans">متوسط 200 يوم (الاتجاه العام):</span>
                     <span className={`font-bold text-sm ${stock.close >= stock.ema200 ? 'text-md-primary' : 'text-md-error'}`}>
-                      {stock.ema200.toFixed(2)} ج.م
+                      {formatPrice(stock.ema200, stock.isFund)} ج.م
                     </span>
                   </div>
                 </div>

@@ -12,7 +12,7 @@ import {
   PortfolioStockDiagnosis,
   RecommendationType 
 } from '../services/recommendationEngine';
-import { EGYPTIAN_FUNDS_MAP } from '../services/egxService';
+import { EGYPTIAN_FUNDS_MAP, formatPrice } from '../services/egxService';
 import { MdCard, MdButton, MdChip, MdBadge, MdTextField } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -243,9 +243,7 @@ export const RecommendationsView: React.FC<Props> = ({
                         {diag.position.isGold ? 'تكلفة شراء الجرام' : 'متوسط الشراء'}
                       </span>
                       <span className="font-bold text-md-on-surface">
-                        {diag.position.isFund 
-                          ? diag.position.buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 }) 
-                          : diag.position.buyPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
+                        {formatPrice(diag.position.buyPrice, diag.position.isFund)} ج.م
                       </span>
                     </div>
                     <div>
@@ -253,9 +251,7 @@ export const RecommendationsView: React.FC<Props> = ({
                         {diag.position.isGold ? 'سعر بيع الجرام الآن' : (diag.position.isFund || diag.position.assetType === 'fund' ? 'قيمة الوثيقة (NAV)' : 'السعر الحالي')}
                       </span>
                       <span className="font-bold text-md-on-surface">
-                        {diag.position.isFund 
-                          ? diag.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 }) 
-                          : diag.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
+                        {formatPrice(diag.currentPrice, diag.position.isFund)} ج.م
                       </span>
                     </div>
                     <div>
@@ -280,8 +276,8 @@ export const RecommendationsView: React.FC<Props> = ({
 
                 <div className="flex items-center justify-between pt-2 border-t border-md-outline-variant/40 text-xs">
                   <div className="flex items-center gap-3 font-mono text-[11px] text-md-on-surface-variant">
-                    <span>وقف: <strong className="text-md-error">{diag.suggestedStopLoss.toFixed(2)}</strong></span>
-                    <span>مستهدف: <strong className="text-md-primary">{diag.suggestedTarget.toFixed(2)}</strong></span>
+                    <span>وقف: <strong className="text-md-error">{formatPrice(diag.suggestedStopLoss, diag.position.isFund)}</strong></span>
+                    <span>مستهدف: <strong className="text-md-primary">{formatPrice(diag.suggestedTarget, diag.position.isFund)}</strong></span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -481,9 +477,7 @@ export const RecommendationsView: React.FC<Props> = ({
 
                       <div className="flex items-center gap-3 text-xs mt-1">
                         <span className="font-mono font-extrabold text-md-on-surface text-base">
-                          {rec.stock.isFund 
-                            ? rec.stock.close.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 }) 
-                            : rec.stock.close.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
+                          {formatPrice(rec.stock.close, rec.stock.isFund)} ج.م
                         </span>
                         <span className={`font-mono font-bold flex items-center gap-0.5 ${
                           rec.stock.changePercent >= 0 ? 'text-md-primary' : 'text-md-error'
@@ -546,7 +540,7 @@ export const RecommendationsView: React.FC<Props> = ({
                   <div className="space-y-1">
                     <span className="text-md-on-surface-variant font-sans block text-[11px]">نطاق الدخول المقترح:</span>
                     <div className="font-extrabold text-md-on-surface text-sm">
-                      {rec.entryPrice.toFixed(2)} ج.م
+                      {formatPrice(rec.entryPrice, rec.stock.isFund)} ج.م
                     </div>
                     <div className="text-[10px] text-md-on-surface-variant font-sans">
                       ({rec.entryZoneMin} - {rec.entryZoneMax} ج.م)
@@ -559,7 +553,7 @@ export const RecommendationsView: React.FC<Props> = ({
                       المستهدف الأول (R1):
                     </span>
                     <div className="font-extrabold text-md-primary text-sm">
-                      {rec.target1.toFixed(2)} ج.م
+                      {formatPrice(rec.target1, rec.stock.isFund)} ج.م
                     </div>
                     <div className="text-[10px] text-md-primary font-bold font-sans">
                       عائد متوقع: +{rec.target1Pct}%
@@ -572,7 +566,7 @@ export const RecommendationsView: React.FC<Props> = ({
                       المستهدف الثاني (R2):
                     </span>
                     <div className="font-extrabold text-md-tertiary text-sm">
-                      {rec.target2.toFixed(2)} ج.م
+                      {formatPrice(rec.target2, rec.stock.isFund)} ج.م
                     </div>
                     <div className="text-[10px] text-md-tertiary font-bold font-sans">
                       عائد أقصى: +{rec.target2Pct}%
@@ -585,7 +579,7 @@ export const RecommendationsView: React.FC<Props> = ({
                       وقف الخسارة الصارم (S1):
                     </span>
                     <div className="font-extrabold text-md-error text-sm">
-                      {rec.stopLoss.toFixed(2)} ج.م
+                      {formatPrice(rec.stopLoss, rec.stock.isFund)} ج.م
                     </div>
                     <div className="text-[10px] text-md-on-surface-variant font-sans">
                       مخاطرة: -{rec.stopLossPct}% • R:R (1 : {rec.riskRewardRatio})

@@ -4,6 +4,7 @@ import {
   BarChart2, Filter, Briefcase
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
+import { formatPrice } from '../services/egxService';
 import { MdCard, MdChip, MdTextField, MdBadge, MdButton } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -268,9 +269,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
                     {/* 3. Price & Change */}
                     <td className="p-4 text-right">
                       <div className="font-mono font-bold text-base text-md-on-surface">
-                        {stock.isFund 
-                          ? stock.close.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 5 }) 
-                          : stock.close.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م
+                        {formatPrice(stock.close, stock.isFund)} ج.م
                       </div>
                       <div className={`font-mono text-xs font-semibold flex items-center gap-1 mt-0.5 ${isGain ? 'text-md-primary' : 'text-md-error'}`}>
                         {isGain ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
@@ -331,14 +330,14 @@ export const TechnicalRadarView: React.FC<Props> = ({
                     {/* 8. Support 1 (S1) */}
                     <td className="p-4 text-right">
                       <span className="font-mono text-amber-500 font-bold text-sm">
-                        {stock.support1.toFixed(2)} ج.م
+                        {formatPrice(stock.support1, stock.isFund)} ج.م
                       </span>
                     </td>
 
                     {/* 9. Resistance 1 (R1) */}
                     <td className="p-4 text-right">
                       <span className="font-mono text-md-primary font-bold text-sm">
-                        {stock.resistance1.toFixed(2)} ج.م
+                        {formatPrice(stock.resistance1, stock.isFund)} ج.م
                       </span>
                     </td>
 

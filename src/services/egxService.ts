@@ -7,6 +7,26 @@ export const LIVE_T70_NAV = 1.39832;        // Live Thndr T70 Fund NAV (exact 5 
 export const LIVE_BMM_NAV = 2.14964;        // Live Belton Myeh Myeh Fund NAV
 export const LIVE_ABR_NAV = 218.27304;      // Live Bareeq Fund NAV
 
+/**
+ * Unified price formatter for Egyptian Stock Exchange (EGX) & Mutual Funds / Gold.
+ * NEVER forces unwanted rounding on mutual funds or exact fraction quotes.
+ * If the value has more than 2 decimal places (e.g. 1.39832, 2.14964, 218.27304, 123.497),
+ * it displays all significant decimals (up to 5 digits) without truncation or rounding.
+ */
+export function formatPrice(price: number | undefined | null, isFund?: boolean): string {
+  if (price === undefined || price === null || isNaN(price)) return '0.00';
+  
+  const str = price.toString();
+  const parts = str.split('.');
+  const decimals = parts[1] ? parts[1].length : 0;
+  
+  const maxDecimals = Math.max(2, Math.min(5, isFund ? 5 : (decimals > 2 ? Math.min(5, decimals) : 2)));
+  return price.toLocaleString('en-US', {
+    minimumFractionDigits: Math.min(2, maxDecimals),
+    maximumFractionDigits: maxDecimals
+  });
+}
+
 const DEFAULT_COLUMNS = [
   'name',
   'description',
@@ -221,6 +241,7 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
           isEGX30: false,
           isEGX70: false,
           isEGX100: true,
+          isFund: true,
           sector: meta.sector || 'ذهب ومعادن ثمينة'
         });
       }
@@ -1304,13 +1325,13 @@ export function convertFundToStockData(fund: MutualFund): StockData {
     rec1h: 0.3,
     rec4h: 0.35,
     rec1w: 0.4,
-    ema20: Number((price * 0.99).toFixed(2)),
-    ema50: Number((price * 0.98).toFixed(2)),
-    ema200: Number((price * 0.95).toFixed(2)),
-    support1: Number((price * 0.96).toFixed(2)),
-    support2: Number((price * 0.93).toFixed(2)),
-    resistance1: Number((price * 1.05).toFixed(2)),
-    resistance2: Number((price * 1.10).toFixed(2)),
+    ema20: Number((price * 0.99).toFixed(5)),
+    ema50: Number((price * 0.98).toFixed(5)),
+    ema200: Number((price * 0.95).toFixed(5)),
+    support1: Number((price * 0.96).toFixed(5)),
+    support2: Number((price * 0.93).toFixed(5)),
+    resistance1: Number((price * 1.05).toFixed(5)),
+    resistance2: Number((price * 1.10).toFixed(5)),
     pivot: price,
     isEGX30: false,
     isEGX70: fund.category === 'أسهم مؤشرات (سلبية)' && fund.code.includes('70'),
