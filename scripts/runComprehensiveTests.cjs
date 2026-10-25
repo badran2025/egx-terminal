@@ -256,6 +256,13 @@ const fundPath = path.resolve(__dirname, '../src/services/egxFundamentalData.ts'
 const fundContent = fs.readFileSync(fundPath, 'utf8');
 assert(fundContent.includes('getSectorValuationBenchmark') && fundContent.includes('evaluateSectorRelativePE'), 'Sector-relative valuation benchmark and PE evaluation active');
 
+// 7. Breakout exclusion from premature TAKE_PROFIT at R1
+assert(nextSessionContent.includes('confluenceScore < 80') && nextSessionContent.includes('currentPrice >= res1 * 0.985'), 'Breakout stocks (score >= 80) excluded from premature profit-taking at R1');
+
+// 8. Strict ConfluenceScore requirements for STRONG_BUY and SWING_BUY (no bypass)
+assert(nextSessionContent.includes('!isHighRisk && confluenceScore >= 80 && currentPrice <= res1 * 1.02'), 'STRONG_BUY strictly requires confluenceScore >= 80 with no rating bypass');
+assert(nextSessionContent.includes('else if (confluenceScore >= 65)'), 'SWING_BUY strictly requires confluenceScore >= 65 with no rating bypass');
+
 // -----------------------------------------------------------------------------
 // FINAL SUMMARY
 // -----------------------------------------------------------------------------

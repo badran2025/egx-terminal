@@ -369,7 +369,6 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   const confluenceScore = Math.min(100, Math.max(30, Math.round(weightedBase) + (isExcellent ? 5 : isHighRisk ? -25 : 0)));
 
   // 8. Final Action Decision Tree (Strict Safety First Order: STOP_LOSS -> TAKE_PROFIT -> STRONG_BUY -> SWING_BUY -> HOLD)
-  const v = simCase.finalVerdict;
   let finalActionVerdict: 'STRONG_BUY' | 'SWING_BUY' | 'HOLD' | 'TAKE_PROFIT' | 'STOP_LOSS' = 'HOLD';
   let actionVerdictText = 'احتفاظ ومراقبة 🔵';
   let actionBadgeColor = 'bg-blue-500/15 text-blue-500 border-blue-500/30';
@@ -382,20 +381,27 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
       : 'تحذير بيع ووقف خسارة (كسر أرضية الأمان) 🔴';
     actionBadgeColor = 'bg-rose-500/15 text-rose-500 border-rose-500/30';
   }
-  // 8.2 PRIORITY 2: TAKE PROFIT (Overextended / Resistance Ceiling reached)
-  else if (currentPrice >= res1 * 0.985 || (stock.rsi && stock.rsi > 70)) {
+  // 8.2 PRIORITY 2: TAKE PROFIT (Overextended / Exhaustion at Resistance)
+  // CRITICAL FIX: Excludes strong breakout stocks (confluenceScore >= 80) from premature profit-taking at R1!
+  // Strong breakouts targeting R2/Target2 will proceed to Priority 3.
+  else if (
+    (stock.rsi && stock.rsi > 75) || 
+    (currentPrice >= res1 * 0.985 && confluenceScore < 80)
+  ) {
     finalActionVerdict = 'TAKE_PROFIT';
     actionVerdictText = 'تخفيف وجني أرباح (السهم عند سقف المقاومة) 🟠';
     actionBadgeColor = 'bg-orange-500/15 text-orange-400 border-orange-500/30';
   }
-  // 8.3 PRIORITY 3: STRONG BUY (Breakout & Institutional Momentum - Not penalized if above S1)
-  else if (!isHighRisk && (v.rating === 'strong_buy' || (confluenceScore >= 80 && currentPrice <= res1 * 1.02))) {
+  // 8.3 PRIORITY 3: STRONG BUY (Breakout & Institutional Momentum)
+  // STRICT RULE: Requires confluenceScore >= 80 unconditionally; no external rating can bypass BADRAN 7 layers!
+  else if (!isHighRisk && confluenceScore >= 80 && currentPrice <= res1 * 1.02) {
     finalActionVerdict = 'STRONG_BUY';
     actionVerdictText = 'شراء قوي واختراق (تأكيد فني ومؤسسي) 🟢';
     actionBadgeColor = 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30';
   }
   // 8.4 PRIORITY 4: SWING BUY / DIP ACCUMULATION
-  else if (confluenceScore >= 65 || v.rating === 'buy') {
+  // STRICT RULE: Requires confluenceScore >= 65 unconditionally; no external rating can bypass BADRAN 7 layers!
+  else if (confluenceScore >= 65) {
     finalActionVerdict = 'SWING_BUY';
     if (isHighRisk) {
       actionVerdictText = '⚠️ مضاربة لحظية عالية المخاطر (التزام صارم بالوقف)';
