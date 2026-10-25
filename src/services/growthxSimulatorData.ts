@@ -1513,39 +1513,80 @@ export function extractPriceFromText(val: string | number | undefined, defaultVa
 export function resolve7LayerAnalysis(selectedSymbol: string, liveStock?: StockData): StockSimulationCase {
   const upper = (selectedSymbol || '').toUpperCase().trim();
 
-  // 1. If pre-authored simulation case exists, return it (enriched with live price if available)
+  // 1. If pre-authored simulation case exists, return it (enriched with live price dynamically)
   if (GROWTHX_SIMULATOR_CASES[upper]) {
     const baseCase = GROWTHX_SIMULATOR_CASES[upper];
     if (liveStock && liveStock.close > 0) {
       const price = liveStock.close;
       const basePrice = baseCase.currentPrice || price;
-      const ratio = price / basePrice;
       
-      // If live price differs by more than 3% from pre-authored price, scale finalVerdict numbers to match live price!
-      let updatedVerdict = baseCase.finalVerdict;
-      if (Math.abs(ratio - 1) > 0.03) {
-        const scaledEntryMin = Number((price * 0.985).toFixed(2));
-        const scaledEntryMax = Number((price * 1.01).toFixed(2));
-        const scaledTarget1 = Number((price * 1.065).toFixed(2));
-        const scaledTarget2 = Number((price * 1.13).toFixed(2));
-        const scaledStopLoss = Number((price * 0.945).toFixed(2));
+      // Calculate dynamic institutional levels anchored strictly to live price
+      const sup1 = liveStock.support1 && liveStock.support1 > 0 && liveStock.support1 < price 
+        ? liveStock.support1 
+        : Number((price * 0.975).toFixed(2));
+      const res1 = liveStock.resistance1 && liveStock.resistance1 > 0 && liveStock.resistance1 > price 
+        ? liveStock.resistance1 
+        : Number((price * 1.065).toFixed(2));
+      const res2 = liveStock.resistance2 && liveStock.resistance2 > 0 && liveStock.resistance2 > res1 
+        ? liveStock.resistance2 
+        : Number((price * 1.13).toFixed(2));
 
-        updatedVerdict = {
-          ...baseCase.finalVerdict,
-          entryRange: `${scaledEntryMin.toFixed(2)} - ${scaledEntryMax.toFixed(2)} ج.م (قرب السعر الحالي ${price.toFixed(2)})`,
-          target1: `${scaledTarget1.toFixed(2)} ج.م (+6.5%)`,
-          target2: `${scaledTarget2.toFixed(2)} ج.م (+13.0%)`,
-          stopLoss: `${scaledStopLoss.toFixed(2)} ج.م (-5.5%)`,
-          buildingFloorsSummary: {
-            floorSupport: `أرضية الدور الحالية: ${(price * 0.97).toFixed(2)} - ${(price * 0.99).toFixed(2)} جنيه`,
-            ceilingResistance: `سقف الدور الأول: ${scaledTarget1.toFixed(2)} جنيه | سقف الدور الثاني: ${scaledTarget2.toFixed(2)} جنيه`,
-            floorStrengthNotes: baseCase.finalVerdict.buildingFloorsSummary?.floorStrengthNotes || 'أرضية ارتكاز فنية محسوبة لحظياً'
-          }
-        };
+      const scaledEntryMin = Number((Math.min(price * 0.99, Math.max(sup1, price * 0.975))).toFixed(2));
+      const scaledEntryMax = Number((Math.max(price * 1.008, scaledEntryMin * 1.018)).toFixed(2));
+      const scaledTarget1 = Number(Math.max(res1, price * 1.065).toFixed(2));
+      const scaledTarget2 = Number(Math.max(res2, price * 1.13).toFixed(2));
+      
+      // Stop loss strictly clamped between -3.5% and -5.0%
+      const maxStopLoss = price * 0.965;
+      const minStopLoss = price * 0.950;
+      let rawStop = Math.min(sup1 * 0.985, price * 0.955);
+      if (rawStop > maxStopLoss) rawStop = maxStopLoss;
+      if (rawStop < minStopLoss) rawStop = minStopLoss;
+      const scaledStopLoss = Number(rawStop.toFixed(2));
+
+      const target1Pct = (((scaledTarget1 - price) / price) * 100).toFixed(1);
+      const target2Pct = (((scaledTarget2 - price) / price) * 100).toFixed(1);
+      const stopLossPct = (((price - scaledStopLoss) / price) * 100).toFixed(1);
+      const rr = (Number(target1Pct) / Math.max(0.5, Number(stopLossPct))).toFixed(1);
+
+      // Dynamically replace any hardcoded basePrice or old static levels in storyIntro and advice
+      let updatedStoryIntro = baseCase.storyIntro;
+      if (baseCase.currentPrice) {
+        updatedStoryIntro = updatedStoryIntro.replace(
+          new RegExp(`${baseCase.currentPrice.toFixed(2)}`, 'g'), 
+          price.toFixed(2)
+        );
       }
+      updatedStoryIntro = updatedStoryIntro.replace(/125\.15/g, price.toFixed(2));
+
+      let updatedAdvice = baseCase.finalVerdict.friendFinalAdvice || '';
+      if (updatedAdvice) {
+        updatedAdvice = updatedAdvice
+          .replace(/125\.15/g, price.toFixed(2))
+          .replace(/124\.50\s*(و|-)\s*125\.80/g, `${scaledEntryMin.toFixed(2)} و ${scaledEntryMax.toFixed(2)}`)
+          .replace(/121\.80/g, scaledStopLoss.toFixed(2))
+          .replace(/136\.00/g, scaledTarget1.toFixed(2))
+          .replace(/144\.50\s*-\s*145\.00/g, scaledTarget2.toFixed(2));
+      }
+
+      const updatedVerdict = {
+        ...baseCase.finalVerdict,
+        entryRange: `${scaledEntryMin.toFixed(2)} - ${scaledEntryMax.toFixed(2)} ج.م (محور السعر الحالي ${price.toFixed(2)})`,
+        target1: `${scaledTarget1.toFixed(2)} ج.م (+${target1Pct}%)`,
+        target2: `${scaledTarget2.toFixed(2)} ج.م (+${target2Pct}%)`,
+        stopLoss: `${scaledStopLoss.toFixed(2)} ج.م (-${stopLossPct}%)`,
+        riskRewardRatio: `1:${rr}`,
+        friendFinalAdvice: updatedAdvice || baseCase.finalVerdict.friendFinalAdvice,
+        buildingFloorsSummary: {
+          floorSupport: `أرضية الدور الحالية: ${sup1.toFixed(2)} جنيه (مرتكز عليها السعر اللحظي ${price.toFixed(2)})`,
+          ceilingResistance: `سقف الدور الأول: ${scaledTarget1.toFixed(2)} جنيه | سقف الدور الثاني: ${scaledTarget2.toFixed(2)} جنيه`,
+          floorStrengthNotes: baseCase.finalVerdict.buildingFloorsSummary?.floorStrengthNotes || 'أرضية ارتكاز فنية محسوبة لحظياً'
+        }
+      };
 
       return {
         ...baseCase,
+        storyIntro: updatedStoryIntro,
         currentPrice: price,
         finalVerdict: updatedVerdict
       };

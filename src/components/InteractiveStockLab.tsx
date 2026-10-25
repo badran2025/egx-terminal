@@ -12,6 +12,7 @@ import { getStockFundamentalProfile, StockFundamentalProfile } from '../services
 import { EGX_ARABIC_NAMES, StockMeta } from '../services/egxArabicNames';
 import { getFallbackStocks, formatPrice } from '../services/egxService';
 import { THNDR_SEVEN_LAYERS_MAPPING } from '../services/thndrIndicatorsData';
+import { buildStockNextSessionPlan, NextSessionStockPlan } from '../services/nextSessionPlannerService';
 import { TradingViewWidget } from './TradingViewWidget';
 import { McdxHeatmapVisualizer } from './McdxHeatmapVisualizer';
 
@@ -176,10 +177,20 @@ export const InteractiveStockLab: React.FC<Props> = ({
   }, [stocks]);
 
   // 3. Resolve simulation case for any chosen stock using unified 7-layer engine
-  const currentCase: StockSimulationCase = useMemo(() => {
-    const liveStock = stocks.find(s => s.symbol.toUpperCase() === selectedSymbol.toUpperCase());
-    return resolve7LayerAnalysis(selectedSymbol, liveStock);
+  const liveStock = useMemo(() => {
+    return stocks.find(s => s.symbol.toUpperCase() === selectedSymbol.toUpperCase());
   }, [selectedSymbol, stocks]);
+
+  const currentCase: StockSimulationCase = useMemo(() => {
+    return resolve7LayerAnalysis(selectedSymbol, liveStock);
+  }, [selectedSymbol, liveStock]);
+
+  const livePlan: NextSessionStockPlan | null = useMemo(() => {
+    if (liveStock && liveStock.close > 0) {
+      return buildStockNextSessionPlan(liveStock);
+    }
+    return null;
+  }, [liveStock]);
 
   const isFundamentalStep = activeStepIndex === 0;
   const currentLayerIndex = activeStepIndex >= 1 && activeStepIndex <= 7 ? activeStepIndex - 1 : null;
@@ -1202,28 +1213,28 @@ export const InteractiveStockLab: React.FC<Props> = ({
                   <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 space-y-0.5">
                     <span className="text-[10px] text-md-on-surface-variant block font-bold">1. سعر الدخول المعتمد (سقف الأوردر بلوك)</span>
                     <span className="text-sm font-bold font-mono text-md-primary block">
-                      {currentCase.finalVerdict.entryRange}
+                      {livePlan ? livePlan.entryRangeText : currentCase.finalVerdict.entryRange}
                     </span>
                   </div>
 
                   <div className="p-3 bg-rose-500/10 rounded-[16px] border border-rose-500/30 space-y-0.5">
                     <span className="text-[10px] text-rose-600 dark:text-rose-400 block font-bold">2. وقف الخسارة الصارم (وقف ATR Fib)</span>
                     <span className="text-sm font-bold font-mono text-rose-700 dark:text-rose-300 block">
-                      {currentCase.finalVerdict.stopLoss}
+                      {livePlan ? `${livePlan.stopLoss.toFixed(2)} ج.م (-${livePlan.stopLossPct}%)` : currentCase.finalVerdict.stopLoss}
                     </span>
                   </div>
 
                   <div className="p-3 bg-emerald-500/10 rounded-[16px] border border-emerald-500/30 space-y-0.5">
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-bold">3. الهدف الأول TP1 (تأمين 50% + Breakeven)</span>
                     <span className="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300 block">
-                      {currentCase.finalVerdict.target1}
+                      {livePlan ? `${livePlan.target1.toFixed(2)} ج.م (+${livePlan.target1Pct}%)` : currentCase.finalVerdict.target1}
                     </span>
                   </div>
 
                   <div className="p-3 bg-emerald-500/10 rounded-[16px] border border-emerald-500/30 space-y-0.5">
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-bold">4. الهدف الثاني TP2 (حصد الرالي مع خط ATR)</span>
                     <span className="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300 block">
-                      {currentCase.finalVerdict.target2}
+                      {livePlan ? `${livePlan.target2.toFixed(2)} ج.م (+${livePlan.target2Pct}%)` : currentCase.finalVerdict.target2}
                     </span>
                   </div>
                 </div>
@@ -1233,7 +1244,7 @@ export const InteractiveStockLab: React.FC<Props> = ({
               <div className="p-3 bg-md-surface rounded-[16px] border border-md-outline-variant/40 flex items-center justify-between gap-3 text-xs">
                 <span className="font-bold text-md-on-surface-variant">نسبة العائد إلى المخاطرة (R:R):</span>
                 <span className="font-mono font-extrabold text-md-primary text-sm bg-md-primary/10 px-2.5 py-1 rounded-md-full">
-                  {currentCase.finalVerdict.riskRewardRatio}
+                  {livePlan ? livePlan.riskRewardRatio : currentCase.finalVerdict.riskRewardRatio}
                 </span>
               </div>
 
@@ -1244,8 +1255,8 @@ export const InteractiveStockLab: React.FC<Props> = ({
                   <span>تطبيق مفهوم "عمارة الأدوار" على السهم:</span>
                 </span>
                 <div className="text-[11px] text-md-on-surface space-y-1">
-                  <div>🏢 {currentCase.finalVerdict.buildingFloorsSummary.floorSupport}</div>
-                  <div>🏠 {currentCase.finalVerdict.buildingFloorsSummary.ceilingResistance}</div>
+                  <div>🏢 {livePlan ? `أرضية الدور الحالية (الدعم الأول): ${livePlan.support1.toFixed(2)} ج.م (والثاني: ${livePlan.support2.toFixed(2)} ج.م)` : currentCase.finalVerdict.buildingFloorsSummary.floorSupport}</div>
+                  <div>🏠 {livePlan ? `سقف الدور الأول: ${livePlan.resistance1.toFixed(2)} ج.م | سقف الدور الثاني: ${livePlan.resistance2.toFixed(2)} ج.م` : currentCase.finalVerdict.buildingFloorsSummary.ceilingResistance}</div>
                   <div className="text-md-on-surface-variant font-medium pt-0.5">
                     💡 {currentCase.finalVerdict.buildingFloorsSummary.floorStrengthNotes}
                   </div>
@@ -1259,7 +1270,14 @@ export const InteractiveStockLab: React.FC<Props> = ({
                   <span>نصيحة صديقك الأخيرة بالأمانة:</span>
                 </div>
                 <p className="text-md-on-surface leading-relaxed font-medium">
-                  "{currentCase.finalVerdict.friendFinalAdvice}"
+                  "{livePlan 
+                    ? currentCase.finalVerdict.friendFinalAdvice
+                        .replace(/125\.15/g, livePlan.currentPrice.toFixed(2))
+                        .replace(/124\.50\s*(و|-)\s*125\.80/g, `${livePlan.entryRangeMin.toFixed(2)} و ${livePlan.entryRangeMax.toFixed(2)}`)
+                        .replace(/121\.80/g, livePlan.stopLoss.toFixed(2))
+                        .replace(/136\.00/g, livePlan.target1.toFixed(2))
+                        .replace(/144\.50\s*-\s*145\.00/g, `${livePlan.target2.toFixed(2)}`)
+                    : currentCase.finalVerdict.friendFinalAdvice}"
                 </p>
               </div>
 
