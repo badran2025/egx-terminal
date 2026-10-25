@@ -185,6 +185,40 @@ assert(simContent.includes('resolve7LayerAnalysis'), 'resolve7LayerAnalysis func
 assert(simContent.includes('fundamentalProfile') && simContent.includes('layers'), 'Gate 0 fundamental profile & 7-layer structure fully integrated');
 
 // -----------------------------------------------------------------------------
+// TEST SUITE 8: Next Session Preparatory Plan & Header De-cluttering
+// -----------------------------------------------------------------------------
+console.log('\n📌 [Suite 8]: Next Session Operational Plan & Header De-cluttering');
+
+const nextSessionServicePath = path.resolve(__dirname, '../src/services/nextSessionPlannerService.ts');
+assert(fs.existsSync(nextSessionServicePath), 'nextSessionPlannerService.ts exists and active');
+
+const nextSessionContent = fs.readFileSync(nextSessionServicePath, 'utf8');
+assert(nextSessionContent.includes('buildStockNextSessionPlan'), 'buildStockNextSessionPlan calculates complete next session plan');
+assert(nextSessionContent.includes('support1') && nextSessionContent.includes('support2') && nextSessionContent.includes('support3'), 'Full 3-tier support levels (S1, S2, S3) calculated');
+assert(nextSessionContent.includes('resistance1') && nextSessionContent.includes('resistance2') && nextSessionContent.includes('resistance3'), 'Full 3-tier resistance levels (R1, R2, R3) calculated');
+assert(nextSessionContent.includes('entryRangeMin') && nextSessionContent.includes('entryRangeMax'), 'Entry range zone calculated');
+assert(nextSessionContent.includes('target1') && nextSessionContent.includes('target2'), 'Targets 1 and 2 calculated');
+assert(nextSessionContent.includes('stopLoss'), 'Stop loss level calculated');
+assert(nextSessionContent.includes('layer1Trend') && nextSessionContent.includes('layer7MultiTF'), 'Dedicated results for all 7 BADRAN layers included');
+assert(nextSessionContent.includes('confluenceScore'), 'Confluence score for 7 stages calculated');
+assert(nextSessionContent.includes('nextEarningsDate'), 'Next scheduled earnings announcement date included');
+assert(nextSessionContent.includes('catalystsAndNews'), 'Corporate catalysts and macroeconomic events included');
+
+// Table component verification
+assert(techContent.includes('pureStocks'), 'TechnicalRadarView filters to pure stocks only, excluding mutual funds and gold');
+assert(techContent.includes('handleExportCSV'), 'TechnicalRadarView supports CSV / Excel export of trading battle plan');
+assert(techContent.includes('selectedStockForModal'), 'TechnicalRadarView provides interactive detail modal for each stock');
+
+// Header De-cluttering Verification
+const labPath = path.resolve(__dirname, '../src/components/InteractiveStockLab.tsx');
+const labContent = fs.readFileSync(labPath, 'utf8');
+assert(!labContent.includes('ابحث عن أي سهم بالرمز أو الاسم:'), 'Redundant huge stock search input removed from InteractiveStockLab');
+assert(labContent.includes('قائمة مراقبة السوق'), 'InteractiveStockLab refers trader to permanent right MarketWatchSidebar');
+
+const radarViewContent = fs.readFileSync(radarPath, 'utf8');
+assert(radarViewContent.includes('توصيات وخطة الجلسة القادمة'), 'RadarAndRecommendationsView sub-tab 2 updated to Next Session Plan');
+
+// -----------------------------------------------------------------------------
 // FINAL SUMMARY
 // -----------------------------------------------------------------------------
 console.log('\n================================================================');

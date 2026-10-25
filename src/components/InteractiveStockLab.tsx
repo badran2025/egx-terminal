@@ -218,153 +218,94 @@ export const InteractiveStockLab: React.FC<Props> = ({
     : currentLayer?.tvStudies || ['MASimple@tv-basicstudies'];
 
   const containerHeightClass = chartHeight === 'tall' ? 'h-[880px]' : 'h-[760px]';
+  const activeStock = stocks.find(s => s.symbol.toUpperCase() === selectedSymbol.toUpperCase());
+  const currentPrice = currentCase.currentPrice || activeStock?.close || 0;
 
   return (
     <div className="space-y-6 text-md-on-surface w-full max-w-[1920px] mx-auto" dir="rtl">
       
-      {/* 1. Compact Header Bar: فحص وتطبيق قالب BADRAN المعتمد */}
-      <div className="bg-gradient-to-r from-md-primary/10 via-md-primary-container/25 to-md-secondary-container/20 border border-md-primary/25 rounded-[22px] px-5 py-3.5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold shadow-xs">
-              <Sparkles size={13} />
-              <span>قالب BADRAN المعتمد في ثاندر</span>
-            </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/25">
-              <CheckCircle2 size={12} />
-              <span>بوابة Gate 0 المالية + الـ 7 طبقات الفنية</span>
-            </span>
-          </div>
-          <p className="text-xs text-md-on-surface-variant font-medium">
-            اختر أي سهم أدناه لفحصه فورياً عبر بوابات الأمان المالي والطبقات الفنية لتحديد سعر الدخول ووقف الخسارة وجني الأرباح.
-          </p>
-        </div>
-      </div>
-
-      {/* 2. Unified Universal Stock Search & Benchmark Chips Bar (يدعم كافة أسهم البورصة المصرية بالكامل) */}
-      <div className="bg-md-surface-container-low border border-md-outline-variant/50 rounded-[24px] p-4 shadow-sm space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. Ultra-Compact Active Stock Header Strip (Integrated with Right Market Watch Sidebar) */}
+      <div className="bg-gradient-to-r from-md-surface-container-low via-md-surface-container to-md-surface-container-high border border-md-outline-variant/60 rounded-[20px] p-3 sm:p-3.5 shadow-xs space-y-2.5">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           
-          {/* Live Search Input with Full 294-Stock Autocomplete Dropdown */}
-          <div className="relative flex-1 max-w-lg" ref={searchContainerRef}>
-            <div className="flex items-center justify-between mb-1 px-1">
-              <span className="text-[11px] font-bold text-md-primary flex items-center gap-1">
-                <span>ابحث عن أي سهم بالرمز أو الاسم:</span>
-              </span>
-              <span className="text-[10px] text-md-on-surface-variant font-mono bg-md-surface px-2 py-0.5 rounded-full border border-md-outline-variant/40">
-                ✨ يدعم {allAvailableStocks.length} سهماً بالبورصة المصرية
-              </span>
-            </div>
-
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setIsSearchOpen(true);
-                }}
-                onFocus={() => setIsSearchOpen(true)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="🔍 اكتب رمز السهم أو اسمه بالعربي (مثال: CCAP, بلتون, طلعت مصطفى, فوري, حديد عز)..."
-                className="w-full bg-md-surface border border-md-outline rounded-md-full px-4 py-2.5 text-xs font-bold text-md-on-surface placeholder:text-md-on-surface-variant/60 focus:outline-none focus:border-md-primary focus:ring-2 focus:ring-md-primary/20 transition-all pr-10"
-              />
-              <Search size={16} className="absolute right-3.5 top-3 text-md-on-surface-variant" />
-            </div>
-
-            {/* Dropdown Results */}
-            {isSearchOpen && (
-              <div className="absolute z-50 mt-1.5 w-full bg-md-surface-container-high border border-md-outline-variant rounded-[20px] shadow-lg overflow-hidden max-h-72 overflow-y-auto">
-                {/* Fallback direct action for any typed ticker */}
-                {searchTerm.trim() && (
-                  <button
-                    onClick={() => handleSelectStock(searchTerm.trim().toUpperCase())}
-                    className="w-full px-4 py-2.5 text-right bg-md-primary/10 hover:bg-md-primary/20 text-xs font-bold text-md-primary flex items-center justify-between border-b border-md-outline-variant/40"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={14} />
-                      <span>فحص وتحليل السهم المكتوب: "{searchTerm.trim().toUpperCase()}" على الشارت</span>
-                    </div>
-                    <span className="text-[10px] bg-md-primary text-md-on-primary px-2 py-0.5 rounded-full font-mono">
-                      اضغط Enter ↵
-                    </span>
-                  </button>
+          {/* Active Stock Information */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-mono font-black text-sm sm:text-base px-3 py-1 rounded-xl bg-md-primary text-md-on-primary shadow-xs">
+              {currentCase.symbol}
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-black text-sm sm:text-base text-md-on-surface">
+                  {currentCase.nameAr}
+                </h2>
+                {activeStock?.isEGX30 && (
+                  <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-blue-500/15 text-blue-500 border border-blue-500/30">
+                    EGX30
+                  </span>
                 )}
-
-                {searchResults.length > 0 ? (
-                  searchResults.map((item) => (
-                    <button
-                      key={item.symbol}
-                      onClick={() => handleSelectStock(item.symbol)}
-                      className="w-full px-4 py-2.5 text-right flex items-center justify-between hover:bg-md-primary/10 transition-colors border-b border-md-outline-variant/30 last:border-none text-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-extrabold text-md-primary bg-md-surface px-2 py-0.5 rounded-full border border-md-outline-variant/40">
-                          {item.symbol}
-                        </span>
-                        <div>
-                          <span className="font-bold text-md-on-surface block">{item.nameAr}</span>
-                          <span className="text-[10px] text-md-on-surface-variant">{item.sector || 'بورصة مصر'}</span>
-                        </div>
-                      </div>
-
-                      <div className="text-left font-mono">
-                        {item.price && item.price > 0 && (
-                          <span className="font-bold text-md-on-surface text-xs block">
-                            {formatPrice(item.price)} ج.م
-                          </span>
-                        )}
-                        {item.changePercent !== undefined && (
-                          <span className={`text-[10px] font-bold ${item.changePercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
-                            {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))
-                ) : (
-                  !searchTerm.trim() && (
-                    <div className="p-3 text-center text-xs text-md-on-surface-variant">
-                      اكتب رمز أو اسم أي سهم بالبورصة المصرية لاختياره
-                    </div>
-                  )
+                {activeStock?.isEGX70 && (
+                  <span className="text-[10px] font-bold px-2 py-0.2 rounded-full bg-purple-500/15 text-purple-500 border border-purple-500/30">
+                    EGX70
+                  </span>
                 )}
               </div>
-            )}
+              <span className="text-[11px] text-md-on-surface-variant font-medium">
+                {currentCase.sector || 'بورصة مصر'}
+              </span>
+            </div>
+
+            <div className="h-6 w-[1px] bg-md-outline-variant/40 hidden sm:block" />
+
+            {/* Price & Change */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-base font-mono font-black text-md-on-surface">
+                {formatPrice(currentPrice)} ج.م
+              </span>
+              {activeStock?.changePercent !== undefined && (
+                <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
+                  activeStock.changePercent >= 0 
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                    : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                }`}>
+                  {activeStock.changePercent >= 0 ? '+' : ''}{activeStock.changePercent.toFixed(2)}%
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* Quick Active Hot Recommendations Bar */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none text-xs">
-            <span className="text-[11px] text-md-on-surface-variant font-bold shrink-0 ml-1 flex items-center gap-1">
-              <Flame size={14} className="text-rose-500" />
-              <span>فرص نشطة اليوم:</span>
+          {/* Quick Active Hot Switches & Sidebar Guide */}
+          <div className="flex items-center gap-2 flex-wrap text-xs self-stretch md:self-auto justify-between md:justify-end">
+            <span className="text-[11px] text-md-on-surface-variant bg-md-surface px-2.5 py-1 rounded-full border border-md-outline-variant/40 hidden lg:inline-flex items-center gap-1">
+              <span>👈 اختر أي سهم لفتحه فورياً من قائمة مراقبة السوق</span>
             </span>
-            {hotRecommendations.map((sym) => {
-              const meta = EGX_ARABIC_NAMES[sym];
-              const isSelected = selectedSymbol === sym;
-              return (
-                <button
-                  key={sym}
-                  onClick={() => handleSelectStock(sym)}
-                  className={`px-3 py-1.5 rounded-md-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-md-primary text-md-on-primary shadow-sm ring-2 ring-md-primary/30'
-                      : 'bg-md-surface text-md-on-surface border border-md-outline-variant/50 hover:bg-md-surface-container-high'
-                  }`}
-                >
-                  <span>{meta?.nameAr.split(' ')[0] || sym}</span>
-                  <span className="font-mono text-[10px] opacity-80">({sym})</span>
-                </button>
-              );
-            })}
+
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+              <span className="text-[10px] font-bold text-md-on-surface-variant shrink-0 ml-1">سريع:</span>
+              {hotRecommendations.slice(0, 4).map((sym) => {
+                const isSelected = selectedSymbol === sym;
+                return (
+                  <button
+                    key={sym}
+                    onClick={() => handleSelectStock(sym)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-md-primary text-md-on-primary shadow-xs'
+                        : 'bg-md-surface text-md-on-surface border border-md-outline-variant/40 hover:bg-md-surface-container-high'
+                    }`}
+                  >
+                    {sym}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
         </div>
 
-        {/* Stock Intro Banner */}
-        <div className="pt-2 border-t border-md-outline-variant/30 flex items-start gap-2 text-xs text-md-on-surface-variant">
-          <span className="text-base shrink-0">💬</span>
-          <p className="leading-relaxed font-medium">
+        {/* Compact Story Line */}
+        <div className="pt-2 border-t border-md-outline-variant/25 flex items-center gap-2 text-[11px] text-md-on-surface-variant font-medium">
+          <span className="text-emerald-500 shrink-0 font-bold">💡 قمرة التحليل:</span>
+          <p className="truncate">
             {currentCase.storyIntro}
           </p>
         </div>

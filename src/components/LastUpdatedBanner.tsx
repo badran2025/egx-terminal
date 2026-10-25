@@ -39,7 +39,7 @@ export const LastUpdatedBanner: React.FC<Props> = ({
 }) => {
   return (
     <div 
-      className={`flex flex-wrap items-center justify-between gap-3 p-3.5 bg-md-surface-container rounded-[20px] border border-md-outline-variant/60 text-xs text-md-on-surface-variant shadow-sm ${className}`}
+      className={`flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 bg-md-surface-container rounded-[18px] border border-md-outline-variant/60 text-xs text-md-on-surface-variant shadow-xs ${className}`}
       dir="rtl"
     >
       {/* Right side: Timestamp & Live Pulse */}

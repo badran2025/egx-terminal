@@ -39,58 +39,42 @@ export const BadranStrategyView: React.FC<Props> = ({
         tabTitle="دليل استراتيجية التحليل وخارطة القرار المعتمدة (قالب BADRAN)"
       />
 
-      {/* 1. M3 Hero Banner */}
-      <div className="bg-gradient-to-r from-blue-600/20 via-indigo-600/15 to-purple-600/15 border-2 border-blue-500/40 rounded-[28px] p-6 shadow-sm relative overflow-hidden">
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
-          <div className="space-y-2">
+      {/* 1. Sleek Compact Header Strip (De-cluttered) */}
+      <div className="bg-gradient-to-r from-blue-600/15 via-indigo-600/10 to-purple-600/10 border border-blue-500/30 rounded-[22px] p-3.5 sm:p-4 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
+            🧭
+          </span>
+          <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md">
-                🧭
+              <h2 className="text-base sm:text-lg font-black tracking-tight text-md-on-surface">
+                {BADRAN_STRATEGY_PLAYBOOK.suiteTitle}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-600 text-white shadow-xs flex items-center gap-1">
+                <CheckCircle2 size={12} />
+                <span>قالب BADRAN المعتمد في ثاندر</span>
               </span>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                    {BADRAN_STRATEGY_PLAYBOOK.suiteTitle}
-                  </h2>
-                  <span className="px-3 py-0.5 rounded-full text-xs font-extrabold bg-blue-600 text-white shadow-sm flex items-center gap-1">
-                    <CheckCircle2 size={13} />
-                    <span>قالب BADRAN المعتمد في ثاندر</span>
-                  </span>
-                </div>
-                <span className="text-xs text-blue-700 dark:text-blue-300 font-semibold block">
-                  خارطة الطريق التشغيلية: كيف تقرأ المؤشرات بالترتيب، وتحدد أسلوبك، وتنفذ بالمليم!
-                </span>
-              </div>
             </div>
-
-            <p className="text-xs text-md-on-surface-variant max-w-3xl leading-relaxed font-medium">
-              مرجعك الميداني الصارم الذي يربط الشارت بقرار التداول: نبدأ بفحص تيار البورصة العام والنشاط، ثم نكشف قيعان كتل الحيتان ومساحة الحركة، ونختبر تانك البنزين ودواسة الزخم، وننتهي بمعادلة التنفيذ بالقرش دون تردد أو عشوائية.
+            <p className="text-xs text-md-on-surface-variant font-medium mt-0.5">
+              خارطة الطريق التشغيلية: كيف تقرأ المؤشرات بالترتيب، وتحدد أسلوبك، وتنفذ بالمليم دون عشوائية!
             </p>
           </div>
+        </div>
 
-          {/* Quick Action CTA & Metrics */}
-          <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end gap-2.5 w-full lg:w-auto">
-            {onNavigateToLab && (
-              <button
-                onClick={() => onNavigateToLab('COMI')}
-                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition-all whitespace-nowrap"
-              >
-                <FlaskConical size={15} />
-                <span>تطبيق الاستراتيجية في المعمل المباشر 🔬</span>
-              </button>
-            )}
-
-            <div className="flex items-center gap-2">
-              <div className="bg-md-surface/90 border border-blue-500/30 rounded-[14px] px-3.5 py-1.5 text-center flex-1 sm:flex-none">
-                <div className="text-[10px] text-md-on-surface-variant font-bold">المؤشرات المعتمدة</div>
-                <div className="text-sm font-mono font-extrabold text-blue-600 dark:text-blue-400">8 مؤشرات متناسقة</div>
-              </div>
-              <div className="bg-md-surface/90 border border-blue-500/30 rounded-[14px] px-3.5 py-1.5 text-center flex-1 sm:flex-none">
-                <div className="text-[10px] text-md-on-surface-variant font-bold">تسلسل الخطوات</div>
-                <div className="text-sm font-mono font-extrabold text-purple-600 dark:text-purple-400">6 خطوات صارمة</div>
-              </div>
-            </div>
-          </div>
+        {/* Quick CTA */}
+        <div className="flex items-center gap-2 self-end md:self-center">
+          {onNavigateToLab && (
+            <button
+              onClick={() => onNavigateToLab('COMI')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all whitespace-nowrap"
+            >
+              <FlaskConical size={14} />
+              <span>تطبيق في المعمل 🔬</span>
+            </button>
+          )}
+          <span className="text-[11px] font-mono font-bold bg-md-surface px-2.5 py-1 rounded-full border border-md-outline-variant/40 text-blue-600 dark:text-blue-400">
+            6 خطوات صارمة • 8 مؤشرات
+          </span>
         </div>
       </div>
 

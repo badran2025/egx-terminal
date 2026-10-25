@@ -157,36 +157,36 @@ export const FundsView: React.FC<Props> = ({
         tabTitle="دليل وثائق الاستثمار وأوعية كلاودز (السياسة الاستثمارية الدقيقة لـ 73 خياراً)"
       />
 
-      {/* Top Header Card */}
-      <MdCard variant="elevated" className="p-5 sm:p-6 shadow-sm relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5 text-md-primary font-bold text-lg">
-              <div className="w-10 h-10 rounded-2xl bg-md-primary-container text-md-on-primary-container flex items-center justify-center shadow-sm">
-                <Coins size={22} />
-              </div>
-              <h2 className="font-extrabold text-xl sm:text-2xl tracking-tight text-md-on-surface">
+      {/* Top Header Card - Compact & Clean */}
+      <MdCard variant="elevated" className="p-3.5 sm:p-4 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-md-primary-container text-md-on-primary-container flex items-center justify-center shadow-xs shrink-0">
+              <Coins size={19} />
+            </div>
+            <div>
+              <h2 className="font-black text-base sm:text-lg tracking-tight text-md-on-surface">
                 دليل صناديق الاستثمار ومؤشراتها وسياساتها الرسمية
               </h2>
+              <p className="text-xs text-md-on-surface-variant font-medium mt-0.5">
+                توثيق رسمي شامل لـ 73 خياراً: كل صندوق مربوط بمؤشره الحقيقي (EGX70, EGX100, EGX30) وسياسة إدارته المعتمدة.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-md-on-surface-variant max-w-4xl leading-relaxed">
-              توثيق رسمي شامل لجميع خيارات الاستثمار المتاحة عبر ثاندر (73 خياراً). كل صندوق مربوط بمؤشره المستهدف الحقيقي وسياسة إدارته المعتمدة وفق نشرات الاكتتاب الرسمية وإفصاحات الهيئة العامة للرقابة المالية.
-            </p>
           </div>
 
           {/* Search Box */}
-          <div className="w-full lg:w-96">
+          <div className="w-full lg:w-80">
             <MdTextField
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث بالمؤشر، الكود أو الاستراتيجية (EGX70, مية مية, عقارات, تصدير, شريعة...)"
-              leadingIcon={<Search size={18} />}
+              placeholder="ابحث بالمؤشر أو الكود (T70, مية مية, عقارات)..."
+              leadingIcon={<Search size={16} />}
             />
           </div>
         </div>
 
         {/* 5 Official Categories Summary Grid (User Defined) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-5 pt-4 border-t border-md-outline-variant/40">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mt-3 pt-3 border-t border-md-outline-variant/40">
           <button 
             onClick={() => setFilter('أسهم نشطة')}
             className={`p-3 rounded-2xl text-right transition-all border ${
