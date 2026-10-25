@@ -1517,9 +1517,37 @@ export function resolve7LayerAnalysis(selectedSymbol: string, liveStock?: StockD
   if (GROWTHX_SIMULATOR_CASES[upper]) {
     const baseCase = GROWTHX_SIMULATOR_CASES[upper];
     if (liveStock && liveStock.close > 0) {
+      const price = liveStock.close;
+      const basePrice = baseCase.currentPrice || price;
+      const ratio = price / basePrice;
+      
+      // If live price differs by more than 3% from pre-authored price, scale finalVerdict numbers to match live price!
+      let updatedVerdict = baseCase.finalVerdict;
+      if (Math.abs(ratio - 1) > 0.03) {
+        const scaledEntryMin = Number((price * 0.985).toFixed(2));
+        const scaledEntryMax = Number((price * 1.01).toFixed(2));
+        const scaledTarget1 = Number((price * 1.065).toFixed(2));
+        const scaledTarget2 = Number((price * 1.13).toFixed(2));
+        const scaledStopLoss = Number((price * 0.945).toFixed(2));
+
+        updatedVerdict = {
+          ...baseCase.finalVerdict,
+          entryRange: `${scaledEntryMin.toFixed(2)} - ${scaledEntryMax.toFixed(2)} ج.م (قرب السعر الحالي ${price.toFixed(2)})`,
+          target1: `${scaledTarget1.toFixed(2)} ج.م (+6.5%)`,
+          target2: `${scaledTarget2.toFixed(2)} ج.م (+13.0%)`,
+          stopLoss: `${scaledStopLoss.toFixed(2)} ج.م (-5.5%)`,
+          buildingFloorsSummary: {
+            floorSupport: `أرضية الدور الحالية: ${(price * 0.97).toFixed(2)} - ${(price * 0.99).toFixed(2)} جنيه`,
+            ceilingResistance: `سقف الدور الأول: ${scaledTarget1.toFixed(2)} جنيه | سقف الدور الثاني: ${scaledTarget2.toFixed(2)} جنيه`,
+            floorStrengthNotes: baseCase.finalVerdict.buildingFloorsSummary?.floorStrengthNotes || 'أرضية ارتكاز فنية محسوبة لحظياً'
+          }
+        };
+      }
+
       return {
         ...baseCase,
-        currentPrice: liveStock.close
+        currentPrice: price,
+        finalVerdict: updatedVerdict
       };
     }
     return baseCase;

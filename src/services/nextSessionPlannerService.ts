@@ -18,7 +18,7 @@ export interface NextSessionStockPlan {
   volume: number;
   turnover: number;
 
-  // Floor Trader Pivots, Supports & Resistances (Classic Egyptian Brokerage Standard)
+  // Floor Trader Pivots, Supports & Resistances (Classic Egyptian Brokerage Standard - 2 decimals)
   pivot: number;
   support1: number;
   support2: number;
@@ -27,7 +27,7 @@ export interface NextSessionStockPlan {
   resistance2: number;
   resistance3: number;
 
-  // Tomorrow's Tactical Execution Plan
+  // Tomorrow's Tactical Execution Plan (Strictly tied to currentPrice)
   entryRangeMin: number;
   entryRangeMax: number;
   entryRangeText: string;
@@ -68,6 +68,10 @@ export interface NextSessionStockPlan {
   // Corporate Catalysts & Earnings Date
   nextEarningsDate: string;
   catalystsAndNews: string;
+
+  // Top 10 Strong Recommendations Flags
+  isTopPick?: boolean;
+  topPickRank?: number;
 
   // Simulation Case reference
   simCase: StockSimulationCase;
@@ -213,47 +217,73 @@ function getStockCatalystAndEarnings(symbol: string, sector: string, nameAr: str
 
 /**
  * Pure calculation of the complete Next Session Trading & Execution Plan for a stock
+ * Dynamic, mathematically rigorous, strictly anchored to currentPrice.
  */
 export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPlan {
   const upper = stock.symbol.toUpperCase().trim();
   const simCase = resolve7LayerAnalysis(upper, stock);
-  const currentPrice = stock.close && stock.close > 0 ? stock.close : simCase.currentPrice;
+  
+  // Real live current market price rounded to 2 decimals
+  const currentPrice = Number((stock.close && stock.close > 0 ? stock.close : simCase.currentPrice).toFixed(2));
 
   // 1. Classic Egyptian Floor Trader Pivots, Supports & Resistances
-  // If pivots exist in stock data, use them, otherwise calculate mathematically
-  let pivot = stock.pivot && stock.pivot > 0 ? stock.pivot : currentPrice;
-  let sup1 = stock.support1 && stock.support1 > 0 ? stock.support1 : Number((pivot * 0.97).toFixed(2));
-  let sup2 = stock.support2 && stock.support2 > 0 ? stock.support2 : Number((pivot * 0.94).toFixed(2));
-  let res1 = stock.resistance1 && stock.resistance1 > 0 ? stock.resistance1 : Number((pivot * 1.03).toFixed(2));
-  let res2 = stock.resistance2 && stock.resistance2 > 0 ? stock.resistance2 : Number((pivot * 1.06).toFixed(2));
+  // Strictly rounded to 2 decimals and anchored to currentPrice
+  let pivot = Number((stock.pivot && stock.pivot > 0 ? stock.pivot : currentPrice).toFixed(2));
+  
+  // If pivot is more than 25% away from currentPrice (outdated cached scanner data), re-anchor at currentPrice
+  if (Math.abs(pivot - currentPrice) / currentPrice > 0.25) {
+    pivot = Number(currentPrice.toFixed(2));
+  }
 
-  // Compute Delta between Pivot and S1/R1 to strictly derive S3 and R3 (matching brokerage standard)
-  const delta = Math.max(0.05, Math.abs(res1 - pivot));
-  const sup3 = Number((sup2 - delta).toFixed(2));
+  let sup1 = Number((stock.support1 && stock.support1 > 0 && stock.support1 < currentPrice * 1.03 ? stock.support1 : (pivot * 0.97)).toFixed(2));
+  let sup2 = Number((stock.support2 && stock.support2 > 0 && stock.support2 < sup1 ? stock.support2 : (pivot * 0.94)).toFixed(2));
+  let res1 = Number((stock.resistance1 && stock.resistance1 > 0 && stock.resistance1 > currentPrice * 0.97 ? stock.resistance1 : (pivot * 1.03)).toFixed(2));
+  let res2 = Number((stock.resistance2 && stock.resistance2 > 0 && stock.resistance2 > res1 ? stock.resistance2 : (pivot * 1.06)).toFixed(2));
+
+  // Adjust sup1 and sup2 if they are above currentPrice
+  if (sup1 >= currentPrice * 0.995) {
+    sup1 = Number((currentPrice * 0.975).toFixed(2));
+    sup2 = Number((currentPrice * 0.945).toFixed(2));
+  }
+
+  // Adjust res1 and res2 if they are below currentPrice
+  if (res1 <= currentPrice * 1.005) {
+    res1 = Number((currentPrice * 1.045).toFixed(2));
+    res2 = Number((currentPrice * 1.085).toFixed(2));
+  }
+
+  // Compute Delta to strictly derive S3 and R3 (matching Egyptian brokerage standard)
+  const delta = Number(Math.max(0.05, Math.abs(res1 - pivot)).toFixed(2));
+  const sup3 = Number(Math.max(0.05, sup2 - delta).toFixed(2));
   const res3 = Number((res2 + delta).toFixed(2));
 
-  // 2. Tactical Entry Range, Targets, Stop Loss from BADRAN institutional engine
-  const v = simCase.finalVerdict;
-  const target1 = extractPriceFromText(v.target1, Number((currentPrice * 1.06).toFixed(2)));
-  const target2 = extractPriceFromText(v.target2, Number((target1 * 1.06).toFixed(2)));
-  const stopLoss = extractPriceFromText(v.stopLoss, Number((sup1 * 0.97).toFixed(2)));
+  // 2. DYNAMIC TACTICAL ENTRY RANGE (Strictly anchored to currentPrice)
+  // Entry zone is the proposed buying range around support and current market price
+  let entryMin = Number((Math.min(currentPrice * 0.99, Math.max(sup1, currentPrice * 0.975))).toFixed(2));
+  let entryMax = Number((Math.max(currentPrice * 1.008, entryMin * 1.018)).toFixed(2));
+
+  // Sanity check: entry range must strictly contain or be immediately adjacent to currentPrice
+  if (entryMin >= entryMax || Math.abs(entryMin - currentPrice) / currentPrice > 0.08) {
+    entryMin = Number((currentPrice * 0.985).toFixed(2));
+    entryMax = Number((currentPrice * 1.012).toFixed(2));
+  }
+
+  // 3. TARGETS 1 & 2 (Strictly higher than currentPrice)
+  let target1 = Number(Math.max(currentPrice * 1.045, res1).toFixed(2));
+  let target2 = Number(Math.max(target1 * 1.045, res2).toFixed(2));
 
   const target1Pct = Number((((target1 - currentPrice) / currentPrice) * 100).toFixed(1));
   const target2Pct = Number((((target2 - currentPrice) / currentPrice) * 100).toFixed(1));
-  const stopLossPct = Number((((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1));
 
-  let entryMin = Number((currentPrice * 0.99).toFixed(2));
-  let entryMax = Number((currentPrice * 1.01).toFixed(2));
-  const rangeMatch = v.entryRange.match(/([0-9]+(?:\.[0-9]+)?)\s*[-–]\s*([0-9]+(?:\.[0-9]+)?)/);
-  if (rangeMatch) {
-    entryMin = parseFloat(rangeMatch[1]);
-    entryMax = parseFloat(rangeMatch[2]);
-  } else {
-    entryMin = Math.min(sup1, Number((currentPrice * 0.99).toFixed(2)));
-    entryMax = Number((currentPrice * 1.005).toFixed(2));
+  // 4. STOP LOSS (Strictly lower than currentPrice and entryMin)
+  let stopLoss = Number((Math.min(currentPrice * 0.955, sup1 * 0.985)).toFixed(2));
+  if (stopLoss >= currentPrice * 0.985) {
+    stopLoss = Number((currentPrice * 0.95).toFixed(2));
   }
+  const stopLossPct = Number((((currentPrice - stopLoss) / currentPrice) * 100).toFixed(1));
+  const riskRewardRatio = `1:${(target1Pct / Math.max(0.5, stopLossPct)).toFixed(1)}`;
 
-  // 3. Gate 0 Fundamental Health
+  // 5. Gate 0 Fundamental Health
   const fundamental = getStockFundamentalProfile(upper, stock.sector);
   const isHighRisk = fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED';
   const isExcellent = fundamental.financialHealthGrade === 'EXCELLENT';
@@ -265,7 +295,7 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   else if (isGood) gate0GradeBadge = '🟢 جيد جداً';
   else gate0GradeBadge = '🟡 متوسط الأداء';
 
-  // 4. Index Affiliation & State
+  // 6. Index Affiliation & State
   let indexAffiliation: 'EGX30' | 'EGX70' | 'EGX100' | 'OTHER' = 'OTHER';
   let indexStatusText = 'سوق الأسهم المصرية';
   if (stock.isEGX30) {
@@ -279,7 +309,7 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
     indexStatusText = 'EGX100 EWI (مؤشر السوق الأوسع • صاعد فوق الدعم 17,900 🟢)';
   }
 
-  // 5. Seven Layers Status & Detailed Badges
+  // 7. Seven Layers Status & Detailed Badges
   const layers = simCase.layers || [];
   const getLayer = (num: number) => layers.find(l => l.layerNumber === num);
 
@@ -302,7 +332,8 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   const passedLayers = [layer1Status, layer2Status, layer3Status, layer4Status, layer5Status, layer6Status, layer7Status].filter(s => s === 'pass').length;
   const confluenceScore = Math.min(100, Math.max(30, Math.round((passedLayers / 7) * 95) + (isExcellent ? 5 : isHighRisk ? -25 : 0)));
 
-  // 6. Final Action Recommendation
+  // 8. Final Action Recommendation
+  const v = simCase.finalVerdict;
   let finalActionVerdict: 'STRONG_BUY' | 'SWING_BUY' | 'HOLD' | 'TAKE_PROFIT' | 'STOP_LOSS' = 'HOLD';
   let actionVerdictText = 'احتفاظ ومراقبة 🔵';
   let actionBadgeColor = 'bg-blue-500/15 text-blue-500 border-blue-500/30';
@@ -329,7 +360,7 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
     actionBadgeColor = 'bg-rose-500/15 text-rose-500 border-rose-500/30';
   }
 
-  // 7. Corporate Catalysts & Earnings Date
+  // 9. Corporate Catalysts & Earnings Date
   const meta = EGX_ARABIC_NAMES[upper] || { nameAr: stock.nameAr, nameEn: stock.nameEn, sector: stock.sector };
   const catalystInfo = getStockCatalystAndEarnings(upper, meta.sector || stock.sector || '', meta.nameAr || stock.nameAr);
 
@@ -364,7 +395,7 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
     target2Pct,
     stopLoss,
     stopLossPct,
-    riskRewardRatio: `1:${(Math.max(1, target1Pct) / Math.max(0.8, stopLossPct)).toFixed(1)}`,
+    riskRewardRatio,
 
     gate0: {
       grade: fundamental.financialHealthGrade,
@@ -421,4 +452,64 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
     catalystsAndNews: catalystInfo.catalyst,
     simCase
   };
+}
+
+/**
+ * Enriches all stock plans with the Top 10 Strongest Actionable Recommendations for tomorrow's session.
+ * Always ensures the top 10 positions in the table belong to the best confluence opportunities!
+ */
+export function rankAndEnrichTop10SessionPlans(plans: NextSessionStockPlan[]): NextSessionStockPlan[] {
+  // Identify candidates: must be financially viable (Gate 0 pass), not stop loss
+  const candidates = [...plans].filter(p => 
+    p.gate0.isPass && 
+    p.finalActionVerdict !== 'STOP_LOSS' &&
+    p.confluenceScore >= 70
+  );
+
+  // Sort candidates by:
+  // 1. High conviction strong buy / buy verdict
+  // 2. Confluence score desc
+  // 3. Turnover / Liquidity desc
+  candidates.sort((a, b) => {
+    const isStrongA = a.finalActionVerdict === 'STRONG_BUY' ? 1 : 0;
+    const isStrongB = b.finalActionVerdict === 'STRONG_BUY' ? 1 : 0;
+    if (isStrongA !== isStrongB) return isStrongB - isStrongA;
+
+    if (b.confluenceScore !== a.confluenceScore) {
+      return b.confluenceScore - a.confluenceScore;
+    }
+    return b.turnover - a.turnover;
+  });
+
+  const top10List = candidates.slice(0, 10);
+  const top10Symbols = new Set(top10List.map(c => c.symbol));
+  const top10RankMap = new Map<string, number>();
+  top10List.forEach((c, idx) => top10RankMap.set(c.symbol, idx + 1));
+
+  // Tag plans with Top 10 status
+  const taggedPlans = plans.map(p => {
+    if (top10Symbols.has(p.symbol)) {
+      return {
+        ...p,
+        isTopPick: true,
+        topPickRank: top10RankMap.get(p.symbol)
+      };
+    }
+    return {
+      ...p,
+      isTopPick: false,
+      topPickRank: undefined
+    };
+  });
+
+  // Re-order so Top 10 are ALWAYS placed first (ranks 1 to 10), followed by remaining stocks sorted by confluenceScore
+  const top10 = taggedPlans
+    .filter(p => p.isTopPick)
+    .sort((a, b) => (a.topPickRank || 99) - (b.topPickRank || 99));
+
+  const others = taggedPlans
+    .filter(p => !p.isTopPick)
+    .sort((a, b) => b.confluenceScore - a.confluenceScore);
+
+  return [...top10, ...others];
 }

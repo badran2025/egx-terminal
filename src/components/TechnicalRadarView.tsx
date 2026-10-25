@@ -3,11 +3,15 @@ import {
   ArrowUpDown, Search, TrendingUp, TrendingDown, 
   BarChart2, Filter, Briefcase, FlaskConical, Download, 
   Printer, CheckCircle2, AlertTriangle, ShieldAlert, Sparkles,
-  ExternalLink, Layers, Eye, RefreshCw, X
+  ExternalLink, Layers, Eye, RefreshCw, X, Star, Flame
 } from 'lucide-react';
 import { StockData, PortfolioPosition } from '../types';
 import { formatPrice, formatTurnover, formatVolumeShares } from '../services/egxService';
-import { buildStockNextSessionPlan, NextSessionStockPlan } from '../services/nextSessionPlannerService';
+import { 
+  buildStockNextSessionPlan, 
+  rankAndEnrichTop10SessionPlans, 
+  NextSessionStockPlan 
+} from '../services/nextSessionPlannerService';
 import { MdCard, MdChip, MdBadge, MdButton } from './material';
 import { LastUpdatedBanner } from './LastUpdatedBanner';
 
@@ -30,7 +34,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
   lastUpdated,
   onRefresh
 }) => {
-  const [filter, setFilter] = useState<'all' | 'strong_buy' | 'entry_zone' | 'egx30' | 'egx70' | 'egx100' | 'owned' | 'sell_alert'>('all');
+  const [filter, setFilter] = useState<'all' | 'top10' | 'strong_buy' | 'entry_zone' | 'egx30' | 'egx70' | 'egx100' | 'owned' | 'sell_alert'>('all');
   const [search, setSearch] = useState<string>('');
   const [sortBy, setSortBy] = useState<'score' | 'turnover' | 'volume' | 'change' | 'price' | 'target1'>('score');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -51,10 +55,16 @@ export const TechnicalRadarView: React.FC<Props> = ({
     return map;
   }, [portfolio]);
 
-  // 2. Pre-calculate Next Session Plans for all stocks
+  // 2. Pre-calculate Next Session Plans for all stocks & Strictly prioritize Top 10 Strong Recommendations
   const stockPlans = useMemo(() => {
-    return pureStocks.map(stock => buildStockNextSessionPlan(stock));
+    const rawPlans = pureStocks.map(stock => buildStockNextSessionPlan(stock));
+    return rankAndEnrichTop10SessionPlans(rawPlans);
   }, [pureStocks]);
+
+  // Extract Top 10 Picks
+  const top10Picks = useMemo(() => {
+    return stockPlans.filter(p => p.isTopPick).sort((a, b) => (a.topPickRank || 99) - (b.topPickRank || 99));
+  }, [stockPlans]);
 
   // 3. Filter stocks
   const filtered = useMemo(() => {
@@ -62,6 +72,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
       const sym = plan.symbol.toUpperCase();
       const isOwned = ownedMap.has(sym);
 
+      if (filter === 'top10' && !plan.isTopPick) return false;
       if (filter === 'owned' && !isOwned) return false;
       if (filter === 'strong_buy' && plan.confluenceScore < 75) return false;
       if (filter === 'entry_zone' && (plan.currentPrice < plan.entryRangeMin || plan.currentPrice > plan.entryRangeMax * 1.015)) return false;
@@ -82,8 +93,15 @@ export const TechnicalRadarView: React.FC<Props> = ({
     });
   }, [stockPlans, filter, search, ownedMap]);
 
-  // 4. Sort logic
+  // 4. Sort logic: By default (or when sortBy === 'score'), Top 10 are ALWAYS strictly at the beginning of the table
   const sortedStocks = useMemo(() => {
+    if (sortBy === 'score' && sortOrder === 'desc') {
+      // Top 10 Strong Recommendations strictly stay in positions 1 to 10!
+      const topPicks = filtered.filter(p => p.isTopPick).sort((a, b) => (a.topPickRank || 99) - (b.topPickRank || 99));
+      const others = filtered.filter(p => !p.isTopPick).sort((a, b) => b.confluenceScore - a.confluenceScore);
+      return [...topPicks, ...others];
+    }
+
     return [...filtered].sort((a, b) => {
       let valA = 0;
       let valB = 0;
@@ -110,7 +128,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
   // Export CSV Handler
   const handleExportCSV = () => {
     const headers = [
-      'الرمز', 'اسم الشركة', 'المؤشر', 'السعر الحالي (ج.م)', 'التغير (ج.م)', '% التغير', 
+      'الترتيب / التميز', 'الرمز', 'اسم الشركة', 'المؤشر', 'السعر الحالي (ج.م)', 'التغير (ج.م)', '% التغير', 
       'حجم التداول (سهم)', 'قيمة التداول (ج.م)', 'ارتكاز (Pivot)', 
       'الدعم 1 (S1)', 'الدعم 2 (S2)', 'الدعم 3 (S3)', 
       'المقاومة 1 (R1)', 'المقاومة 2 (R2)', 'المقاومة 3 (R3)', 
@@ -122,6 +140,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
     ];
 
     const rows = sortedStocks.map(p => [
+      p.isTopPick ? `توب ${p.topPickRank}` : '-',
       p.symbol,
       `"${p.nameAr.replace(/"/g, '""')}"`,
       p.indexAffiliation,
@@ -184,7 +203,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
   return (
     <div className="space-y-4 w-full text-md-on-surface" dir="rtl">
       
-      {/* 1. Sleek Compact Header Bar (Clean, Unified, No Visual Clutter) */}
+      {/* 1. Sleek Compact Header Bar */}
       <div className="bg-gradient-to-r from-emerald-600/15 via-teal-600/10 to-blue-600/10 border border-emerald-500/30 rounded-[22px] p-3.5 sm:p-4 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -193,8 +212,9 @@ export const TechnicalRadarView: React.FC<Props> = ({
             </span>
             <h2 className="text-base sm:text-lg font-black tracking-tight text-md-on-surface flex items-center gap-2">
               <span>خطة وتوصيات الجلسة القادمة (تجهيز السوق المباشر)</span>
-              <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                قالب BADRAN + Gate 0
+              <span className="text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                <Star size={11} className="fill-amber-500 text-amber-500" />
+                <span>أول 10 توصيات مثبتة بالصدارة</span>
               </span>
             </h2>
           </div>
@@ -237,38 +257,39 @@ export const TechnicalRadarView: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* 2. Top Summary KPI Badges */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div className="bg-md-surface-container-low border border-emerald-500/25 rounded-2xl p-2.5 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] text-md-on-surface-variant font-bold">فرص شراء قوية (السكور ≥ 75%)</div>
-            <div className="text-lg font-mono font-black text-emerald-600 dark:text-emerald-400">{strongBuyCount} سهماً</div>
+      {/* 2. Top 10 Strongest Session Recommendations Quick Strip */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border border-amber-500/30 rounded-[20px] p-3 shadow-xs space-y-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
+              ⭐
+            </span>
+            <span className="font-black text-xs sm:text-sm text-md-on-surface">
+              أقوى 10 توصيات مؤكدة لجلسة الغد (مثبتة في صدارة الجدول بالترتيب):
+            </span>
           </div>
-          <span className="text-emerald-500 text-base">🚀</span>
+          <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+            أعلى توافق فني (BADRAN) ومؤسسي وسلامة مالية Gate 0
+          </span>
         </div>
 
-        <div className="bg-md-surface-container-low border border-teal-500/25 rounded-2xl p-2.5 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] text-md-on-surface-variant font-bold">داخل نطاق الدخول الآن</div>
-            <div className="text-lg font-mono font-black text-teal-600 dark:text-teal-400">{inEntryZoneCount} سهماً</div>
-          </div>
-          <span className="text-teal-500 text-base">🎯</span>
-        </div>
-
-        <div className="bg-md-surface-container-low border border-blue-500/25 rounded-2xl p-2.5 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] text-md-on-surface-variant font-bold">شركات ممتازة مالياً (Gate 0)</div>
-            <div className="text-lg font-mono font-black text-blue-600 dark:text-blue-400">{excellentFundCount} شركة</div>
-          </div>
-          <span className="text-blue-500 text-base">💎</span>
-        </div>
-
-        <div className="bg-md-surface-container-low border border-rose-500/25 rounded-2xl p-2.5 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] text-md-on-surface-variant font-bold">تحذير بيع وكسر دعم</div>
-            <div className="text-lg font-mono font-black text-rose-600 dark:text-rose-400">{sellAlertCount} سهماً</div>
-          </div>
-          <span className="text-rose-500 text-base">🛑</span>
+        {/* Quick Jump Pills for the Top 10 */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 text-xs">
+          {top10Picks.map((plan) => (
+            <button
+              key={plan.symbol}
+              onClick={() => setSelectedStockForModal(plan)}
+              className="px-2.5 py-1.5 rounded-xl bg-md-surface hover:bg-md-surface-container-high border border-amber-500/40 text-xs font-bold text-md-on-surface shadow-xs transition-all flex items-center gap-1.5 shrink-0 hover:scale-105 active:scale-95"
+              title={`انقر لفتح بطاقة توصية ${plan.nameAr} كاملة`}
+            >
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                {plan.topPickRank}
+              </span>
+              <span className="font-mono text-md-primary font-black">{plan.symbol}</span>
+              <span className="font-mono text-xs font-bold">{plan.currentPrice.toFixed(2)} ج.م</span>
+              <span className="text-emerald-500 text-[10px] font-mono font-bold">+{plan.target1Pct}%</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -285,6 +306,18 @@ export const TechnicalRadarView: React.FC<Props> = ({
             }`}
           >
             جميع الأسهم ({pureStocks.length})
+          </button>
+
+          <button
+            onClick={() => setFilter('top10')}
+            className={`px-3 py-1.5 rounded-full font-black transition-all whitespace-nowrap text-xs flex items-center gap-1 ${
+              filter === 'top10' 
+                ? 'bg-amber-600 text-white shadow-xs' 
+                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20'
+            }`}
+          >
+            <Star size={12} className="fill-current" />
+            <span>أفضل 10 فرص ({top10Picks.length})</span>
           </button>
 
           <button
@@ -398,8 +431,8 @@ export const TechnicalRadarView: React.FC<Props> = ({
             <thead className="bg-md-surface-container-high text-md-on-surface-variant font-bold border-b border-md-outline-variant/60 sticky top-0 z-20 backdrop-blur-md">
               <tr>
                 {/* 1. Sticky Ticker & Company */}
-                <th className="p-3 text-center min-w-[90px] w-24 sticky right-0 z-30 bg-md-surface-container-high border-l border-md-outline-variant/60 shadow-xs">
-                  الرمز
+                <th className="p-3 text-center min-w-[100px] w-28 sticky right-0 z-30 bg-md-surface-container-high border-l border-md-outline-variant/60 shadow-xs">
+                  الرمز / الترتيب
                 </th>
                 <th className="p-3 text-right min-w-[190px]">
                   اسم الشركة والمؤشر
@@ -514,15 +547,27 @@ export const TechnicalRadarView: React.FC<Props> = ({
                 return (
                   <tr 
                     key={plan.symbol}
-                    className="hover:bg-md-surface-container-highest/60 transition-colors group cursor-pointer text-xs"
+                    className={`transition-colors group cursor-pointer text-xs ${
+                      plan.isTopPick 
+                        ? 'bg-amber-500/5 hover:bg-amber-500/15 border-r-4 border-r-amber-500 font-medium' 
+                        : 'hover:bg-md-surface-container-highest/60'
+                    }`}
                     onClick={() => setSelectedStockForModal(plan)}
                   >
-                    {/* 1. Sticky Ticker Column */}
+                    {/* 1. Sticky Ticker Column with Top 10 Badge */}
                     <td className="p-2.5 text-center sticky right-0 z-10 bg-md-surface group-hover:bg-md-surface-container-highest border-l border-md-outline-variant/40 shadow-xs">
                       <div className="flex items-center justify-center gap-1">
                         <span className="font-mono font-black text-xs px-2 py-1 rounded-md bg-md-surface-container-high text-md-on-surface border border-md-outline-variant/60 group-hover:border-md-primary transition-colors">
                           {plan.symbol}
                         </span>
+                        {plan.isTopPick && (
+                          <span 
+                            className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-2xs" 
+                            title={`المركز رقم ${plan.topPickRank} في أقوى 10 فرص للجلسة القادمة`}
+                          >
+                            ⭐ {plan.topPickRank}
+                          </span>
+                        )}
                         {isOwned && (
                           <span title="مملوك في محفظتك">💼</span>
                         )}
@@ -562,7 +607,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
 
                     {/* Current Price */}
                     <td className="p-2.5 font-mono font-black text-xs text-md-on-surface">
-                      {formatPrice(plan.currentPrice)} ج.م
+                      {plan.currentPrice.toFixed(2)} ج.م
                     </td>
 
                     {/* Daily Change & % */}
@@ -588,39 +633,39 @@ export const TechnicalRadarView: React.FC<Props> = ({
                     {/* Target 1 & 2 */}
                     <td className="p-2.5 font-mono text-xs">
                       <div className="text-emerald-600 dark:text-emerald-400 font-bold">
-                        1: {formatPrice(plan.target1)} <span className="text-[10px]">(+{plan.target1Pct}%)</span>
+                        1: {plan.target1.toFixed(2)} <span className="text-[10px]">(+{plan.target1Pct}%)</span>
                       </div>
                       <div className="text-teal-600 dark:text-teal-400 font-medium text-[11px]">
-                        2: {formatPrice(plan.target2)} <span className="text-[10px]">(+{plan.target2Pct}%)</span>
+                        2: {plan.target2.toFixed(2)} <span className="text-[10px]">(+{plan.target2Pct}%)</span>
                       </div>
                     </td>
 
                     {/* Stop Loss */}
                     <td className="p-2.5 font-mono text-xs text-rose-600 dark:text-rose-400 font-bold">
-                      {formatPrice(plan.stopLoss)} <span className="text-[10px]">(-{plan.stopLossPct}%)</span>
+                      {plan.stopLoss.toFixed(2)} <span className="text-[10px]">(-{plan.stopLossPct}%)</span>
                     </td>
 
                     {/* Floor Trader Pivots, Supports & Resistances */}
                     <td className="p-2.5 text-center font-mono font-bold text-xs bg-amber-500/5 text-amber-600 dark:text-amber-400">
-                      {formatPrice(plan.pivot)}
+                      {plan.pivot.toFixed(2)}
                     </td>
-                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface">
-                      {formatPrice(plan.support1)}
-                    </td>
-                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface-variant">
-                      {formatPrice(plan.support2)}
-                    </td>
-                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface-variant/80">
-                      {formatPrice(plan.support3)}
-                    </td>
-                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface">
-                      {formatPrice(plan.resistance1)}
+                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface font-semibold">
+                      {plan.support1.toFixed(2)}
                     </td>
                     <td className="p-2.5 text-center font-mono text-xs text-md-on-surface-variant">
-                      {formatPrice(plan.resistance2)}
+                      {plan.support2.toFixed(2)}
                     </td>
                     <td className="p-2.5 text-center font-mono text-xs text-md-on-surface-variant/80">
-                      {formatPrice(plan.resistance3)}
+                      {plan.support3.toFixed(2)}
+                    </td>
+                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface font-semibold">
+                      {plan.resistance1.toFixed(2)}
+                    </td>
+                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface-variant">
+                      {plan.resistance2.toFixed(2)}
+                    </td>
+                    <td className="p-2.5 text-center font-mono text-xs text-md-on-surface-variant/80">
+                      {plan.resistance3.toFixed(2)}
                     </td>
 
                     {/* Gate 0 Fundamental Health */}
@@ -751,9 +796,16 @@ export const TechnicalRadarView: React.FC<Props> = ({
                   {selectedStockForModal.symbol}
                 </span>
                 <div>
-                  <h3 className="text-lg font-black text-md-on-surface">
-                    {selectedStockForModal.nameAr}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-md-on-surface">
+                      {selectedStockForModal.nameAr}
+                    </h3>
+                    {selectedStockForModal.isTopPick && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 shadow-xs">
+                        ⭐ التوصية رقم {selectedStockForModal.topPickRank} بالجلسة
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-md-on-surface-variant font-medium flex items-center gap-2 mt-0.5">
                     <span>{selectedStockForModal.sector}</span>
                     <span>•</span>
@@ -776,7 +828,7 @@ export const TechnicalRadarView: React.FC<Props> = ({
                 <span className="text-[11px] text-md-on-surface-variant font-bold block">السعر الحالي والتغير:</span>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-mono font-black text-md-on-surface">
-                    {formatPrice(selectedStockForModal.currentPrice)} ج.م
+                    {selectedStockForModal.currentPrice.toFixed(2)} ج.م
                   </span>
                   <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
                     selectedStockForModal.changePercent >= 0 ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'
@@ -804,21 +856,21 @@ export const TechnicalRadarView: React.FC<Props> = ({
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 text-center">
                 <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-sans">المستهدف 1</div>
                 <div className="text-sm font-black text-md-on-surface mt-0.5">
-                  {formatPrice(selectedStockForModal.target1)} (+{selectedStockForModal.target1Pct}%)
+                  {selectedStockForModal.target1.toFixed(2)} (+{selectedStockForModal.target1Pct}%)
                 </div>
               </div>
 
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 text-center">
                 <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold font-sans">المستهدف 2</div>
                 <div className="text-sm font-black text-md-on-surface mt-0.5">
-                  {formatPrice(selectedStockForModal.target2)} (+{selectedStockForModal.target2Pct}%)
+                  {selectedStockForModal.target2.toFixed(2)} (+{selectedStockForModal.target2Pct}%)
                 </div>
               </div>
 
               <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-2.5 text-center">
                 <div className="text-[10px] text-rose-600 dark:text-rose-400 font-bold font-sans">وقف الخسارة الصارم</div>
                 <div className="text-sm font-black text-md-on-surface mt-0.5">
-                  {formatPrice(selectedStockForModal.stopLoss)} (-{selectedStockForModal.stopLossPct}%)
+                  {selectedStockForModal.stopLoss.toFixed(2)} (-{selectedStockForModal.stopLossPct}%)
                 </div>
               </div>
             </div>
@@ -831,31 +883,31 @@ export const TechnicalRadarView: React.FC<Props> = ({
               <div className="grid grid-cols-7 gap-1.5 text-center font-mono text-xs">
                 <div className="bg-md-surface p-1.5 rounded-lg border border-md-outline-variant/40">
                   <div className="text-[9px] text-md-on-surface-variant">S3</div>
-                  <div className="font-bold">{formatPrice(selectedStockForModal.support3)}</div>
+                  <div className="font-bold">{selectedStockForModal.support3.toFixed(2)}</div>
                 </div>
                 <div className="bg-md-surface p-1.5 rounded-lg border border-md-outline-variant/40">
                   <div className="text-[9px] text-md-on-surface-variant">S2</div>
-                  <div className="font-bold">{formatPrice(selectedStockForModal.support2)}</div>
+                  <div className="font-bold">{selectedStockForModal.support2.toFixed(2)}</div>
                 </div>
                 <div className="bg-md-surface p-1.5 rounded-lg border border-md-outline-variant/40">
                   <div className="text-[9px] text-md-on-surface-variant">S1</div>
-                  <div className="font-bold">{formatPrice(selectedStockForModal.support1)}</div>
+                  <div className="font-bold">{selectedStockForModal.support1.toFixed(2)}</div>
                 </div>
                 <div className="bg-amber-500/15 p-1.5 rounded-lg border border-amber-500/30 text-amber-600 dark:text-amber-400 font-black">
                   <div className="text-[9px]">الارتكاز</div>
-                  <div>{formatPrice(selectedStockForModal.pivot)}</div>
+                  <div>{selectedStockForModal.pivot.toFixed(2)}</div>
                 </div>
                 <div className="bg-md-surface p-1.5 rounded-lg border border-md-outline-variant/40">
                   <div className="text-[9px] text-md-on-surface-variant">R1</div>
-                  <div className="font-bold">{formatPrice(selectedStockForModal.resistance1)}</div>
+                  <div className="font-bold">{selectedStockForModal.resistance1.toFixed(2)}</div>
                 </div>
                 <div className="bg-md-surface p-1.5 rounded-lg border border-md-outline-variant/40">
                   <div className="text-[9px] text-md-on-surface-variant">R2</div>
-                  <div className="font-bold">{formatPrice(selectedStockForModal.resistance2)}</div>
+                  <div className="font-bold">{selectedStockForModal.resistance2.toFixed(2)}</div>
                 </div>
                 <div className="bg-md-surface p-1.5 rounded-lg border border-md-outline-variant/40">
                   <div className="text-[9px] text-md-on-surface-variant">R3</div>
-                  <div className="font-bold">{formatPrice(selectedStockForModal.resistance3)}</div>
+                  <div className="font-bold">{selectedStockForModal.resistance3.toFixed(2)}</div>
                 </div>
               </div>
             </div>

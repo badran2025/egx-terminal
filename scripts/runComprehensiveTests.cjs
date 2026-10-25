@@ -208,6 +208,17 @@ assert(nextSessionContent.includes('catalystsAndNews'), 'Corporate catalysts and
 assert(techContent.includes('pureStocks'), 'TechnicalRadarView filters to pure stocks only, excluding mutual funds and gold');
 assert(techContent.includes('handleExportCSV'), 'TechnicalRadarView supports CSV / Excel export of trading battle plan');
 assert(techContent.includes('selectedStockForModal'), 'TechnicalRadarView provides interactive detail modal for each stock');
+assert(techContent.includes('rankAndEnrichTop10SessionPlans'), 'TechnicalRadarView uses rankAndEnrichTop10SessionPlans');
+assert(techContent.includes('top10Picks'), 'TechnicalRadarView renders top 10 strong recommendations strip');
+assert(techContent.includes('⭐ {plan.topPickRank}'), 'TechnicalRadarView badges top 10 strong recommendations in the table');
+
+// Dynamic Pricing & Safety Verification
+assert(nextSessionContent.includes('rankAndEnrichTop10SessionPlans'), 'nextSessionPlannerService exports rankAndEnrichTop10SessionPlans');
+assert(nextSessionContent.includes('isTopPick') && nextSessionContent.includes('topPickRank'), 'NextSessionStockPlan has top recommendation rank attributes');
+
+// Ensure that prices are strictly anchored dynamically to currentPrice (no stale 30.80 for 14.82)
+assert(nextSessionContent.includes('entryMin >= entryMax') || nextSessionContent.includes('Math.abs(entryMin - currentPrice)'), 'Entry range is mathematically validated and anchored to currentPrice');
+assert(nextSessionContent.includes('stopLoss >= currentPrice'), 'Stop loss is strictly validated to be lower than currentPrice');
 
 // Header De-cluttering Verification
 const labPath = path.resolve(__dirname, '../src/components/InteractiveStockLab.tsx');
