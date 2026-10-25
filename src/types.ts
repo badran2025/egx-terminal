@@ -29,6 +29,28 @@ export interface StockData {
   sector?: string;
   isFund?: boolean;
   isGold?: boolean;
+
+  // Gate 0 Live Fundamentals (from TradingView Scanner)
+  peRatio?: number;
+  eps?: number;
+  dividendYield?: number;
+  debtToEquity?: number;
+  roe?: number;
+  marketCap?: number;
+
+  // Technical Layers (from TradingView Scanner)
+  macd?: number;
+  macdSignal?: number;
+  bbUpper?: number;
+  bbLower?: number;
+  bbBasis?: number;
+  atr?: number;
+  cmf?: number;
+
+  // Multi-Timeframe Confluence (from TradingView Scanner)
+  rsi1w?: number;
+  ema50_1h?: number;
+  ema50_1w?: number;
 }
 
 export interface PortfolioPosition {
@@ -90,4 +112,21 @@ export interface EGXNewsItem {
   category: 'إفصاح رسمي' | 'توزيعات أرباح' | 'نتائج أعمال' | 'استحواذ ودمج' | 'أخبار عامة';
   sentiment: 'إيجابي' | 'محايد' | 'سلبي';
   summary: string;
+  url?: string;
+  source?: string;
+}
+
+export interface MacroMarketRates {
+  usdEgp: number;
+  goldOunceUsd: number;
+  gold24kEgp: number;
+  gold21kEgp: number;
+  goldPoundEgp: number;
+  brentOilUsd: number;
+  macroRiskScore: number; // -10 to +5
+  macroRiskModifier: number; // e.g. -5 to +3 percentage points for ConfluenceScore
+  macroSentiment: 'إيجابي' | 'محايد' | 'حذر / توترات';
+  recommendedCashRatioPct: number; // e.g. 20% to 50%
+  lastSyncTime: string;
+  isLive: boolean;
 }

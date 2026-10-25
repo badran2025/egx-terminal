@@ -3,8 +3,14 @@ import {
   BarChart3, Briefcase, Coins, Newspaper, RefreshCw, 
   Search, Sun, Moon, Sparkles, Zap, GraduationCap, Compass
 } from 'lucide-react';
-import { StockData, PortfolioPosition } from './types';
-import { fetchEGXStocks, getFallbackStocks } from './services/egxService';
+import { StockData, PortfolioPosition, MacroMarketRates, EGXNewsItem } from './types';
+import { 
+  fetchEGXStocks, 
+  getFallbackStocks, 
+  fetchLiveMacroRates, 
+  fetchLiveGeopoliticalNews, 
+  getDataFeedStatus 
+} from './services/egxService';
 import { HeaderTicker } from './components/HeaderTicker';
 import { MarketWatchSidebar } from './components/MarketWatchSidebar';
 import { RadarAndRecommendationsView } from './components/RadarAndRecommendationsView';
@@ -20,6 +26,13 @@ export function App() {
   const [stocks, setStocks] = useState<StockData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
+  const [macroRates, setMacroRates] = useState<MacroMarketRates | null>(null);
+  const [news, setNews] = useState<EGXNewsItem[]>([]);
+  const [macroRiskModifier, setMacroRiskModifier] = useState<number>(0);
+  const [macroSentiment, setMacroSentiment] = useState<'إيجابي' | 'محايد' | 'حذر / توترات'>('محايد');
+  const [recommendedCashRatio, setRecommendedCashRatio] = useState<number>(25);
+
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [labRequestedSymbol, setLabRequestedSymbol] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
@@ -73,12 +86,28 @@ export function App() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchEGXStocks();
-      setStocks(data);
-      setLastUpdated(new Date());
+      const [stocksData, macroData, newsData] = await Promise.all([
+        fetchEGXStocks(),
+        fetchLiveMacroRates().catch(() => null),
+        fetchLiveGeopoliticalNews().catch(() => null)
+      ]);
+
+      setStocks(stocksData);
+      if (macroData) setMacroRates(macroData);
+      if (newsData) {
+        setNews(newsData.news);
+        setMacroRiskModifier(newsData.modifier);
+        setMacroSentiment(newsData.sentiment);
+        setRecommendedCashRatio(newsData.recommendedCashRatioPct);
+      }
+
+      const status = getDataFeedStatus();
+      setIsLiveConnected(status.isLive);
+      setLastUpdated(status.syncTime || new Date());
     } catch (err) {
-      console.error(err);
+      console.error('Error loading live data, using fallback:', err);
       setStocks(getFallbackStocks());
+      setIsLiveConnected(false);
       setLastUpdated(new Date());
     } finally {
       setIsLoading(false);
@@ -121,8 +150,16 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-md-surface text-md-on-surface flex flex-col selection:bg-md-primary-container selection:text-md-on-primary-container transition-colors duration-200" dir="rtl">
-      {/* Top Benchmark & Macro Ticker Tape */}
-      <HeaderTicker stocks={stocks} onSelectStock={(sym) => setSelectedSymbol(sym)} />
+      {/* Top Benchmark & Macro Ticker Tape with Transparency Badge */}
+      <HeaderTicker 
+        stocks={stocks} 
+        onSelectStock={(sym) => setSelectedSymbol(sym)}
+        isLive={isLiveConnected}
+        lastUpdated={lastUpdated}
+        onRefresh={loadData}
+        macroRates={macroRates}
+        macroRiskModifier={macroRiskModifier}
+      />
 
       {/* Material 3 Top App Bar */}
       <header className="bg-md-surface-container-low border-b border-md-outline-variant/60 sticky top-0 z-40 backdrop-blur-md bg-opacity-95 shadow-md-1">
@@ -297,6 +334,7 @@ export function App() {
               lastUpdated={lastUpdated}
               onRefresh={loadData}
               initialLabSymbol={labRequestedSymbol || undefined}
+              macroRiskModifier={macroRiskModifier}
             />
           )}
 
@@ -349,6 +387,10 @@ export function App() {
               lastUpdated={lastUpdated}
               onRefresh={loadData}
               isLoading={isLoading}
+              news={news}
+              macroRiskModifier={macroRiskModifier}
+              macroSentiment={macroSentiment}
+              recommendedCashRatioPct={recommendedCashRatio}
             />
           )}
         </div>

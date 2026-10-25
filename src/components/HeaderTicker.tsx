@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, TrendingDown, Clock, Activity, ShieldCheck, 
-  Coins, Sparkles, DollarSign, ChevronLeft, Award
+  Coins, Sparkles, DollarSign, ChevronLeft, Award, RefreshCw, AlertTriangle, CheckCircle2
 } from 'lucide-react';
-import { StockData } from '../types';
+import { StockData, MacroMarketRates } from '../types';
 import { 
   LIVE_GOLD_24K_PRICE, 
   LIVE_GOLD_21K_PRICE, 
@@ -14,10 +14,24 @@ import {
 interface Props {
   stocks: StockData[];
   onSelectStock: (symbol: string) => void;
+  isLive?: boolean;
+  lastUpdated?: Date;
+  onRefresh?: () => void;
+  macroRates?: MacroMarketRates | null;
+  macroRiskModifier?: number;
 }
 
-export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) => {
+export const HeaderTicker: React.FC<Props> = ({ 
+  stocks = [], 
+  onSelectStock,
+  isLive = true,
+  lastUpdated,
+  onRefresh,
+  macroRates,
+  macroRiskModifier = 0
+}) => {
   const [cairoTime, setCairoTime] = useState<string>('');
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -34,17 +48,32 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
     return () => clearInterval(interval);
   }, []);
 
+  const handleRefreshClick = async () => {
+    if (onRefresh && !isRefreshing) {
+      setIsRefreshing(true);
+      await onRefresh();
+      setTimeout(() => setIsRefreshing(false), 800);
+    }
+  };
+
+  const lastSyncStr = lastUpdated ? lastUpdated.toLocaleTimeString('ar-EG', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  }) : cairoTime;
+
   // Benchmarks & key assets
   const egx30 = stocks.find(s => s.symbol === 'EGX30');
   const egx70 = stocks.find(s => s.symbol === 'EGX70EWI');
   const egx100 = stocks.find(s => s.symbol === 'EGX100EWI');
   const goldStock = stocks.find(s => s.symbol.toUpperCase() === 'THNDRGOLD');
 
-  // Real market rates (Egyptian Sagha & Hedging)
-  const gold24Price = (goldStock?.close && goldStock.close > 1000) ? goldStock.close : LIVE_GOLD_24K_PRICE;
-  const gold21Price = LIVE_GOLD_21K_PRICE;
-  const goldPoundPrice = gold21Price * 8; // 8 grams 21k
-  const usdMarketRate = LIVE_USD_MARKET_RATE;
+  // Real live rates prioritizing live macro scanner feed
+  const gold24Price = macroRates?.gold24kEgp || ((goldStock?.close && goldStock.close > 1000) ? goldStock.close : LIVE_GOLD_24K_PRICE);
+  const gold21Price = macroRates?.gold21kEgp || LIVE_GOLD_21K_PRICE;
+  const goldPoundPrice = macroRates?.goldPoundEgp || (gold21Price * 8);
+  const usdMarketRate = macroRates?.usdEgp || LIVE_USD_MARKET_RATE;
+  const brentOil = macroRates?.brentOilUsd || 116.80;
 
   // Key active stocks to cycle in the ticker
   const topActiveTickers = ['COMI', 'TMGH', 'FWRY', 'SWDY', 'EKHO', 'CCAP', 'ABUK', 'ETEL', 'T70', 'BMM'];
@@ -55,11 +84,11 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
   // Ticker content items array
   const tickerItems = (
     <>
-      {/* 1. Real Gold Prices (سعر السوق الحقيقي بالصاغة) */}
+      {/* 1. Real Gold Prices (سعر الذهب الحي بالصاغة) */}
       <div 
         onClick={() => onSelectStock('THNDRGOLD')}
         className="flex items-center gap-1.5 cursor-pointer hover:bg-amber-500/15 px-3 py-1 rounded-xl transition-all border border-amber-500/20 text-xs font-bold"
-        title="ذهب عيار 24 بسوق الصاغة الحقيقي (اضغط لفتح الشارت)"
+        title="ذهب عيار 24 بسوق الصاغة الحي (محسوب لحظياً من أونصة الذهب والدولار)"
       >
         <span className="text-amber-500">🥇 ذهب 24:</span>
         <span className="font-mono text-md-on-surface font-extrabold">{formatPrice(gold24Price)} ج.م</span>
@@ -82,16 +111,37 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
         <span className="font-mono text-md-on-surface font-extrabold">{formatPrice(goldPoundPrice)} ج.م</span>
       </div>
 
-      {/* 2. Real Market Dollar (سعر التحوط بالصاغة) */}
+      {/* 2. Real Market Dollar (سعر صرف الدولار الحي) */}
       <div 
         className="flex items-center gap-1.5 px-3 py-1 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-xs font-bold"
-        title="سعر صرف الدولار الحقيقي بسوق الصاغة والتحوط (وليس البنك المركزي)"
+        title="سعر صرف الدولار المباشر من ماسح العملات"
       >
-        <span className="text-emerald-600 dark:text-emerald-400">💵 دولار السوق الحقيقي:</span>
+        <span className="text-emerald-600 dark:text-emerald-400">💵 دولار السوق:</span>
         <span className="font-mono text-md-on-surface font-extrabold">{usdMarketRate.toFixed(2)} ج.م</span>
       </div>
 
-      {/* 3. EGX 30 */}
+      {/* 3. Brent Crude Oil (خام برنت الحي) */}
+      <div 
+        className="flex items-center gap-1.5 px-3 py-1 rounded-xl border border-sky-500/20 bg-sky-500/10 text-xs font-bold"
+        title="سعر خام برنت العالمي الحي (Brent Crude)"
+      >
+        <span className="text-sky-600 dark:text-sky-400">🛢️ خام برنت:</span>
+        <span className="font-mono text-md-on-surface font-extrabold">${brentOil.toFixed(2)}</span>
+      </div>
+
+      {/* 4. Macro Risk Sentiment Pill */}
+      {macroRiskModifier !== 0 && (
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold ${
+          macroRiskModifier > 0 
+            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+            : 'border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+        }`}>
+          <span>🌍 الأخبار الجيوسياسية:</span>
+          <span className="font-mono">{macroRiskModifier > 0 ? `+${macroRiskModifier}%` : `${macroRiskModifier}%`}</span>
+        </div>
+      )}
+
+      {/* 5. EGX 30 */}
       <div 
         onClick={() => onSelectStock('EGX30')}
         className="flex items-center gap-1.5 cursor-pointer hover:bg-blue-500/15 px-3 py-1 rounded-xl transition-all border border-blue-500/20 text-xs font-bold"
@@ -108,7 +158,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
         </span>
       </div>
 
-      {/* 4. EGX 70 EWI */}
+      {/* 6. EGX 70 EWI */}
       <div 
         onClick={() => onSelectStock('EGX70EWI')}
         className="flex items-center gap-1.5 cursor-pointer hover:bg-teal-500/15 px-3 py-1 rounded-xl transition-all border border-teal-500/20 text-xs font-bold"
@@ -125,7 +175,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
         </span>
       </div>
 
-      {/* 5. EGX 100 EWI */}
+      {/* 7. EGX 100 EWI */}
       <div 
         onClick={() => onSelectStock('EGX100EWI')}
         className="flex items-center gap-1.5 cursor-pointer hover:bg-purple-500/15 px-3 py-1 rounded-xl transition-all border border-purple-500/20 text-xs font-bold"
@@ -142,7 +192,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
         </span>
       </div>
 
-      {/* 6. Active Stock Micro-Cards */}
+      {/* 8. Active Stock Micro-Cards */}
       {activeStocksList.map(stock => {
         const isPos = stock.changePercent >= 0;
         return (
@@ -186,7 +236,7 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
         </div>
       </div>
 
-      {/* 2. Seamless Infinite Marquee Track (Smooth horizontal auto-scrolling news tape) */}
+      {/* 2. Seamless Infinite Marquee Track */}
       <div className="flex-1 overflow-hidden relative mask-radial">
         <div className="ticker-marquee-track flex items-center gap-4 text-xs">
           {tickerItems}
@@ -194,10 +244,40 @@ export const HeaderTicker: React.FC<Props> = ({ stocks = [], onSelectStock }) =>
         </div>
       </div>
 
-      {/* 3. Subtle Trust Badge on the left */}
-      <div className="hidden lg:flex items-center gap-1.5 text-md-on-surface-variant text-[11px] font-sans shrink-0 border-r border-md-outline-variant/40 pr-3">
-        <ShieldCheck size={14} className="text-emerald-600 dark:text-emerald-400" />
-        <span className="font-semibold">تسعير سوقي مباشر</span>
+      {/* 3. Official Data Feed Transparency Status Badge (Left side) */}
+      <div className="shrink-0 z-10 flex items-center gap-2 pr-2">
+        {isLive ? (
+          <div 
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold"
+            title={`الاتصال نشط بالماسح اللحظي • آخر تحديث: ${lastSyncStr}`}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="hidden sm:inline">🟢 متصل مباشرة بماسح البورصة (تأخير 15 د) —</span>
+            <span>{lastSyncStr}</span>
+          </div>
+        ) : (
+          <div 
+            className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-bold"
+            title="تعذر الاتصال المباشر بالماسح ويتم عرض البيانات المعايرة مسبقاً"
+          >
+            <AlertTriangle size={13} className="text-amber-500" />
+            <span className="hidden md:inline">🟠 وضع البيانات الاحتياطية (Fallback)</span>
+            {onRefresh && (
+              <button
+                onClick={handleRefreshClick}
+                disabled={isRefreshing}
+                className="px-2 py-0.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold flex items-center gap-1 transition-all shadow-xs cursor-pointer"
+                title="إعادة الاتصال بالماسح وجلب البيانات اللحظية الآن"
+              >
+                <RefreshCw size={11} className={isRefreshing ? "animate-spin" : ""} />
+                <span>إعادة الاتصال الآن</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

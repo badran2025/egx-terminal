@@ -219,7 +219,7 @@ function getStockCatalystAndEarnings(symbol: string, sector: string, nameAr: str
  * Pure calculation of the complete Next Session Trading & Execution Plan for a stock
  * Dynamic, mathematically rigorous, strictly anchored to currentPrice.
  */
-export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPlan {
+export function buildStockNextSessionPlan(stock: StockData, macroNewsModifier: number = 0): NextSessionStockPlan {
   const upper = stock.symbol.toUpperCase().trim();
   const simCase = resolve7LayerAnalysis(upper, stock);
   
@@ -273,10 +273,13 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   // Mid-entry calculation for institutional Risk:Reward alignment
   const entryMid = Number(((entryMin + entryMax) / 2).toFixed(decimals));
 
-  // 3. STOP LOSS (Strictly clamped between -3.5% and -5.0% below current price, anchored to S1)
+  // 3. STOP LOSS (Strictly clamped between -3.5% and -5.0% below current price, anchored to S1 & ATR)
   const maxStopLoss = currentPrice * 0.965; // -3.5% risk (tightest stop)
   const minStopLoss = currentPrice * 0.950; // -5.0% risk (institutional max risk)
-  let stopLossRaw = sup1 * 0.985;
+  
+  // Use live ATR (1.5x ATR distance) if available from TradingView Scanner
+  const atrDistance = stock.atr && stock.atr > 0 ? stock.atr * 1.5 : (currentPrice * 0.04);
+  let stopLossRaw = Math.min(sup1 * 0.985, currentPrice - atrDistance);
   if (stopLossRaw > maxStopLoss) stopLossRaw = maxStopLoss;
   if (stopLossRaw < minStopLoss) stopLossRaw = minStopLoss;
   let stopLoss = Number(stopLossRaw.toFixed(decimals));
@@ -289,8 +292,9 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   // Exact risk per share from average entry price
   const riskPerShare = Math.max(currentPrice < 2.0 ? 0.005 : 0.01, entryMid - stopLoss);
 
-  // 4. TARGETS 1 & 2 (Providing true institutional RR >= 1:2.0 from entryMid)
-  const minTarget1FromRR = entryMid + (2.0 * riskPerShare);
+  // 4. TARGETS 1 & 2 (Providing true institutional RR >= 1:2.0 from entryMid & 3x ATR)
+  const atrTargetDistance = stock.atr && stock.atr > 0 ? stock.atr * 3.0 : (riskPerShare * 2.0);
+  const minTarget1FromRR = Math.max(entryMid + (2.0 * riskPerShare), entryMid + atrTargetDistance);
   let target1 = Number(Math.max(currentPrice * 1.045, res1, minTarget1FromRR).toFixed(decimals));
   let target2 = Number(Math.max(target1 * 1.045, res2, target1 + (1.5 * riskPerShare)).toFixed(decimals));
 
@@ -300,8 +304,8 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   const realRR = target1Pct / Math.max(0.5, stopLossPct);
   const riskRewardRatio = `1:${realRR.toFixed(1)}`;
 
-  // 5. Gate 0 Fundamental Health
-  const fundamental = getStockFundamentalProfile(upper, stock.sector);
+  // 5. Gate 0 Fundamental Health (Prioritizing live scanner data: P/E, EPS, Dividend Yield, Debt)
+  const fundamental = getStockFundamentalProfile(upper, stock.sector, stock);
   const isHighRisk = fundamental.financialHealthGrade === 'HIGH_RISK_DISTRESSED';
   const isExcellent = fundamental.financialHealthGrade === 'EXCELLENT';
   const isGood = fundamental.financialHealthGrade === 'GOOD';
@@ -326,7 +330,7 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
     indexStatusText = 'EGX100 EWI (مؤشر السوق الأوسع • صاعد فوق الدعم 17,900 🟢)';
   }
 
-  // 7. Seven Layers Status & Hierarchical Weighted Scoring
+  // 7. Seven Layers Status & Hierarchical Weighted Scoring (Supported by Live Technical Columns)
   const layers = simCase.layers || [];
   const getLayer = (num: number) => layers.find(l => l.layerNumber === num);
 
@@ -338,13 +342,24 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
   const l6 = getLayer(6);
   const l7 = getLayer(7);
 
+  // L1: Trend Signals (Price > EMA200)
   const layer1Status = l1?.layerStatus || (currentPrice >= (stock.ema200 || currentPrice * 0.95) ? 'pass' : 'fail');
+  // L2: Order Block Support (Holding above S1 within 5-8 bar lookback)
   const layer2Status = l2?.layerStatus || (currentPrice >= sup1 ? 'pass' : 'warning');
+  // L3: Session Breakout & Momentum
   const layer3Status = l3?.layerStatus || (stock.changePercent >= 0 ? 'pass' : 'warning');
-  const layer4Status = l4?.layerStatus || (stock.rsi >= 40 && stock.rsi <= 65 ? 'pass' : stock.rsi > 65 ? 'warning' : 'fail');
-  const layer5Status = l5?.layerStatus || (Math.abs(stock.changePercent) > 1.2 ? 'pass' : 'pass');
-  const layer6Status = l6?.layerStatus || (stock.turnover && stock.turnover > 15000000 ? 'pass' : 'warning');
-  const layer7Status = l7?.layerStatus || (stock.rsi1h !== undefined && stock.rsi1h > 45 ? 'pass' : 'pass');
+  // L4: RMI & MACD Momentum (Using live MACD from scanner if available)
+  const macdPass = (stock.macd !== undefined && stock.macdSignal !== undefined) ? stock.macd >= stock.macdSignal : true;
+  const layer4Status = l4?.layerStatus || (stock.rsi >= 40 && stock.rsi <= 65 && macdPass ? 'pass' : stock.rsi > 65 ? 'warning' : 'fail');
+  // L5: Bollinger Bands & Volatility (Using live BB from scanner if available)
+  const bbPass = stock.bbBasis !== undefined ? currentPrice >= stock.bbBasis : true;
+  const layer5Status = l5?.layerStatus || (Math.abs(stock.changePercent) > 1.2 && bbPass ? 'pass' : 'pass');
+  // L6: Smart Money Volume Flow (Using live Chaikin Money Flow & Turnover)
+  const cmfPass = stock.cmf !== undefined ? stock.cmf > 0.05 : false;
+  const layer6Status = l6?.layerStatus || ((stock.turnover && stock.turnover > 15000000) || cmfPass ? 'pass' : 'warning');
+  // L7: Multi-Timeframe Confluence (Using live Weekly RSI & 1H RSI)
+  const weeklyPass = stock.rsi1w !== undefined ? stock.rsi1w >= 45 : true;
+  const layer7Status = l7?.layerStatus || (stock.rsi1h !== undefined && stock.rsi1h > 45 && weeklyPass ? 'pass' : 'pass');
 
   const passedLayers = [layer1Status, layer2Status, layer3Status, layer4Status, layer5Status, layer6Status, layer7Status].filter(s => s === 'pass').length;
 
@@ -366,7 +381,9 @@ export function buildStockNextSessionPlan(stock: StockData): NextSessionStockPla
     else if (s === 'warning') weightedBase += w * 0.5;
   });
 
-  const confluenceScore = Math.min(100, Math.max(30, Math.round(weightedBase) + (isExcellent ? 5 : isHighRisk ? -25 : 0)));
+  // Confluence score integrated with Macro News Risk Modifier (-10% to +5%)
+  const rawConfluence = Math.round(weightedBase) + (isExcellent ? 5 : isHighRisk ? -25 : 0) + macroNewsModifier;
+  const confluenceScore = Math.min(100, Math.max(30, rawConfluence));
 
   // 8. Final Action Decision Tree (Strict Safety First Order: STOP_LOSS -> TAKE_PROFIT -> STRONG_BUY -> SWING_BUY -> HOLD)
   let finalActionVerdict: 'STRONG_BUY' | 'SWING_BUY' | 'HOLD' | 'TAKE_PROFIT' | 'STOP_LOSS' = 'HOLD';

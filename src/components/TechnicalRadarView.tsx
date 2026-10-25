@@ -23,6 +23,7 @@ interface Props {
   isLoading?: boolean;
   lastUpdated?: Date;
   onRefresh?: () => void;
+  macroRiskModifier?: number;
 }
 
 export const TechnicalRadarView: React.FC<Props> = ({ 
@@ -32,7 +33,8 @@ export const TechnicalRadarView: React.FC<Props> = ({
   onOpenLabWithStock,
   isLoading = false,
   lastUpdated,
-  onRefresh
+  onRefresh,
+  macroRiskModifier = 0
 }) => {
   const [filter, setFilter] = useState<'all' | 'top10' | 'strong_buy' | 'entry_zone' | 'egx30' | 'egx70' | 'egx100' | 'owned' | 'sell_alert'>('all');
   const [search, setSearch] = useState<string>('');
@@ -57,9 +59,9 @@ export const TechnicalRadarView: React.FC<Props> = ({
 
   // 2. Pre-calculate Next Session Plans for all stocks & Strictly prioritize Top 10 Strong Recommendations
   const stockPlans = useMemo(() => {
-    const rawPlans = pureStocks.map(stock => buildStockNextSessionPlan(stock));
+    const rawPlans = pureStocks.map(stock => buildStockNextSessionPlan(stock, macroRiskModifier));
     return rankAndEnrichTop10SessionPlans(rawPlans);
-  }, [pureStocks]);
+  }, [pureStocks, macroRiskModifier]);
 
   // Extract Top 10 Picks
   const top10Picks = useMemo(() => {

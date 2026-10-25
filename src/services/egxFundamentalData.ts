@@ -318,16 +318,74 @@ export function evaluateSectorRelativePE(peRatio: number, sector: string): { gra
 }
 
 /**
- * Get fundamental profile for any stock (with smart dynamic heuristics for unlisted)
+ * Get fundamental profile for any stock (prioritizing live TradingView scanner data with database fallback)
  */
-export function getStockFundamentalProfile(symbol: string, sector?: string): StockFundamentalProfile {
+export function getStockFundamentalProfile(
+  symbol: string, 
+  sector?: string, 
+  liveStock?: {
+    peRatio?: number;
+    eps?: number;
+    dividendYield?: number;
+    debtToEquity?: number;
+    roe?: number;
+    marketCap?: number;
+  }
+): StockFundamentalProfile {
   const clean = symbol.replace('EGX:', '').toUpperCase();
-  if (EGX_FUNDAMENTAL_DATABASE[clean]) {
-    return EGX_FUNDAMENTAL_DATABASE[clean];
+  const baseProfile = EGX_FUNDAMENTAL_DATABASE[clean];
+  const currentSector = sector || 'بورصة مصر';
+
+  // 1. Check if live scanner provided authentic P/E ratio
+  const hasLivePE = liveStock?.peRatio !== undefined && liveStock.peRatio !== null && !isNaN(liveStock.peRatio);
+
+  if (hasLivePE) {
+    const livePe = Number(liveStock!.peRatio);
+    const liveDiv = liveStock?.dividendYield !== undefined && !isNaN(liveStock.dividendYield) ? Number(liveStock.dividendYield) : (baseProfile?.dividendYieldPct || 0);
+    const debtRatio = liveStock?.debtToEquity !== undefined && !isNaN(liveStock.debtToEquity) ? Number(liveStock.debtToEquity) : (baseProfile ? (baseProfile.debtRisk === 'LOW' ? 0.4 : baseProfile.debtRisk === 'CRITICAL' ? 4.5 : 1.2) : 1.0);
+    
+    let debtRisk: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL' = 'MODERATE';
+    if (debtRatio > 3.0) debtRisk = 'CRITICAL';
+    else if (debtRatio > 1.8) debtRisk = 'HIGH';
+    else if (debtRatio < 0.6) debtRisk = 'LOW';
+
+    // Loss-making company with negative P/E or critical distress
+    if (livePe <= 0 || debtRisk === 'CRITICAL') {
+      return {
+        symbol: clean,
+        nameAr: baseProfile?.nameAr || clean,
+        peRatio: livePe,
+        profitabilityStatus: 'LOSS_MAKING',
+        financialHealthGrade: 'HIGH_RISK_DISTRESSED',
+        debtRisk,
+        dividendYieldPct: liveDiv,
+        investmentSuitability: 'SPECULATIVE_RISK',
+        headlineSummary: baseProfile?.headlineSummary || '⚠️ شركة تحقق خسائر أو تعاني من مديونية مرتفعة حية من ماسح السوق',
+        baladiAdvice: baseProfile?.baladiAdvice || 'سهم مضاربي عالي المخاطر حسب أرقام الماسح اللحظية؛ لا يصلح للاستثمار والتزم بوقف الخسارة فوراً.'
+      };
+    }
+
+    const evalRes = evaluateSectorRelativePE(livePe, currentSector);
+    return {
+      symbol: clean,
+      nameAr: baseProfile?.nameAr || clean,
+      peRatio: Number(livePe.toFixed(2)),
+      profitabilityStatus: evalRes.status,
+      financialHealthGrade: evalRes.grade,
+      debtRisk,
+      dividendYieldPct: Number(liveDiv.toFixed(2)),
+      investmentSuitability: evalRes.suitability,
+      headlineSummary: baseProfile?.headlineSummary || `أداء مالي مباشر من الماسح • مكرر ربحية حي ${livePe.toFixed(1)}x ضمن قطاع ${currentSector}`,
+      baladiAdvice: baseProfile?.baladiAdvice || `ماليات الشركة مستقرة ومكرر ربحيتها الحي يعكس تقييماً ${evalRes.grade === 'EXCELLENT' ? 'ممتازاً ومغرياً' : 'متوازناً'}، مناسب للمضاربة والاستثمار مع حركة السوق.`
+    };
   }
 
-  const currentSector = sector || 'بورصة مصر';
-  // Heuristic based on sector and ticker
+  // 2. Database Fallback if live scanner did not return P/E
+  if (baseProfile) {
+    return baseProfile;
+  }
+
+  // 3. Sector Heuristic Fallback
   const isHighRiskSector = currentSector.includes('مضاربات') || currentSector.includes('استصلاح') || clean.startsWith('ARAB');
   
   if (isHighRiskSector) {

@@ -264,6 +264,38 @@ assert(nextSessionContent.includes('!isHighRisk && confluenceScore >= 80 && curr
 assert(nextSessionContent.includes('else if (confluenceScore >= 65)'), 'SWING_BUY strictly requires confluenceScore >= 65 with no rating bypass');
 
 // -----------------------------------------------------------------------------
+// SUITE 10: Live Data Feeds, Geopolitical News Engine & Data Status Badge
+// -----------------------------------------------------------------------------
+console.log('\n📌 [Suite 10]: Live Data Feeds, Geopolitical News Engine & Data Status Badge');
+
+const egxServiceContent = fs.readFileSync(egxServicePath, 'utf8');
+
+// 1. DEFAULT_COLUMNS expanded to all 37 institutional columns
+assert(egxServiceContent.includes('price_earnings_ttm') && egxServiceContent.includes('earnings_per_share_basic_ttm'), 'Scanner API requests live P/E and EPS');
+assert(egxServiceContent.includes('MACD.macd') && egxServiceContent.includes('BB.upper') && egxServiceContent.includes('ATR'), 'Scanner API requests MACD, Bollinger Bands, and ATR');
+assert(egxServiceContent.includes('ChaikinMoneyFlow') && egxServiceContent.includes('RSI|1W'), 'Scanner API requests Chaikin Money Flow and Weekly RSI');
+
+// 2. Gate 0 prioritizes live scanner P/E over static fallback
+assert(fundContent.includes('hasLivePE') && fundContent.includes('evaluateSectorRelativePE(livePe'), 'Gate 0 dynamically evaluates live P/E from TradingView scanner');
+
+// 3. fetchLiveMacroRates fetches live USD, Gold, and Brent Oil
+assert(egxServiceContent.includes('fetchLiveMacroRates') && egxServiceContent.includes('brentOilUsd'), 'egxService exports fetchLiveMacroRates with USD, Gold, and Brent Oil');
+
+// 4. Geopolitical news engine and risk modifier
+assert(egxServiceContent.includes('calculateGeopoliticalRiskScore') && egxServiceContent.includes('fetchLiveGeopoliticalNews'), 'egxService implements live geopolitical news engine and sentiment modifier');
+
+// 5. Data Feed Transparency Status Badge in HeaderTicker
+const headerPath = path.resolve(__dirname, '../src/components/HeaderTicker.tsx');
+const headerContent = fs.readFileSync(headerPath, 'utf8');
+assert(headerContent.includes('متصل مباشرة بماسح البورصة') && headerContent.includes('وضع البيانات الاحتياطية'), 'HeaderTicker displays live transparency status badge');
+assert(headerContent.includes('إعادة الاتصال الآن'), 'HeaderTicker provides fallback reconnect action button');
+
+// 6. Vite config proxies for scanner, forex, cfd, and news
+const viteConfigPath = path.resolve(__dirname, '../vite.config.ts');
+const viteContent = fs.readFileSync(viteConfigPath, 'utf8');
+assert(viteContent.includes('/api/forex-scanner') && viteContent.includes('/api/cfd-scanner') && viteContent.includes('/api/egx-news'), 'vite.config.ts configures live proxies for forex, cfd, and news');
+
+// -----------------------------------------------------------------------------
 // FINAL SUMMARY
 // -----------------------------------------------------------------------------
 console.log('\n================================================================');

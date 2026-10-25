@@ -18,6 +18,7 @@ interface Props {
   onRefresh?: () => void;
   initialSubTab?: 'lab' | 'radar_table';
   initialLabSymbol?: string;
+  macroRiskModifier?: number;
 }
 
 export const RadarAndRecommendationsView: React.FC<Props> = ({
@@ -30,7 +31,8 @@ export const RadarAndRecommendationsView: React.FC<Props> = ({
   lastUpdated,
   onRefresh,
   initialSubTab = 'lab',
-  initialLabSymbol
+  initialLabSymbol,
+  macroRiskModifier = 0
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'lab' | 'radar_table'>(
     initialSubTab === 'radar_table' ? 'radar_table' : 'lab'
@@ -120,6 +122,7 @@ export const RadarAndRecommendationsView: React.FC<Props> = ({
           isLoading={isLoading}
           lastUpdated={lastUpdated}
           onRefresh={onRefresh}
+          macroRiskModifier={macroRiskModifier}
         />
       )}
     </div>

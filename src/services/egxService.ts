@@ -162,29 +162,56 @@ export function getEGXSessionDates(now: Date = new Date()): EGXSessionDates {
   };
 }
 
-const DEFAULT_COLUMNS = [
-  'name',
-  'description',
-  'close',
-  'change',
-  'change_abs',
-  'volume',
-  'Value.Traded',
-  'Recommend.All',
-  'Recommend.All|60',
-  'Recommend.All|240',
-  'Recommend.All|1W',
-  'RSI',
-  'RSI|60',
-  'EMA20',
-  'EMA50',
-  'EMA200',
-  'Pivot.M.Classic.S1',
-  'Pivot.M.Classic.S2',
-  'Pivot.M.Classic.R1',
-  'Pivot.M.Classic.R2',
-  'Pivot.M.Classic.Middle'
+export const DEFAULT_COLUMNS = [
+  'name',                         // 0
+  'description',                  // 1
+  'close',                        // 2
+  'change',                       // 3
+  'change_abs',                   // 4
+  'volume',                       // 5
+  'Value.Traded',                 // 6
+  'Recommend.All',                // 7
+  'Recommend.All|60',             // 8
+  'Recommend.All|240',            // 9
+  'Recommend.All|1W',             // 10
+  'RSI',                          // 11
+  'RSI|60',                       // 12
+  'EMA20',                        // 13
+  'EMA50',                        // 14
+  'EMA200',                       // 15
+  'Pivot.M.Classic.S1',           // 16
+  'Pivot.M.Classic.S2',           // 17
+  'Pivot.M.Classic.R1',           // 18
+  'Pivot.M.Classic.R2',           // 19
+  'Pivot.M.Classic.Middle',       // 20
+  'price_earnings_ttm',           // 21 (Gate 0 Live P/E)
+  'earnings_per_share_basic_ttm', // 22 (Gate 0 Live EPS)
+  'dividends_yield_current',      // 23 (Gate 0 Live Dividend Yield)
+  'debt_to_equity',               // 24 (Gate 0 Live Debt-to-Equity)
+  'return_on_equity',             // 25 (Gate 0 Live ROE)
+  'market_cap_basic',             // 26 (Gate 0 Live Market Cap)
+  'MACD.macd',                    // 27 (Layer 4 MACD Line)
+  'MACD.signal',                  // 28 (Layer 4 Signal Line)
+  'BB.upper',                     // 29 (Layer 5 Upper Band)
+  'BB.lower',                     // 30 (Layer 5 Lower Band)
+  'BB.basis',                     // 31 (Layer 5 Middle Band)
+  'ATR',                          // 32 (Layer 5 & Dynamic Execution Math ATR)
+  'ChaikinMoneyFlow',             // 33 (Layer 6 True Volume Flow CMF)
+  'RSI|1W',                       // 34 (Layer 7 Weekly RSI)
+  'EMA50|60',                     // 35 (Layer 7 1-Hour EMA50)
+  'EMA50|1W'                      // 36 (Layer 7 Weekly EMA50)
 ];
+
+// Global status tracker for transparency badge
+export let lastDataFeedIsLive = false;
+export let lastDataFeedSyncTime: Date = new Date();
+
+export function getDataFeedStatus() {
+  return {
+    isLive: lastDataFeedIsLive,
+    syncTime: lastDataFeedSyncTime
+  };
+}
 
 export function getRecommendationCategory(score: number): StockData['recommendationText'] {
   if (score >= 0.35) return 'شراء قوي';
@@ -205,6 +232,7 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
   };
 
   let json: any = null;
+  let isLive = false;
 
   // 1. First Attempt: Direct call to TradingView's Egypt Scanner (CORS supported natively by TradingView)
   try {
@@ -217,6 +245,7 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
       const data = await directRes.json();
       if (data && Array.isArray(data.data) && data.data.length > 0) {
         json = data;
+        isLive = true;
       }
     }
   } catch (err) {
@@ -237,6 +266,7 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
           const data = await proxyRes.json();
           if (data && Array.isArray(data.data) && data.data.length > 0) {
             json = data;
+            isLive = true;
           }
         }
       }
@@ -244,6 +274,9 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
       console.warn('Proxy fetch failed:', err);
     }
   }
+
+  lastDataFeedIsLive = isLive;
+  lastDataFeedSyncTime = new Date();
 
   if (json && Array.isArray(json.data) && json.data.length > 0) {
     try {
@@ -270,6 +303,28 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
       const r1 = d[18] || (close * 1.05);
       const r2 = d[19] || (close * 1.10);
       const pivot = d[20] || close;
+
+      // Gate 0 Live Fundamentals (strictly extracted from scanner)
+      const peRatio = d[21] !== null && d[21] !== undefined && !isNaN(d[21]) ? Number(d[21]) : undefined;
+      const eps = d[22] !== null && d[22] !== undefined && !isNaN(d[22]) ? Number(d[22]) : undefined;
+      const dividendYield = d[23] !== null && d[23] !== undefined && !isNaN(d[23]) ? Number(d[23]) : undefined;
+      const debtToEquity = d[24] !== null && d[24] !== undefined && !isNaN(d[24]) ? Number(d[24]) : undefined;
+      const roe = d[25] !== null && d[25] !== undefined && !isNaN(d[25]) ? Number(d[25]) : undefined;
+      const marketCap = d[26] !== null && d[26] !== undefined && !isNaN(d[26]) ? Number(d[26]) : undefined;
+
+      // Technical Layers 4, 5, 6 (MACD, Bollinger, ATR, CMF)
+      const macd = d[27] !== null && d[27] !== undefined && !isNaN(d[27]) ? Number(d[27]) : undefined;
+      const macdSignal = d[28] !== null && d[28] !== undefined && !isNaN(d[28]) ? Number(d[28]) : undefined;
+      const bbUpper = d[29] !== null && d[29] !== undefined && !isNaN(d[29]) ? Number(d[29]) : undefined;
+      const bbLower = d[30] !== null && d[30] !== undefined && !isNaN(d[30]) ? Number(d[30]) : undefined;
+      const bbBasis = d[31] !== null && d[31] !== undefined && !isNaN(d[31]) ? Number(d[31]) : undefined;
+      const atr = d[32] !== null && d[32] !== undefined && !isNaN(d[32]) ? Number(d[32]) : undefined;
+      const cmf = d[33] !== null && d[33] !== undefined && !isNaN(d[33]) ? Number(d[33]) : undefined;
+
+      // Layer 7 Multi-Timeframe Confluence
+      const rsi1w = d[34] !== null && d[34] !== undefined && !isNaN(d[34]) ? Number(d[34]) : undefined;
+      const ema50_1h = d[35] !== null && d[35] !== undefined && !isNaN(d[35]) ? Number(d[35]) : undefined;
+      const ema50_1w = d[36] !== null && d[36] !== undefined && !isNaN(d[36]) ? Number(d[36]) : undefined;
 
       return {
         symbol: rawSymbol,
@@ -300,6 +355,24 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
         isEGX70: meta.isEGX70 || false,
         isEGX100: meta.isEGX100 || Boolean(meta.isEGX30 || meta.isEGX70) || false,
         sector: meta.sector || "سوق الأسهم المصرية",
+
+        // Live Fundamentals & Technical Enhancements
+        peRatio,
+        eps,
+        dividendYield,
+        debtToEquity,
+        roe,
+        marketCap,
+        macd,
+        macdSignal,
+        bbUpper,
+        bbLower,
+        bbBasis,
+        atr,
+        cmf,
+        rsi1w,
+        ema50_1h,
+        ema50_1w
       };
     });
 
@@ -2430,3 +2503,230 @@ export const EGX_LATEST_NEWS: EGXNewsItem[] = [
     summary: "أنهت لجنة المؤشرات مراجعتها الربع سنوية لإعادة ضبط الحدود السعرية ونسب التداول الحر للأسهم القيادية."
   }
 ];
+
+// =========================================================================
+// LIVE MACRO RATES ENGINE (USD, SAGHA GOLD, BRENT CRUDE OIL)
+// =========================================================================
+export async function fetchLiveMacroRates(): Promise<any> {
+  let usd = LIVE_USD_MARKET_RATE;
+  let goldOunce = 3995.0;
+  let brent = 115.0;
+  let isLive = false;
+
+  // 1. Fetch live USD/EGP from TradingView Forex Scanner
+  try {
+    const usdRes = await fetch('https://scanner.tradingview.com/forex/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        symbols: { tickers: ['FX_IDC:USDEGP'] },
+        columns: ['close', 'change']
+      })
+    });
+    if (usdRes.ok) {
+      const data = await usdRes.json();
+      if (data?.data?.[0]?.d?.[0]) {
+        usd = Number(Number(data.data[0].d[0]).toFixed(2));
+        isLive = true;
+      }
+    }
+  } catch {
+    try {
+      const pRes = await fetch('/api/forex-scanner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbols: { tickers: ['FX_IDC:USDEGP'] },
+          columns: ['close', 'change']
+        })
+      });
+      if (pRes.ok) {
+        const data = await pRes.json();
+        if (data?.data?.[0]?.d?.[0]) {
+          usd = Number(Number(data.data[0].d[0]).toFixed(2));
+          isLive = true;
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Fetch live Gold Ounce and Brent Oil from CFD Scanner
+  try {
+    const cfdRes = await fetch('https://scanner.tradingview.com/cfd/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        symbols: { tickers: ['TVC:GOLD', 'FX:UKOIL'] },
+        columns: ['close', 'change']
+      })
+    });
+    if (cfdRes.ok) {
+      const data = await cfdRes.json();
+      data?.data?.forEach((item: any) => {
+        if (item.s === 'TVC:GOLD' && item.d?.[0]) goldOunce = Number(item.d[0]);
+        if (item.s === 'FX:UKOIL' && item.d?.[0]) brent = Number(item.d[0]);
+      });
+      isLive = true;
+    }
+  } catch {
+    try {
+      const pRes = await fetch('/api/cfd-scanner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbols: { tickers: ['TVC:GOLD', 'FX:UKOIL'] },
+          columns: ['close', 'change']
+        })
+      });
+      if (pRes.ok) {
+        const data = await pRes.json();
+        data?.data?.forEach((item: any) => {
+          if (item.s === 'TVC:GOLD' && item.d?.[0]) goldOunce = Number(item.d[0]);
+          if (item.s === 'FX:UKOIL' && item.d?.[0]) brent = Number(item.d[0]);
+        });
+        isLive = true;
+      }
+    } catch {}
+  }
+
+  // Calculate local Sagha gold strictly from live ounce and dollar
+  const gold24 = Number(((goldOunce * usd) / 31.1035).toFixed(2));
+  const gold21 = Number((gold24 * (21 / 24)).toFixed(2));
+  const goldPound = Number((gold21 * 8).toFixed(2));
+
+  return {
+    usdEgp: usd,
+    goldOunceUsd: Number(goldOunce.toFixed(2)),
+    gold24kEgp: gold24,
+    gold21kEgp: gold21,
+    goldPoundEgp: goldPound,
+    brentOilUsd: Number(brent.toFixed(2)),
+    isLive
+  };
+}
+
+// =========================================================================
+// GEOPOLITICAL & MACRO NEWS SENTIMENT ENGINE
+// =========================================================================
+export function calculateGeopoliticalRiskScore(newsList: EGXNewsItem[]): {
+  riskScore: number;
+  modifier: number;
+  sentiment: 'إيجابي' | 'محايد' | 'حذر / توترات';
+  recommendedCashRatioPct: number;
+} {
+  let score = 0;
+  const negativeKeywords = [
+    'حرب', 'ضربات', 'توترات', 'نزاع', 'عقوبات', 'هبوط', 'تراجع', 'خسائر', 'تضخم',
+    'رفع الفائدة', 'تعويم', 'أزمة', 'توقف', 'إغلاق', 'عجز', 'إفلاس', 'اضطراب', 'تهديد'
+  ];
+  const positiveKeywords = [
+    'استثمار', 'طروحات', 'استحواذ', 'شراكة', 'أرباح', 'نمو', 'صعود', 'ارتفاع',
+    'فائض', 'توزيعات', 'توسع', 'صفقة', 'خفض الفائدة', 'تعافي', 'تدفقات', 'اتفاق'
+  ];
+
+  newsList.forEach(item => {
+    const text = (item.title + ' ' + (item.summary || '')).toLowerCase();
+    negativeKeywords.forEach(kw => {
+      if (text.includes(kw)) score -= 1;
+    });
+    positiveKeywords.forEach(kw => {
+      if (text.includes(kw)) score += 1;
+    });
+  });
+
+  // Clamp modifier between -10% and +5%
+  let modifier = 0;
+  let sentiment: 'إيجابي' | 'محايد' | 'حذر / توترات' = 'محايد';
+  let recommendedCashRatioPct = 25; // Default safe buffer
+
+  if (score >= 2) {
+    modifier = Math.min(5, Math.round(score * 0.8));
+    sentiment = 'إيجابي';
+    recommendedCashRatioPct = 15; // Confident deployment
+  } else if (score <= -2) {
+    modifier = Math.max(-10, Math.round(score * 1.0));
+    sentiment = 'حذر / توترات';
+    recommendedCashRatioPct = 40; // Raise cash defense buffer
+  } else {
+    modifier = 0;
+    sentiment = 'محايد';
+    recommendedCashRatioPct = 25;
+  }
+
+  return {
+    riskScore: score,
+    modifier,
+    sentiment,
+    recommendedCashRatioPct
+  };
+}
+
+export async function fetchLiveGeopoliticalNews(): Promise<{
+  news: EGXNewsItem[];
+  riskScore: number;
+  modifier: number;
+  sentiment: 'إيجابي' | 'محايد' | 'حذر / توترات';
+  recommendedCashRatioPct: number;
+  isLive: boolean;
+}> {
+  let news: EGXNewsItem[] = [];
+  let isLive = false;
+
+  try {
+    const res = await fetch('/api/egx-news');
+    if (res.ok) {
+      const xmlText = await res.text();
+      if (xmlText && xmlText.includes('<item>')) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const items = xmlDoc.querySelectorAll('item');
+
+        items.forEach((item, idx) => {
+          if (idx >= 10) return; // Keep top 10 fresh news items
+          const title = item.querySelector('title')?.textContent || '';
+          const link = item.querySelector('link')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          const source = item.querySelector('source')?.textContent || 'البورصة المصرية';
+
+          let sentiment: 'إيجابي' | 'محايد' | 'سلبي' = 'محايد';
+          if (title.includes('صعود') || title.includes('أرباح') || title.includes('نمو') || title.includes('طرح') || title.includes('استثمار')) {
+            sentiment = 'إيجابي';
+          } else if (title.includes('هبوط') || title.includes('خسائر') || title.includes('وقف') || title.includes('توتر') || title.includes('تراجع')) {
+            sentiment = 'سلبي';
+          }
+
+          news.push({
+            id: `live-news-${idx}`,
+            title,
+            company: source,
+            time: pubDate ? new Date(pubDate).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : 'اليوم',
+            category: title.includes('توزيع') ? 'توزيعات أرباح' : title.includes('طرح') ? 'استحواذ ودمج' : 'أخبار عامة',
+            sentiment,
+            summary: title,
+            url: link,
+            source
+          });
+        });
+
+        if (news.length > 0) isLive = true;
+      }
+    }
+  } catch (err) {
+    console.warn('Live news RSS fetch bypassed, using curated feed:', err);
+  }
+
+  if (news.length === 0) {
+    news = EGX_LATEST_NEWS;
+  }
+
+  const analysis = calculateGeopoliticalRiskScore(news);
+
+  return {
+    news,
+    riskScore: analysis.riskScore,
+    modifier: analysis.modifier,
+    sentiment: analysis.sentiment,
+    recommendedCashRatioPct: analysis.recommendedCashRatioPct,
+    isLive
+  };
+}
