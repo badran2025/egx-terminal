@@ -230,6 +230,33 @@ const radarViewContent = fs.readFileSync(radarPath, 'utf8');
 assert(radarViewContent.includes('توصيات وخطة الجلسة القادمة'), 'RadarAndRecommendationsView sub-tab 2 updated to Next Session Plan');
 
 // -----------------------------------------------------------------------------
+// SUITE 9: Institutional Algorithmic Audit & Quantitative Corrections
+// -----------------------------------------------------------------------------
+console.log('\n📌 [Suite 9]: Institutional Algorithmic Audit & Quantitative Corrections');
+
+// 1. Decision tree safety order (STOP_LOSS must be checked before SWING_BUY)
+const stopLossIndex = nextSessionContent.indexOf("finalActionVerdict = 'STOP_LOSS'");
+const swingBuyIndex = nextSessionContent.indexOf("finalActionVerdict = 'SWING_BUY'");
+assert(stopLossIndex > 0 && swingBuyIndex > 0 && stopLossIndex < swingBuyIndex, 'STOP_LOSS is prioritized before SWING_BUY in decision tree');
+
+// 2. Penny stocks (< 2.00 EGP) 3-decimal tick size support
+assert(nextSessionContent.includes('decimals = rawPrice < 2.0 ? 3 : 2') || nextSessionContent.includes('decimals = currentPrice < 2.0 ? 3 : 2'), 'Penny stocks support 3-decimal tick size (0.001 EGP)');
+
+// 3. StopLoss strictly clamped between -3.5% and -5.0%
+assert(nextSessionContent.includes('currentPrice * 0.965') && nextSessionContent.includes('currentPrice * 0.950'), 'StopLoss strictly bounded between -3.5% and -5.0%');
+
+// 4. Risk:Reward measured from entryMid (not just close)
+assert(nextSessionContent.includes('entryMid') && nextSessionContent.includes('minTarget1FromRR'), 'Risk:Reward measured from entryMid ensuring institutional RR >= 1:2.0');
+
+// 5. Hierarchical weighted scoring (L1, L2, L6 higher weight)
+assert(nextSessionContent.includes('layerWeights') && nextSessionContent.includes('weightedBase'), 'Confluence scoring uses institutional hierarchical weights');
+
+// 6. Sector-relative P/E valuation and 20-30 gap closure
+const fundPath = path.resolve(__dirname, '../src/services/egxFundamentalData.ts');
+const fundContent = fs.readFileSync(fundPath, 'utf8');
+assert(fundContent.includes('getSectorValuationBenchmark') && fundContent.includes('evaluateSectorRelativePE'), 'Sector-relative valuation benchmark and PE evaluation active');
+
+// -----------------------------------------------------------------------------
 // FINAL SUMMARY
 // -----------------------------------------------------------------------------
 console.log('\n================================================================');

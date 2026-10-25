@@ -270,6 +270,54 @@ export const EGX_FUNDAMENTAL_DATABASE: Record<string, StockFundamentalProfile> =
 };
 
 /**
+ * Institutional Sector Relative Valuation Brackets (Egyptian Market Standards)
+ */
+export interface SectorValuationBenchmark {
+  excellentPeMax: number;
+  goodPeMax: number;
+  fairPeMax: number;
+}
+
+export function getSectorValuationBenchmark(sector: string): SectorValuationBenchmark {
+  const s = sector.toLowerCase();
+  if (s.includes('بنوك') || s.includes('مالية') || s.includes('أسمدة') || s.includes('بتروكيماو')) {
+    // Value & Cyclical Sectors: Low PE norm
+    return { excellentPeMax: 8.5, goodPeMax: 14.0, fairPeMax: 20.0 };
+  }
+  if (s.includes('تكنولوج') || s.includes('دفع') || s.includes('اتصالات') || s.includes('فارما') || s.includes('صحة') || s.includes('تعليم')) {
+    // High Growth & Tech Sectors: Higher PE tolerance
+    return { excellentPeMax: 18.0, goodPeMax: 26.0, fairPeMax: 32.0 };
+  }
+  if (s.includes('عقار') || s.includes('إسكان') || s.includes('تشييد')) {
+    // Real Estate: Land bank assets and backlog sales
+    return { excellentPeMax: 10.0, goodPeMax: 18.0, fairPeMax: 25.0 };
+  }
+  // Default general industrial / consumption benchmark
+  return { excellentPeMax: 10.0, goodPeMax: 18.0, fairPeMax: 24.0 };
+}
+
+/**
+ * Evaluates PE ratio against sector relative benchmark to prevent unfair penalization of growth stocks
+ */
+export function evaluateSectorRelativePE(peRatio: number, sector: string): { grade: FinancialHealthGrade; status: ProfitabilityStatus; suitability: InvestmentSuitability } {
+  if (peRatio <= 0) {
+    return { grade: 'HIGH_RISK_DISTRESSED', status: 'LOSS_MAKING', suitability: 'SPECULATIVE_RISK' };
+  }
+  const benchmark = getSectorValuationBenchmark(sector);
+  if (peRatio <= benchmark.excellentPeMax) {
+    return { grade: 'EXCELLENT', status: 'PROFITABLE_GROWTH', suitability: 'INVESTMENT_GRADE' };
+  }
+  if (peRatio <= benchmark.goodPeMax) {
+    return { grade: 'GOOD', status: 'PROFITABLE_GROWTH', suitability: 'INVESTMENT_GRADE' };
+  }
+  if (peRatio <= benchmark.fairPeMax) {
+    return { grade: 'FAIR', status: 'PROFITABLE_STABLE', suitability: 'SWING_ONLY' };
+  }
+  // Above fair benchmark: high valuation momentum stock
+  return { grade: 'FAIR', status: 'PROFITABLE_GROWTH', suitability: 'SWING_ONLY' };
+}
+
+/**
  * Get fundamental profile for any stock (with smart dynamic heuristics for unlisted)
  */
 export function getStockFundamentalProfile(symbol: string, sector?: string): StockFundamentalProfile {
@@ -278,8 +326,9 @@ export function getStockFundamentalProfile(symbol: string, sector?: string): Sto
     return EGX_FUNDAMENTAL_DATABASE[clean];
   }
 
+  const currentSector = sector || 'بورصة مصر';
   // Heuristic based on sector and ticker
-  const isHighRiskSector = (sector || '').includes('مضاربات') || (sector || '').includes('استصلاح') || clean.startsWith('ARAB');
+  const isHighRiskSector = currentSector.includes('مضاربات') || currentSector.includes('استصلاح') || clean.startsWith('ARAB');
   
   if (isHighRiskSector) {
     return {
@@ -296,15 +345,18 @@ export function getStockFundamentalProfile(symbol: string, sector?: string): Sto
     };
   }
 
+  const estimatedPe = 11.5;
+  const evaluation = evaluateSectorRelativePE(estimatedPe, currentSector);
+
   return {
     symbol: clean,
     nameAr: clean,
-    peRatio: 9.5,
-    profitabilityStatus: 'PROFITABLE_STABLE',
-    financialHealthGrade: 'GOOD',
+    peRatio: estimatedPe,
+    profitabilityStatus: evaluation.status,
+    financialHealthGrade: evaluation.grade,
     debtRisk: 'MODERATE',
-    dividendYieldPct: 5.0,
-    investmentSuitability: 'SWING_ONLY',
+    dividendYieldPct: 4.5,
+    investmentSuitability: evaluation.suitability,
     headlineSummary: 'أداء مالي متوازن واستقرار تشغيلي ضمن قطاع الشركة',
     baladiAdvice: 'ماليات الشركة متوازنة ولا تعاني من ديون حرجة؛ مناسب للمضاربة السوينج مع مراعاة اتجاه السوق العام.'
   };
