@@ -62,10 +62,10 @@ export const HeaderTicker: React.FC<Props> = ({
     second: '2-digit' 
   }) : cairoTime;
 
-  // Benchmarks & key assets
-  const egx30 = stocks.find(s => s.symbol === 'EGX30');
-  const egx70 = stocks.find(s => s.symbol === 'EGX70EWI');
-  const egx100 = stocks.find(s => s.symbol === 'EGX100EWI');
+  // Benchmarks & key assets (prioritizing live stocks then live macroRates indices)
+  const egx30 = stocks.find(s => s.symbol === 'EGX30') || (macroRates?.indices?.egx30 ? { close: macroRates.indices.egx30.close, changePercent: macroRates.indices.egx30.change } : null);
+  const egx70 = stocks.find(s => s.symbol === 'EGX70EWI') || (macroRates?.indices?.egx70 ? { close: macroRates.indices.egx70.close, changePercent: macroRates.indices.egx70.change } : null);
+  const egx100 = stocks.find(s => s.symbol === 'EGX100EWI') || (macroRates?.indices?.egx100 ? { close: macroRates.indices.egx100.close, changePercent: macroRates.indices.egx100.change } : null);
   const goldStock = stocks.find(s => s.symbol.toUpperCase() === 'THNDRGOLD');
 
   // Real live rates prioritizing live macro scanner feed
@@ -148,13 +148,13 @@ export const HeaderTicker: React.FC<Props> = ({
       >
         <span className="text-blue-600 dark:text-blue-400">EGX 30:</span>
         <span className="font-mono text-md-on-surface font-extrabold">
-          {egx30 ? egx30.close.toLocaleString('en-US') : '51,052'}
+          {egx30 ? egx30.close.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '49,234.3'}
         </span>
         <span className={`font-mono text-[11px] font-bold flex items-center ${
-          (egx30?.changePercent ?? -1.45) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'
+          (egx30?.changePercent ?? -3.56) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'
         }`}>
-          {(egx30?.changePercent ?? -1.45) >= 0 ? '▲ +' : '▼ '}
-          {Math.abs(egx30?.changePercent ?? -1.45).toFixed(2)}%
+          {(egx30?.changePercent ?? -3.56) >= 0 ? '▲ +' : '▼ '}
+          {Math.abs(egx30?.changePercent ?? -3.56).toFixed(2)}%
         </span>
       </div>
 
@@ -165,13 +165,13 @@ export const HeaderTicker: React.FC<Props> = ({
       >
         <span className="text-teal-600 dark:text-teal-400">EGX 70 EWI:</span>
         <span className="font-mono text-md-on-surface font-extrabold">
-          {egx70 ? egx70.close.toLocaleString('en-US') : '13,109'}
+          {egx70 ? egx70.close.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '15,282.6'}
         </span>
         <span className={`font-mono text-[11px] font-bold flex items-center ${
-          (egx70?.changePercent ?? 0.85) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'
+          (egx70?.changePercent ?? -11.07) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'
         }`}>
-          {(egx70?.changePercent ?? 0.85) >= 0 ? '▲ +' : '▼ '}
-          {Math.abs(egx70?.changePercent ?? 0.85).toFixed(2)}%
+          {(egx70?.changePercent ?? -11.07) >= 0 ? '▲ +' : '▼ '}
+          {Math.abs(egx70?.changePercent ?? -11.07).toFixed(2)}%
         </span>
       </div>
 
@@ -182,13 +182,13 @@ export const HeaderTicker: React.FC<Props> = ({
       >
         <span className="text-purple-600 dark:text-purple-400">EGX 100 EWI:</span>
         <span className="font-mono text-md-on-surface font-extrabold">
-          {egx100 ? egx100.close.toLocaleString('en-US') : '17,540'}
+          {egx100 ? egx100.close.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '21,064.5'}
         </span>
         <span className={`font-mono text-[11px] font-bold flex items-center ${
-          (egx100?.changePercent ?? 1.10) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'
+          (egx100?.changePercent ?? -8.88) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'
         }`}>
-          {(egx100?.changePercent ?? 1.10) >= 0 ? '▲ +' : '▼ '}
-          {Math.abs(egx100?.changePercent ?? 1.10).toFixed(2)}%
+          {(egx100?.changePercent ?? -8.88) >= 0 ? '▲ +' : '▼ '}
+          {Math.abs(egx100?.changePercent ?? -8.88).toFixed(2)}%
         </span>
       </div>
 

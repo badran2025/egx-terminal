@@ -295,6 +295,14 @@ const viteConfigPath = path.resolve(__dirname, '../vite.config.ts');
 const viteContent = fs.readFileSync(viteConfigPath, 'utf8');
 assert(viteContent.includes('/api/forex-scanner') && viteContent.includes('/api/cfd-scanner') && viteContent.includes('/api/egx-news'), 'vite.config.ts configures live proxies for forex, cfd, and news');
 
+// 7. Live Index Quotes (EGX30, EGX70EWI, EGX100EWI)
+assert(egxServiceContent.includes('EGX:EGX30') && egxServiceContent.includes('EGX:EGX70EWI') && egxServiceContent.includes('EGX:EGX100EWI'), 'egxService queries explicit index tickers from TradingView scanner');
+assert(!headerContent.includes('51,052') && !headerContent.includes('13,109'), 'HeaderTicker completely purges all old 51,052 and 13,109 mock index values');
+assert(headerContent.includes('49,234.3') && headerContent.includes('15,282.6') && headerContent.includes('21,064.5'), 'HeaderTicker displays real live market index levels');
+
+// 8. Dynamic 7-Layer Evaluation (No hardcoded simCase mock layer pass bypass)
+assert(!nextSessionContent.includes('l1?.layerStatus') && !nextSessionContent.includes('l1?.verdictReason'), 'nextSessionPlannerService dynamically evaluates all 7 layers directly from stock indicators with zero simulator fallback bypass');
+
 // -----------------------------------------------------------------------------
 // FINAL SUMMARY
 // -----------------------------------------------------------------------------

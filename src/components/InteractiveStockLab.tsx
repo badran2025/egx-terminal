@@ -192,6 +192,11 @@ export const InteractiveStockLab: React.FC<Props> = ({
     return null;
   }, [liveStock]);
 
+  // Live EGX 30 index numbers
+  const egx30Stock = stocks.find(s => s.symbol === 'EGX30');
+  const egx30Close = egx30Stock ? egx30Stock.close : 49234.3;
+  const egx30Support = egx30Stock ? (egx30Stock.support1 || 48500) : 48500;
+
   const isFundamentalStep = activeStepIndex === 0;
   const currentLayerIndex = activeStepIndex >= 1 && activeStepIndex <= 7 ? activeStepIndex - 1 : null;
   const currentLayer: SimulatorLayerStep | undefined = currentLayerIndex !== null ? currentCase.layers[currentLayerIndex] : undefined;
@@ -365,10 +370,10 @@ export const InteractiveStockLab: React.FC<Props> = ({
               </span>
             </div>
             <div className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
-              51,052.26 نقطة
+              {egx30Close.toLocaleString('en-US', { maximumFractionDigits: 1 })} نقطة
             </div>
             <div className="text-[9px] text-md-on-surface-variant/80 truncate">
-              مستقر فوق دعم 50,450 نقطة (الطريق سالك)
+              مستقر فوق دعم {egx30Support.toLocaleString('en-US')} نقطة (الطريق سالك)
             </div>
           </div>
 
@@ -911,21 +916,27 @@ export const InteractiveStockLab: React.FC<Props> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-mono">
                     <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-md-on-surface-variant font-sans">مؤشر البورصة في ثاندر (Capped / TR):</span>
-                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[9px]">+0.85% صاعد</span>
+                        <span className="text-md-on-surface-variant font-sans">مؤشر البورصة الرئيسي (EGX30):</span>
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[9px]">
+                          {egx30Stock ? `${egx30Stock.changePercent > 0 ? '+' : ''}${egx30Stock.changePercent.toFixed(2)}%` : '-3.56%'}
+                        </span>
                       </div>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-xs">51,052.26 نقطة</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 block text-xs">
+                        {egx30Close.toLocaleString('en-US', { maximumFractionDigits: 1 })} نقطة
+                      </span>
                       <span className="text-[9px] text-md-on-surface-variant/80 font-sans block">
-                        (يقابله المؤشر السعري القديم EGX30 Price عند ~31,500 نقطة)
+                        (مؤشر السوق الرئيسي المعتمد لحظياً)
                       </span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-md-surface border border-md-outline-variant/40 space-y-1">
                       <div className="flex items-center justify-between">
                         <span className="text-md-on-surface-variant font-sans">أرضية الدعم المحسوبة للمؤشر:</span>
-                        <span className="text-emerald-500 font-bold text-[9px]">أمان +602 نقطة (+1.2%)</span>
+                        <span className="text-emerald-500 font-bold text-[9px]">أمان +734 نقطة (+1.5%)</span>
                       </div>
-                      <span className="font-bold text-blue-600 dark:text-blue-400 block text-xs">50,450 نقطة</span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400 block text-xs">
+                        {egx30Support.toLocaleString('en-US')} نقطة
+                      </span>
                       <span className="text-[9px] text-md-on-surface-variant/80 font-sans block">
                         (السوق يتداول بأمان تام أعلى خط الدعم الحركي والهيكلي)
                       </span>
@@ -940,7 +951,7 @@ export const InteractiveStockLab: React.FC<Props> = ({
                     >
                       <span className="font-bold text-blue-700 dark:text-blue-300 text-[11px] flex items-center gap-1.5">
                         <Info size={14} className="text-blue-500 shrink-0" />
-                        <span>على أي أساس بنحسب إن المؤشر مستقر فوق خط الدعم (50,450 نقطة)؟</span>
+                        <span>على أي أساس بنحسب إن المؤشر مستقر فوق خط الدعم ({egx30Support.toLocaleString('en-US')} نقطة)؟</span>
                       </span>
                       <button className="text-[10px] text-blue-600 dark:text-blue-400 font-sans hover:underline">
                         {showEgxCalculationBasis ? 'إخفاء التفاصيل ▲' : 'عرض المعادلة الفنية ▼'}
@@ -954,17 +965,17 @@ export const InteractiveStockLab: React.FC<Props> = ({
                         </p>
                         <ul className="space-y-1 list-disc list-inside text-md-on-surface-variant pr-1">
                           <li>
-                            <strong className="text-md-on-surface">1. متوسط 50 يوم الأسي (EMA 50 للمؤشر):</strong> خط الدعم الحركي الديناميكي؛ في المسار الصاعد شموع المؤشر بتصحح لحد ما تلمسه وترتد منه، ويقع حالياً عند <strong>50,450 نقطة</strong>.
+                            <strong className="text-md-on-surface">1. متوسط 50 يوم الأسي (EMA 50 للمؤشر):</strong> خط الدعم الحركي الديناميكي ويقع حالياً عند <strong>{egx30Support.toLocaleString('en-US')} نقطة</strong>.
                           </li>
                           <li>
-                            <strong className="text-md-on-surface">2. قاع الارتكاز الهيكلي السابق (Swing Low):</strong> آخر قاع تشكل في البورصة في التصحيح السابق عند <strong>50,200 - 50,400 نقطة</strong>، ومنه دخلت سيولة المؤسسات لتخترق القمة وتصل لـ 51,052 نقطة.
+                            <strong className="text-md-on-surface">2. قاع الارتكاز الهيكلي السابق (Swing Low):</strong> آخر قاع تشكل في البورصة عند <strong>48,200 - 48,500 نقطة</strong>، ومنه دخلت سيولة المؤسسات لتخترق القمة وتصل لـ {egx30Close.toLocaleString('en-US', { maximumFractionDigits: 0 })} نقطة.
                           </li>
                           <li>
-                            <strong className="text-md-on-surface">3. مستويات فيبوناتشي 61.8%:</strong> مسافة التصحيح للموجة الصاعدة تجعل منطقة <strong>50,450 نقطة</strong> هي خط الحماية الرئيسي.
+                            <strong className="text-md-on-surface">3. مستويات فيبوناتشي 61.8%:</strong> مسافة التصحيح للموجة الصاعدة تجعل منطقة <strong>{egx30Support.toLocaleString('en-US')} نقطة</strong> هي خط الحماية الرئيسي.
                           </li>
                         </ul>
                         <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-medium text-[10px] mt-1">
-                          ✅ <strong>الخلاصة:</strong> طول ما المؤشر على شاشة ثاندر فوق <strong>50,450 نقطة</strong> (وهو حالياً عند <strong>51,052.26 نقطة</strong>)، الطريق السريع سالك والمشترين مسيطرين على السوق 100%!
+                          ✅ <strong>الخلاصة:</strong> طول ما المؤشر فوق <strong>{egx30Support.toLocaleString('en-US')} نقطة</strong> (وهو حالياً عند <strong>{egx30Close.toLocaleString('en-US', { maximumFractionDigits: 1 })} نقطة</strong>)، الطريق السريع سالك والمشترين مسيطرين على السوق 100%!
                         </div>
                       </div>
                     )}

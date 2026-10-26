@@ -684,57 +684,85 @@ export const TechnicalRadarView: React.FC<Props> = ({
                     {/* Dedicated 7 Stages of BADRAN Template */}
                     <td className="p-2 text-center" title={plan.layer1Trend.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer1Trend.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/15 text-rose-600'
+                        plan.layer1Trend.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer1Trend.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer1Trend.status === 'pass' ? 'صاعد ✅' : 'هابط ❌'}
+                        {plan.layer1Trend.resultText}
                       </span>
                     </td>
 
                     <td className="p-2 text-center" title={plan.layer2Liquidity.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer2Liquidity.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600'
+                        plan.layer2Liquidity.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer2Liquidity.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer2Liquidity.status === 'pass' ? 'ارتكاز طلب ✅' : 'قرب عرض ⚠️'}
+                        {plan.layer2Liquidity.resultText}
                       </span>
                     </td>
 
                     <td className="p-2 text-center" title={plan.layer3ORB.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer3ORB.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-md-surface-container text-md-on-surface-variant'
+                        plan.layer3ORB.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer3ORB.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer3ORB.status === 'pass' ? 'اختراق صاعد ✅' : 'داخل النطاق'}
+                        {plan.layer3ORB.resultText}
                       </span>
                     </td>
 
                     <td className="p-2 text-center" title={plan.layer4RMI.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer4RMI.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600'
+                        plan.layer4RMI.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer4RMI.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer4RMI.status === 'pass' ? 'زخم شراء ✅' : 'تشبع/هدوء ⚠️'}
+                        {plan.layer4RMI.resultText}
                       </span>
                     </td>
 
                     <td className="p-2 text-center" title={plan.layer5Bollinger.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer5Bollinger.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-md-surface-container text-md-on-surface-variant'
+                        plan.layer5Bollinger.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer5Bollinger.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer5Bollinger.status === 'pass' ? 'توسع باند ✅' : 'انضغاط نطاق'}
+                        {plan.layer5Bollinger.resultText}
                       </span>
                     </td>
 
                     <td className="p-2 text-center" title={plan.layer6MCDX.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer6MCDX.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600'
+                        plan.layer6MCDX.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer6MCDX.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer6MCDX.status === 'pass' ? 'حيتان 75%+ ✅' : 'سيولة أفراد ⚠️'}
+                        {plan.layer6MCDX.resultText}
                       </span>
                     </td>
 
                     <td className="p-2 text-center" title={plan.layer7MultiTF.detail}>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        plan.layer7MultiTF.status === 'pass' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600'
+                        plan.layer7MultiTF.status === 'pass' 
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                          : plan.layer7MultiTF.status === 'warning' 
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                          : 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                       }`}>
-                        {plan.layer7MultiTF.status === 'pass' ? 'توافق 4/4 ✅' : 'تعارض ساعة ⚠️'}
+                        {plan.layer7MultiTF.resultText}
                       </span>
                     </td>
 

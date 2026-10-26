@@ -127,6 +127,11 @@ export interface MacroMarketRates {
   macroRiskModifier: number; // e.g. -5 to +3 percentage points for ConfluenceScore
   macroSentiment: 'إيجابي' | 'محايد' | 'حذر / توترات';
   recommendedCashRatioPct: number; // e.g. 20% to 50%
+  indices?: {
+    egx30: { close: number; change: number; changeAbs: number };
+    egx70: { close: number; change: number; changeAbs: number };
+    egx100: { close: number; change: number; changeAbs: number };
+  };
   lastSyncTime: string;
   isLive: boolean;
 }

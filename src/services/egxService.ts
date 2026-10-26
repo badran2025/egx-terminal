@@ -231,22 +231,38 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
     range: [0, 350] // Expanded to cover all 300+ EGX stocks!
   };
 
+  const indexPayload = {
+    symbols: { tickers: ['EGX:EGX30', 'EGX:EGX70EWI', 'EGX:EGX100EWI'] },
+    columns: DEFAULT_COLUMNS
+  };
+
   let json: any = null;
   let isLive = false;
 
   // 1. First Attempt: Direct call to TradingView's Egypt Scanner (CORS supported natively by TradingView)
   try {
-    const directRes = await fetch('https://scanner.tradingview.com/egypt/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(scanPayload)
-    });
-    if (directRes.ok) {
-      const data = await directRes.json();
-      if (data && Array.isArray(data.data) && data.data.length > 0) {
-        json = data;
-        isLive = true;
-      }
+    const [stocksRes, indexRes] = await Promise.all([
+      fetch('https://scanner.tradingview.com/egypt/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scanPayload)
+      }).catch(() => null),
+      fetch('https://scanner.tradingview.com/egypt/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(indexPayload)
+      }).catch(() => null)
+    ]);
+
+    const stocksData = stocksRes && stocksRes.ok ? await stocksRes.json() : null;
+    const indexData = indexRes && indexRes.ok ? await indexRes.json() : null;
+
+    if (stocksData && Array.isArray(stocksData.data) && stocksData.data.length > 0) {
+      const combined = indexData?.data && Array.isArray(indexData.data)
+        ? [...indexData.data, ...stocksData.data]
+        : stocksData.data;
+      json = { data: combined };
+      isLive = true;
     }
   } catch (err) {
     console.warn('Direct TradingView fetch bypassed, trying /api/egx-scanner proxy:', err);
@@ -255,20 +271,28 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
   // 2. Second Attempt: Vercel Serverless Function & Vite dev proxy (/api/egx-scanner)
   if (!json) {
     try {
-      const proxyRes = await fetch('/api/egx-scanner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(scanPayload)
-      });
-      if (proxyRes.ok) {
-        const contentType = proxyRes.headers.get('content-type') || '';
-        if (contentType.includes('application/json')) {
-          const data = await proxyRes.json();
-          if (data && Array.isArray(data.data) && data.data.length > 0) {
-            json = data;
-            isLive = true;
-          }
-        }
+      const [proxyStocks, proxyIndex] = await Promise.all([
+        fetch('/api/egx-scanner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(scanPayload)
+        }).catch(() => null),
+        fetch('/api/egx-scanner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(indexPayload)
+        }).catch(() => null)
+      ]);
+
+      const stocksData = proxyStocks && proxyStocks.ok ? await proxyStocks.json() : null;
+      const indexData = proxyIndex && proxyIndex.ok ? await proxyIndex.json() : null;
+
+      if (stocksData && Array.isArray(stocksData.data) && stocksData.data.length > 0) {
+        const combined = indexData?.data && Array.isArray(indexData.data)
+          ? [...indexData.data, ...stocksData.data]
+          : stocksData.data;
+        json = { data: combined };
+        isLive = true;
       }
     } catch (err) {
       console.warn('Proxy fetch failed:', err);
@@ -481,6 +505,78 @@ export async function fetchEGXStocks(): Promise<StockData[]> {
 
 export function getFallbackStocks(): StockData[] {
   const primaryFallback: StockData[] = [
+    {
+      symbol: "EGX30",
+      ticker: "EGX:EGX30",
+      nameAr: "مؤشر EGX 30",
+      nameEn: "EGX 30 Index",
+      close: 49234.3,
+      change: -1818,
+      changePercent: -3.56,
+      volume: 262595000,
+      turnover: 5200000000,
+      recommendationScore: 0.1,
+      recommendationText: "مراقبة / محايد",
+      rsi: 48.5,
+      ema20: 49800,
+      ema50: 49500,
+      ema200: 48500,
+      support1: 48500,
+      support2: 47800,
+      resistance1: 50200,
+      resistance2: 51000,
+      pivot: 49500,
+      isEGX30: true,
+      sector: "مؤشرات السوق الرئيسية"
+    },
+    {
+      symbol: "EGX70EWI",
+      ticker: "EGX:EGX70EWI",
+      nameAr: "مؤشر EGX 70 EWI",
+      nameEn: "EGX 70 EWI Index",
+      close: 15282.6,
+      change: -1901.7,
+      changePercent: -11.07,
+      volume: 1034430000,
+      turnover: 3100000000,
+      recommendationScore: -0.15,
+      recommendationText: "مراقبة / محايد",
+      rsi: 41.2,
+      ema20: 16100,
+      ema50: 15800,
+      ema200: 15000,
+      support1: 15000,
+      support2: 14500,
+      resistance1: 16200,
+      resistance2: 16800,
+      pivot: 15500,
+      isEGX70: true,
+      sector: "مؤشرات السوق الرئيسية"
+    },
+    {
+      symbol: "EGX100EWI",
+      ticker: "EGX:EGX100EWI",
+      nameAr: "مؤشر EGX 100 EWI",
+      nameEn: "EGX 100 EWI Index",
+      close: 21064.5,
+      change: -2053,
+      changePercent: -8.88,
+      volume: 1297020000,
+      turnover: 8300000000,
+      recommendationScore: -0.05,
+      recommendationText: "مراقبة / محايد",
+      rsi: 44.0,
+      ema20: 22100,
+      ema50: 21800,
+      ema200: 20500,
+      support1: 20800,
+      support2: 20200,
+      resistance1: 22000,
+      resistance2: 22800,
+      pivot: 21400,
+      isEGX100: true,
+      sector: "مؤشرات السوق الرئيسية"
+    },
     {
       symbol: "COMI",
       ticker: "EGX:COMI",
@@ -2589,6 +2685,47 @@ export async function fetchLiveMacroRates(): Promise<any> {
     } catch {}
   }
 
+  // 3. Fetch live EGX Indices (EGX30, EGX70EWI, EGX100EWI)
+  let egx30 = { close: 49234.3, change: -3.56, changeAbs: -1818 };
+  let egx70 = { close: 15282.6, change: -11.07, changeAbs: -1901.7 };
+  let egx100 = { close: 21064.5, change: -8.88, changeAbs: -2053 };
+
+  try {
+    const idxRes = await fetch('https://scanner.tradingview.com/egypt/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        symbols: { tickers: ['EGX:EGX30', 'EGX:EGX70EWI', 'EGX:EGX100EWI'] },
+        columns: ['name', 'close', 'change', 'change_abs']
+      })
+    }).catch(async () => {
+      return await fetch('/api/egx-scanner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbols: { tickers: ['EGX:EGX30', 'EGX:EGX70EWI', 'EGX:EGX100EWI'] },
+          columns: ['name', 'close', 'change', 'change_abs']
+        })
+      });
+    });
+    if (idxRes && idxRes.ok) {
+      const idxData = await idxRes.json();
+      idxData?.data?.forEach((item: any) => {
+        if (item.s === 'EGX:EGX30' && item.d?.[1]) {
+          egx30 = { close: Number(item.d[1]), change: Number(item.d[2] || 0), changeAbs: Number(item.d[3] || 0) };
+        }
+        if (item.s === 'EGX:EGX70EWI' && item.d?.[1]) {
+          egx70 = { close: Number(item.d[1]), change: Number(item.d[2] || 0), changeAbs: Number(item.d[3] || 0) };
+        }
+        if (item.s === 'EGX:EGX100EWI' && item.d?.[1]) {
+          egx100 = { close: Number(item.d[1]), change: Number(item.d[2] || 0), changeAbs: Number(item.d[3] || 0) };
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Live indices fetch bypassed:', err);
+  }
+
   // Calculate local Sagha gold strictly from live ounce and dollar
   const gold24 = Number(((goldOunce * usd) / 31.1035).toFixed(2));
   const gold21 = Number((gold24 * (21 / 24)).toFixed(2));
@@ -2601,6 +2738,11 @@ export async function fetchLiveMacroRates(): Promise<any> {
     gold21kEgp: gold21,
     goldPoundEgp: goldPound,
     brentOilUsd: Number(brent.toFixed(2)),
+    indices: {
+      egx30,
+      egx70,
+      egx100
+    },
     isLive
   };
 }
